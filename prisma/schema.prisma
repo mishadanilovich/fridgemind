@@ -94,7 +94,9 @@ model Household {
 }
 
 model User {
-  id          String        @id @default(cuid())
+  // Значение всегда равно Supabase Auth auth.users.id (UUID) — задаётся триггером
+  // handle_new_user при регистрации, приложение не должно вызывать prisma.user.create() напрямую.
+  id          String        @id
   email       String        @unique
   name        String
   householdId String        @map("household_id")
