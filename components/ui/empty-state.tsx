@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +7,7 @@ type Props = {
   title: string;
   description?: string;
   /** Необязательное действие, например кнопка "Добавить". */
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 };
 
