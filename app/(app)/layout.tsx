@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/nav/BottomNav";
 import { ProfileLink } from "@/components/nav/ProfileLink";
 import { getCurrentUser } from "@/lib/auth";
 
-export default async function AppLayout({ children }: { children: ReactNode }) {
+type Props = LayoutProps<"/">;
+
+export default async function AppLayout({ children }: Props) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 

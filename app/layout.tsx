@@ -17,11 +17,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type Props = LayoutProps<"/">;
+
+export default function RootLayout({ children }: Props) {
   return (
     <html lang="ru">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
