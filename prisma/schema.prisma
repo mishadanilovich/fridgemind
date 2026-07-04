@@ -1,0 +1,317 @@
+// FridgeMind — Prisma schema
+// Naming: camelCase in schema/Prisma Client, snake_case in Postgres via @map/@@map (см. CLAUDE.md, раздел 10)
+// Единицы измерения (WEIGHT/VOLUME/COUNT), роли (HouseholdRole), категории (ProductCategory) —
+// см. CLAUDE.md, раздел 5.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Enums ----------
+
+enum HouseholdRole {
+  ORGANIZER
+  EDITOR
+  MEMBER
+
+  @@map("household_role")
+}
+
+enum UnitType {
+  WEIGHT
+  VOLUME
+  COUNT
+
+  @@map("unit_type")
+}
+
+// Всегда базовая единица хранения для своего unitType (см. раздел 5 "Единицы измерения").
+// G/ML/PCS — граммы/миллилитры/штуки. Отображение в кг/л — только на UI.
+enum Unit {
+  G
+  ML
+  PCS
+
+  @@map("unit")
+}
+
+enum ProductCategory {
+  DAIRY
+  MEAT_FISH
+  VEGETABLES_FRUITS
+  GROCERY
+  BAKERY
+  BEVERAGES
+  FROZEN
+  HOUSEHOLD_CHEMICALS
+  PERSONAL_CARE
+  OTHER
+
+  @@map("product_category")
+}
+
+enum CookingMethod {
+  STOVETOP
+  OVEN
+  MULTICOOKER
+  GRILL
+  MICROWAVE
+  NO_COOK
+
+  @@map("cooking_method")
+}
+
+enum PantryItemSource {
+  MANUAL
+  PHOTO
+
+  @@map("pantry_item_source")
+}
+
+// ---------- Household & Users ----------
+
+model Household {
+  id         String   @id @default(cuid())
+  name       String?
+  inviteCode String   @unique @default(cuid()) @map("invite_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  users             User[]
+  recipes           Recipe[]
+  pantryItems       PantryItem[]
+  menuWeeks         MenuWeek[]
+  mealSlots         MealSlot[]
+  shoppingListItems ShoppingListItem[]
+
+  @@map("households")
+}
+
+model User {
+  id          String        @id @default(cuid())
+  email       String        @unique
+  name        String
+  householdId String        @map("household_id")
+  role        HouseholdRole @default(MEMBER)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  eatenMeals        MenuDayMeal[]      @relation("EatenBy")
+  boughtItems       ShoppingListItem[] @relation("BoughtBy")
+
+  @@index([householdId])
+  @@map("users")
+}
+
+// ---------- Ingredient catalog (глобальный справочник, не привязан к household) ----------
+
+// Справочник глобальный и НЕ принадлежит Household — сознательное решение из раздела 5,
+// чтобы не дублировать общеупотребимые продукты между семьями. У модели намеренно нет
+// поля householdId и связи с Household.
+model Ingredient {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  defaultUnitType UnitType        @map("default_unit_type")
+  category        ProductCategory
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  recipeIngredients RecipeIngredient[]
+  pantryItems       PantryItem[]
+  shoppingListItems ShoppingListItem[]
+
+  @@map("ingredients")
+}
+
+// ---------- Recipes ----------
+
+model Recipe {
+  id              String          @id @default(cuid())
+  householdId     String          @map("household_id")
+  title           String
+  photoUrl        String?         @map("photo_url")
+  baseServings    Int             @map("base_servings")
+  cookTimeMinutes Int?            @map("cook_time_minutes")
+  cookingMethods  CookingMethod[] @map("cooking_methods")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  household   Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  steps       RecipeStep[]
+  ingredients RecipeIngredient[]
+  menuDayMeals MenuDayMeal[]
+
+  @@index([householdId])
+  @@map("recipes")
+}
+
+model RecipeStep {
+  id          String  @id @default(cuid())
+  recipeId    String  @map("recipe_id")
+  order       Int
+  instruction String
+  photoUrl    String? @map("photo_url")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_steps")
+}
+
+model RecipeIngredient {
+  id           String @id @default(cuid())
+  recipeId     String @map("recipe_id")
+  ingredientId String @map("ingredient_id")
+  quantity     Float // в базовой единице (г/мл/шт)
+  unit         Unit
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+// ---------- Pantry (домашний инвентарь) ----------
+
+model PantryItem {
+  id           String           @id @default(cuid())
+  householdId  String           @map("household_id")
+  ingredientId String           @map("ingredient_id")
+  quantity     Float // в базовой единице (г/мл/шт)
+  unit         Unit
+  addedVia     PantryItemSource @default(MANUAL) @map("added_via")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  household  Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([householdId, ingredientId]) // одна строка на продукт в household — количество пополняется/уменьшается
+  @@index([householdId])
+  @@map("pantry_items")
+}
+
+// ---------- Meal slots (динамические, настраиваемые household'ом) ----------
+
+model MealSlot {
+  id          String   @id @default(cuid())
+  householdId String   @map("household_id")
+  name        String
+  order       Int
+  deletedAt   DateTime? @map("deleted_at") // soft-delete, см. раздел 5 "Слоты приёма пищи"
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  household    Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  menuDayMeals MenuDayMeal[]
+
+  @@index([householdId])
+  @@map("meal_slots")
+}
+
+// ---------- Menu (неделя → день → приём пищи) ----------
+
+model MenuWeek {
+  id            String   @id @default(cuid())
+  householdId   String   @map("household_id")
+  weekStartDate DateTime @map("week_start_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  household         Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  days              MenuDay[]
+  shoppingListItems ShoppingListItem[]
+
+  @@index([householdId])
+  @@map("menu_weeks")
+}
+
+model MenuDay {
+  id         String   @id @default(cuid())
+  menuWeekId String   @map("menu_week_id")
+  date       DateTime
+
+  menuWeek MenuWeek      @relation(fields: [menuWeekId], references: [id], onDelete: Cascade)
+  meals    MenuDayMeal[]
+
+  @@index([menuWeekId])
+  @@map("menu_days")
+}
+
+// По одной записи на каждый слот дня, в который назначен рецепт (см. раздел 5).
+// Удаление рецепта из слота ("убрать") = удаление этой записи.
+model MenuDayMeal {
+  id           String    @id @default(cuid())
+  menuDayId    String    @map("menu_day_id")
+  mealSlotId   String    @map("meal_slot_id")
+  recipeId     String    @map("recipe_id")
+  servings     Int // по умолчанию = Recipe.baseServings, можно поменять для конкретного раза
+  isEaten      Boolean   @default(false) @map("is_eaten")
+  eatenAt      DateTime? @map("eaten_at")
+  eatenByUserId String?  @map("eaten_by_user_id")
+
+  menuDay   MenuDay  @relation(fields: [menuDayId], references: [id], onDelete: Cascade)
+  mealSlot  MealSlot @relation(fields: [mealSlotId], references: [id])
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  eatenBy   User?    @relation("EatenBy", fields: [eatenByUserId], references: [id], onDelete: SetNull)
+
+  shoppingListItemMeals ShoppingListItemMeal[]
+
+  @@unique([menuDayId, mealSlotId]) // один рецепт на слот в конкретный день
+  @@index([menuDayId])
+  @@index([recipeId])
+  @@map("menu_day_meals")
+}
+
+// ---------- Shopping list ----------
+
+model ShoppingListItem {
+  id              String           @id @default(cuid())
+  householdId     String           @map("household_id")
+  weekId          String           @map("week_id")
+  ingredientId    String?          @map("ingredient_id") // null для ручных позиций
+  name            String // денормализовано для ручных позиций; для обычных — из Ingredient.name
+  quantity        Float // суммарно на всю неделю (или под фильтр дней — пересчитывается на лету)
+  unit            Unit
+  isBought        Boolean          @default(false) @map("is_bought")
+  addedToPantry   Boolean          @default(false) @map("added_to_pantry")
+  isManual        Boolean          @default(false) @map("is_manual")
+  manualCategory  ProductCategory? @map("manual_category") // только для isManual = true
+  boughtByUserId  String?          @map("bought_by_user_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  household  Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  week       MenuWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+  boughtBy   User?       @relation("BoughtBy", fields: [boughtByUserId], references: [id], onDelete: SetNull)
+
+  meals ShoppingListItemMeal[]
+
+  @@index([householdId])
+  @@index([weekId])
+  @@map("shopping_list_items")
+}
+
+// Связывает позицию списка с конкретным приёмом пищи/днём — нужно для фильтра по дням
+// (см. раздел 6, "Поток фильтр по дням в списке покупок"). У ручных позиций записей нет.
+model ShoppingListItemMeal {
+  id                 String @id @default(cuid())
+  shoppingListItemId String @map("shopping_list_item_id")
+  menuDayMealId      String @map("menu_day_meal_id")
+  quantity           Float // вклад именно этого приёма пищи в общее количество
+
+  shoppingListItem ShoppingListItem @relation(fields: [shoppingListItemId], references: [id], onDelete: Cascade)
+  menuDayMeal      MenuDayMeal      @relation(fields: [menuDayMealId], references: [id], onDelete: Cascade)
+
+  @@index([shoppingListItemId])
+  @@index([menuDayMealId])
+  @@map("shopping_list_item_meals")
+}
