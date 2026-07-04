@@ -3,10 +3,10 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-
-const inputClass =
-  "w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary";
 
 function SignupForm() {
   const router = useRouter();
@@ -54,7 +54,7 @@ function SignupForm() {
   if (sent) {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="font-heading text-2xl font-bold">Проверьте почту</h1>
+        <h1 className="text-2xl font-bold">Проверьте почту</h1>
         <p className="text-sm text-muted-foreground">
           Мы отправили письмо со ссылкой для подтверждения на <span className="font-medium">{email}</span>.
           Перейдите по ней, чтобы завершить регистрацию.
@@ -69,48 +69,40 @@ function SignupForm() {
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
-        <h1 className="font-heading text-2xl font-bold">FridgeMind</h1>
+        <h1 className="text-2xl font-bold">FridgeMind</h1>
         <p className="text-sm text-muted-foreground">
           {inviteCode ? "Регистрация и присоединение к семье" : "Создание аккаунта"}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-medium">
-            Имя
-          </label>
-          <input
+        <div className="space-y-1.5">
+          <Label htmlFor="name">Имя</Label>
+          <Input
             id="name"
             type="text"
             required
             autoComplete="name"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className={inputClass}
           />
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium">
-            Email
-          </label>
-          <input
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className={inputClass}
           />
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium">
-            Пароль
-          </label>
-          <input
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Пароль</Label>
+          <Input
             id="password"
             type="password"
             required
@@ -118,19 +110,14 @@ function SignupForm() {
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className={inputClass}
           />
         </div>
 
-        {error && <p className="text-sm text-accent">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-        >
+        <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Создаём…" : "Зарегистрироваться"}
-        </button>
+        </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
