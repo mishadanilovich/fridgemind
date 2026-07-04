@@ -1,28 +1,38 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser, unauthorized } from "@/lib/auth";
 import { manualShoppingItemInputSchema } from "@/lib/zod-schemas";
 
 // Список покупок — без ограничений по ролям (см. CLAUDE.md, раздел 5).
-// Фильтр по дням (see раздел 6, "Поток фильтр по дням") пересчитывает quantity на лету
-// через ShoppingListItemMeal, а не хранит отдельную копию на каждую комбинацию дней.
 
 export async function GET(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const days = searchParams.getAll("day"); // ISO-даты выбранных дней, пусто = вся неделя
 
-  // TODO: агрегировать ShoppingListItem (+ManualItems) для householdId/weekId;
-  // если `days` непусто — суммировать только ShoppingListItemMeal, чей MenuDayMeal.menuDay.date в `days`
+  // TODO (этап 7): при непустом `days` пересчитывать quantity через ShoppingListItemMeal
   void days;
-  return NextResponse.json({ items: [] });
+
+  const items = await prisma.shoppingListItem.findMany({
+    where: { householdId: user.householdId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({ items });
 }
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+
   const body = await request.json();
   const parsed = manualShoppingItemInputSchema.safeParse(body);
-
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // TODO: создать ShoppingListItem с isManual = true, ingredientId = null, manualCategory из parsed.data
+  // TODO (этап 8): создать ShoppingListItem с isManual = true, ingredientId = null, manualCategory из parsed.data
   return NextResponse.json({ ok: true }, { status: 201 });
 }

@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { BottomNav } from "@/components/nav/BottomNav";
-import { ProfileLink } from "@/components/nav/ProfileLink";
 import "./globals.css";
 
 // Bricolage Grotesque не отдаёт кириллицу через next/font (нет subset'а "cyrillic" в
@@ -28,14 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
       />
-      <body className="min-h-screen pb-24">
-        <header className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="font-heading text-lg font-bold">FridgeMind</span>
-          <ProfileLink />
-        </header>
-        <main className="mx-auto max-w-md px-4 py-4">{children}</main>
-        <BottomNav />
-      </body>
+      <body className="min-h-screen">{children}</body>
     </html>
   );
 }

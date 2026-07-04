@@ -1,18 +1,33 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser, hasRole, unauthorized, forbidden } from "@/lib/auth";
 
-// Поток "создание household и приглашение участников" (см. CLAUDE.md, раздел 6).
-// Генерация/инвалидация inviteCode — доступно любому участнику для просмотра ссылки,
-// но "Сгенерировать новую ссылку" по дизайну видна только после раскрытия "Пригласить" (UI-деталь).
-
+// Регенерация inviteCode — только ORGANIZER (см. CLAUDE.md, раздел 5).
 export async function POST() {
-  // TODO: regenerate Household.inviteCode (invalidates old link), только вызывается явным действием
-  return NextResponse.json({ inviteCode: "TODO" });
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (!hasRole(user, ["ORGANIZER"])) return forbidden();
+
+  const household = await prisma.household.update({
+    where: { id: user.householdId },
+    data: { inviteCode: crypto.randomUUID() },
+  });
+
+  return NextResponse.json({ inviteCode: household.inviteCode });
 }
 
-// Принятие приглашения по коду — см. поток в разделе 6, шаг 3 (новый пользователь / уже в другом household / уже здесь)
+// Валидация кода приглашения (используется лендингом /invite/[code]).
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  // TODO: найти Household по inviteCode, обработать 3 случая из потока в CLAUDE.md
-  return NextResponse.json({ householdId: null, code });
+  if (!code) {
+    return NextResponse.json({ error: "code required" }, { status: 400 });
+  }
+
+  const household = await prisma.household.findUnique({
+    where: { inviteCode: code },
+    select: { id: true, name: true },
+  });
+
+  return NextResponse.json({ valid: Boolean(household), household });
 }
