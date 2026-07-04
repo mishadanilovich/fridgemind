@@ -1,6 +1,10 @@
-import { PrismaClient, ProductCategory, UnitType } from "@prisma/client";
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient, ProductCategory, UnitType } from "../lib/generated/prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DIRECT_URL }),
+});
 
 const starterIngredients: Array<{ name: string; defaultUnitType: UnitType; category: ProductCategory }> = [
   { name: "Молоко", defaultUnitType: "VOLUME", category: "DAIRY" },

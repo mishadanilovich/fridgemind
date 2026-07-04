@@ -21,7 +21,7 @@ export type {
   ProductCategory,
   CookingMethod,
   PantryItemSource,
-} from "@prisma/client";
+} from "./generated/prisma/client";
 
 export type {
   RecognizedProduct,
@@ -36,17 +36,17 @@ export type {
 } from "./zod-schemas";
 
 /** Рецепт с загруженными шагами и ингредиентами — типичная форма для экрана просмотра. */
-export type RecipeWithDetails = import("@prisma/client").Recipe & {
-  steps: import("@prisma/client").RecipeStep[];
-  ingredients: (import("@prisma/client").RecipeIngredient & {
-    ingredient: import("@prisma/client").Ingredient;
+export type RecipeWithDetails = import("./generated/prisma/client").Recipe & {
+  steps: import("./generated/prisma/client").RecipeStep[];
+  ingredients: (import("./generated/prisma/client").RecipeIngredient & {
+    ingredient: import("./generated/prisma/client").Ingredient;
   })[];
 };
 
 /** Слот дня меню с назначенным рецептом (если есть) — форма для "Сегодня"/"Меню на неделю". */
 export type MenuSlotView = {
-  mealSlot: import("@prisma/client").MealSlot;
+  mealSlot: import("./generated/prisma/client").MealSlot;
   meal:
-    | (import("@prisma/client").MenuDayMeal & { recipe: import("@prisma/client").Recipe })
+    | (import("./generated/prisma/client").MenuDayMeal & { recipe: import("./generated/prisma/client").Recipe })
     | null;
 };
