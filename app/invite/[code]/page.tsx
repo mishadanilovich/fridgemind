@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { acceptInvite } from "@/app/actions/invite";
 import { Button } from "@/components/ui/button";
+import { acceptInvite } from "@/lib/actions/invite";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
