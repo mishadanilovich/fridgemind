@@ -32,6 +32,7 @@ export default function RootLayout({ children }: Props) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- next/font не отдаёт кириллицу для Bricolage Grotesque, см. комментарий выше */}
       <link
         rel="stylesheet"
+        precedence="default"
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
       />
       <body className="min-h-screen">{children}</body>
