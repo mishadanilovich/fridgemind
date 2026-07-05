@@ -1,4 +1,4 @@
-import { Skeleton } from "./Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Заглушка строки списка — переиспользуется для "Домашние запасы" и "Список покупок"

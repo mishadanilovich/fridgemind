@@ -1,5 +1,5 @@
 import { ListRowSkeletonGroup } from "@/components/skeletons/ListRowSkeleton";
-import { Skeleton } from "@/components/skeletons/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShoppingListLoading() {
   return (

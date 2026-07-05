@@ -1,5 +1,5 @@
 import { MealSlotSkeletonList } from "@/components/skeletons/MealSlotSkeleton";
-import { Skeleton } from "@/components/skeletons/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MenuLoading() {
   return (

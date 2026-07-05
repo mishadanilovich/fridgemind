@@ -1,4 +1,4 @@
-import { Skeleton } from "./Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Заглушка экрана "Профиль/Настройки" (см. CLAUDE.md, раздел 6). */
 export function ProfileSkeleton() {

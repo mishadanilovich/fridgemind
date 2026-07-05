@@ -1,4 +1,4 @@
-import { Skeleton } from "./Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Заглушка карточки приёма пищи — экраны "Сегодня" и "Меню на неделю"
