@@ -3,27 +3,26 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { type AuthFormState, signUp } from "@/app/actions/auth";
+import { signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const initialState: AuthFormState = { error: null };
+import { initialFormState } from "@/lib/form-state";
 
 type Props = {
   inviteCode?: string;
 };
 
 export function SignupForm({ inviteCode }: Props) {
-  const [state, formAction, isPending] = useActionState(signUp, initialState);
+  const [state, formAction, isPending] = useActionState(signUp, initialFormState);
 
-  if (state.sentTo) {
+  if (state.data?.sentTo) {
     return (
       <div className="space-y-4 text-center">
         <h1 className="text-2xl font-bold">Проверьте почту</h1>
         <p className="text-sm text-muted-foreground">
           Мы отправили письмо со ссылкой для подтверждения на{" "}
-          <span className="font-medium">{state.sentTo}</span>. Перейдите по ней, чтобы завершить
+          <span className="font-medium">{state.data.sentTo}</span>. Перейдите по ней, чтобы завершить
           регистрацию.
         </p>
         <Link href="/login" className="inline-block text-sm font-semibold text-primary">

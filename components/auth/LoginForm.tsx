@@ -3,19 +3,18 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { type AuthFormState, signIn } from "@/app/actions/auth";
+import { signIn } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const initialState: AuthFormState = { error: null };
+import { initialFormState } from "@/lib/form-state";
 
 type Props = {
   next?: string;
 };
 
 export function LoginForm({ next }: Props) {
-  const [state, formAction, isPending] = useActionState(signIn, initialState);
+  const [state, formAction, isPending] = useActionState(signIn, initialFormState);
 
   return (
     <div className="space-y-6">

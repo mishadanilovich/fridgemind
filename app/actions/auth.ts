@@ -3,20 +3,11 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { firstIssue, type FormState } from "@/lib/form-state";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { loginFormSchema, signupFormSchema } from "@/lib/zod-schemas";
 
-export type AuthFormState = {
-  error: string | null;
-  /** Email, на который отправлено письмо-подтверждение (экран "проверьте почту"). */
-  sentTo?: string;
-  /** Введённые значения — для repopulation полей после ошибки (форма сбрасывается). */
-  values?: { email?: string; name?: string };
-};
-
-function firstIssue(issues: { message: string }[]): string {
-  return issues[0]?.message ?? "Проверьте введённые данные";
-}
+export type AuthFormState = FormState<{ email: string; name: string }, { sentTo: string }>;
 
 export async function signIn(_prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
@@ -79,7 +70,7 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
     redirect("/");
   }
 
-  return { error: null, sentTo: parsed.data.email };
+  return { error: null, data: { sentTo: parsed.data.email } };
 }
 
 export async function signOut() {
