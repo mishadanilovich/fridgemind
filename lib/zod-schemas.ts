@@ -93,3 +93,17 @@ export const manualShoppingItemInputSchema = z.object({
   manualCategory: productCategorySchema.default("OTHER"),
 });
 export type ManualShoppingItemInput = z.infer<typeof manualShoppingItemInputSchema>;
+
+// ---------- Auth-формы (server actions + useActionState) ----------
+
+export const loginFormSchema = z.object({
+  email: z.string().email("Некорректный email"),
+  password: z.string().min(6, "Пароль — минимум 6 символов"),
+});
+export type LoginFormInput = z.infer<typeof loginFormSchema>;
+
+export const signupFormSchema = loginFormSchema.extend({
+  name: z.string().min(1, "Укажите имя"),
+  inviteCode: z.string().optional(),
+});
+export type SignupFormInput = z.infer<typeof signupFormSchema>;
