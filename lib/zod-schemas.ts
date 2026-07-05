@@ -94,6 +94,21 @@ export const manualShoppingItemInputSchema = z.object({
 });
 export type ManualShoppingItemInput = z.infer<typeof manualShoppingItemInputSchema>;
 
+// ---------- Household / профиль (этап 3) ----------
+
+// Название household — необязательное; пустая строка трактуется как "не задано" (→ null в БД).
+export const householdNameSchema = z.string().trim().max(60, "Слишком длинное название");
+
+// Имя слота приёма пищи (MealSlot) — произвольный текст, но не пустой.
+export const mealSlotNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Введите название")
+  .max(40, "Слишком длинное название");
+
+// Новый порядок слотов — массив их id в нужной последовательности.
+export const mealSlotOrderSchema = z.array(z.string().min(1)).min(1);
+
 // ---------- Auth-формы (server actions + useActionState) ----------
 
 export const loginFormSchema = z.object({
