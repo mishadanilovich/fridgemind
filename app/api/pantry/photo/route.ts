@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { visionRecognitionResponseSchema } from "@/lib/zod-schemas";
 
 // Поток "фото холодильника" — см. CLAUDE.md, раздел 6.

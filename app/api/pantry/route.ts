@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getCurrentUser, unauthorized } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Инвентарь без ограничений по ролям — любой участник household (см. CLAUDE.md, раздел 5).
 

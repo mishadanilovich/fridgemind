@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function acceptInvite(code: string) {
   const user = await getCurrentUser();

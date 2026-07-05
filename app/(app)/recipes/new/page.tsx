@@ -8,7 +8,7 @@ export default function NewRecipePage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Новый рецепт</h1>
       <p className="text-sm text-muted-foreground">
-        Форма ещё не реализована — см. CLAUDE.md, раздел 5 "Ввод рецептов".
+        Форма ещё не реализована — см. CLAUDE.md, раздел 5 «Ввод рецептов».
       </p>
     </div>
   );

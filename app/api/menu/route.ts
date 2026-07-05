@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+
+import { forbidden, getCurrentUser, hasRole, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, hasRole, unauthorized, forbidden } from "@/lib/auth";
 
 // Запись/изменение MenuDayMeal — роль ORGANIZER или EDITOR (см. CLAUDE.md, раздел 5).
 

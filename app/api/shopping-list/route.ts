@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getCurrentUser, unauthorized } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { manualShoppingItemInputSchema } from "@/lib/zod-schemas";
 
 // Список покупок — без ограничений по ролям (см. CLAUDE.md, раздел 5).

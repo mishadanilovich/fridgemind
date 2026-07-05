@@ -8,6 +8,7 @@ import { Serwist } from "serwist";
 // последнее актуальное меню/список покупок для чтения без сети отдельно от этого файла.
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- declaration merging с глобальным WorkerGlobalScope возможен только через interface
   interface WorkerGlobalScope extends SerwistGlobalConfig {
     __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
   }

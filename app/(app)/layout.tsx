@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import { BottomNav } from "@/components/nav/BottomNav";
 import { ProfileLink } from "@/components/nav/ProfileLink";
 import { getCurrentUser } from "@/lib/auth";

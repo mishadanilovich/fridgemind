@@ -1,8 +1,8 @@
 "use client"
 
-import { forwardRef, type ComponentPropsWithoutRef, type ComponentRef, type HTMLAttributes } from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
+import { type ComponentPropsWithoutRef, type ComponentRef, forwardRef, type HTMLAttributes } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -183,18 +183,18 @@ DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
 
 export {
   DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuCheckboxItem,
-  DropdownMenuRadioItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuGroup,
-  DropdownMenuPortal,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuRadioGroup,
+  DropdownMenuTrigger,
 }

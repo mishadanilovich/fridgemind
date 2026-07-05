@@ -1,5 +1,6 @@
-import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+import type { Metadata, Viewport } from "next";
 
 // Bricolage Grotesque не отдаёт кириллицу через next/font (нет subset'а "cyrillic" в
 // текущей версии next/font/google) — подключаем оба шрифта как в макете Claude Design,
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: Props) {
         href="https://fonts.gstatic.com"
         crossOrigin="anonymous"
       />
+      {/* eslint-disable-next-line @next/next/no-page-custom-font -- next/font не отдаёт кириллицу для Bricolage Grotesque, см. комментарий выше */}
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"

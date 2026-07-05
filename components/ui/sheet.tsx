@@ -1,9 +1,9 @@
 "use client"
 
-import { forwardRef, type ComponentPropsWithoutRef, type ComponentRef, type HTMLAttributes } from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
+import { type ComponentPropsWithoutRef, type ComponentRef, forwardRef, type HTMLAttributes } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -49,9 +49,7 @@ const sheetVariants = cva(
   }
 )
 
-interface SheetContentProps
-  extends ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+type SheetContentProps = {} & ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & VariantProps<typeof sheetVariants>
 
 const SheetContent = forwardRef<
   ComponentRef<typeof SheetPrimitive.Content>,
@@ -128,13 +126,13 @@ SheetDescription.displayName = SheetPrimitive.Description.displayName
 
 export {
   Sheet,
-  SheetPortal,
-  SheetOverlay,
-  SheetTrigger,
   SheetClose,
   SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
   SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger,
 }

@@ -4,19 +4,19 @@ import Dexie, { type EntityTable } from "dexie";
 // Хранит последнее известное состояние меню/рецептов/списка покупок для чтения без сети;
 // синхронизация с сервером — при восстановлении сети и через Supabase Realtime (для списка покупок).
 
-interface CachedMenuWeek {
+type CachedMenuWeek = {
   id: string; // menuWeekId
   data: unknown; // сериализованный MenuWeek + days + meals + recipe
   cachedAt: number;
 }
 
-interface CachedShoppingList {
+type CachedShoppingList = {
   id: string; // householdId
   data: unknown; // сериализованные ShoppingListItem[]
   cachedAt: number;
 }
 
-interface CachedRecipe {
+type CachedRecipe = {
   id: string; // recipeId
   data: unknown;
   cachedAt: number;
@@ -35,4 +35,4 @@ db.version(1).stores({
 });
 
 export { db as offlineDb };
-export type { CachedMenuWeek, CachedShoppingList, CachedRecipe };
+export type { CachedMenuWeek, CachedRecipe,CachedShoppingList };

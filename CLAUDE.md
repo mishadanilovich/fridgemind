@@ -292,6 +292,14 @@ MVP — только ручной ввод рецепта через форму:
 - Пропсы компонентов — явный `type Props = { ... }` рядом с компонентом; `React.FC` не используется. Данные с сервера типизируются типами из `lib/types` (Prisma/view-типы), а не инлайн-объектами.
 - Пропсы страниц/layout'ов — через сгенерированные Next'ом типизированные роуты: `type Props = PageProps<"/invite/[code]">` (и `LayoutProps<...>` для layout'ов), а не рукописные `{ params: Promise<...> }` — параметры остаются в синхроне с реальным путём автоматически.
 - Импорты из `react` — только именованные, без `import * as React`: значения обычным импортом, типы — `import type { ReactNode }` (или inline `type X` в смешанном импорте). `React.Xxx`-префиксы в коде не используются. Файлы, сгенерированные `npx shadcn add`, приводятся к этому стилю сразу после генерации (вместе с адаптацией цветов к теме).
+- `type` по умолчанию, `interface` — только там, где нужен declaration merging (например, расширение глобального `WorkerGlobalScope` в `app/sw.ts`) — закреплено ESLint-правилом `consistent-type-definitions`.
+
+### ESLint
+Flat config (`eslint.config.mjs`): ESLint 9 + `next/core-web-vitals` + `next/typescript` (через FlatCompat). Команды: `npm run lint` / `npm run lint:fix` (`next lint` не используется — deprecated). Поверх пресетов:
+- `simple-import-sort/imports|exports` — порядок импортов чинится автофиксом, руками не сортируем;
+- `@typescript-eslint/consistent-type-imports` (inline `type`-модификаторы), `consistent-type-definitions: type`;
+- запрет дефолтного импорта `react` (`no-restricted-imports`).
+Отступления от правил — только точечным `eslint-disable-next-line` с пояснением причины.
 
 ### Тесты
 Полное E2E-покрытие для personal-use проекта избыточно, поэтому фокус на местах, где реально возникают баги:
