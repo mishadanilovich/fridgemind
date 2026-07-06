@@ -42,8 +42,12 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
         {canLeave ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="w-full text-destructive" disabled={isPending}>
-                <DoorOpen />
+              <Button
+                variant="outline"
+                className="w-full text-destructive"
+                loading={isPending}
+                icon={<DoorOpen />}
+              >
                 Покинуть семью
               </Button>
             </AlertDialogTrigger>
@@ -68,8 +72,7 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
           </AlertDialog>
         ) : (
           <>
-            <Button variant="outline" className="w-full" disabled>
-              <DoorOpen />
+            <Button variant="outline" className="w-full" disabled icon={<DoorOpen />}>
               Покинуть семью
             </Button>
             {leaveReason && <p className="mt-1 text-xs text-muted-foreground">{leaveReason}</p>}
@@ -79,8 +82,7 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
       </div>
 
       <form action={signOut}>
-        <Button type="submit" variant="ghost" className="w-full">
-          <LogOut />
+        <Button type="submit" variant="ghost" className="w-full" icon={<LogOut />}>
           Выйти из аккаунта
         </Button>
       </form>

@@ -58,8 +58,7 @@ export function InviteSection({ inviteCode }: Props) {
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} className="w-full">
-        <UserPlus />
+      <Button onClick={() => setOpen(true)} className="w-full" icon={<UserPlus />}>
         Пригласить
       </Button>
     );
@@ -84,9 +83,14 @@ export function InviteSection({ inviteCode }: Props) {
         Любой, кто перейдёт по ссылке, присоединится к вашей семье как Участник.
       </p>
 
-      <Button variant="ghost" size="sm" onClick={onRegenerate} disabled={isPending}>
-        <RefreshCw />
-        {isPending ? "Обновляем…" : "Сгенерировать новую ссылку"}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRegenerate}
+        loading={isPending}
+        icon={<RefreshCw />}
+      >
+        Сгенерировать новую ссылку
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

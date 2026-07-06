@@ -113,8 +113,13 @@ export function MealSlotsManager({ slots }: Props) {
             }
           }}
         />
-        <Button variant="outline" onClick={onAdd} disabled={isAdding || !newName.trim()}>
-          <Plus />
+        <Button
+          variant="outline"
+          onClick={onAdd}
+          loading={isAdding}
+          disabled={!newName.trim()}
+          icon={<Plus />}
+        >
           Добавить
         </Button>
       </div>

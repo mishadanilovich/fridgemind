@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { type ButtonHTMLAttributes, forwardRef } from "react"
+import { Loader2 } from "lucide-react"
+import { type ButtonHTMLAttributes, forwardRef, type ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -35,17 +36,44 @@ const buttonVariants = cva(
 
 export type ButtonProps = {
   asChild?: boolean
+  loading?: boolean
+  /** Ведущая иконка; при loading заменяется спиннером. Игнорируется с asChild. */
+  icon?: ReactNode
 } & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      icon,
+      disabled,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
-      />
+      >
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {loading ? <Loader2 className="animate-spin" /> : icon}
+            {children}
+          </>
+        )}
+      </Comp>
     )
   }
 )

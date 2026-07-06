@@ -27,8 +27,8 @@ export function HouseholdNameForm({ name }: Props) {
           placeholder="Ваша семья"
           defaultValue={state.values?.name ?? name ?? ""}
         />
-        <Button type="submit" variant="outline" disabled={isPending}>
-          {isPending ? "Сохраняем…" : "Сохранить"}
+        <Button type="submit" variant="outline" loading={isPending}>
+          Сохранить
         </Button>
       </div>
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
