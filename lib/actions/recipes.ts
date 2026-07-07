@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/auth";
 import type { ActionResult, FormState } from "@/lib/form-state";
-import { firstIssue } from "@/lib/form-state";
+import { fieldIssues, firstIssue } from "@/lib/form-state";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { type RecipeInput, recipeInputSchema } from "@/lib/zod-schemas";
@@ -102,8 +102,8 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
 }
 
 // Форма создания/редактирования (useActionState): вложенные ингредиенты/шаги приходят JSON-
-// строкой в скрытом поле payload; recipeId непустой — режим редактирования. При успехе —
-// redirect на карточку рецепта, иначе ошибка через FormState.
+// строкой в скрытом поле payload; recipeId непустой — режим редактирования. Ошибки валидации
+// возвращаются пополево (fieldErrors), остальные — общим error. Успех — redirect на рецепт.
 export async function saveRecipe(_prev: FormState, formData: FormData): Promise<FormState> {
   const recipeId = String(formData.get("recipeId") ?? "").trim();
 
@@ -114,9 +114,14 @@ export async function saveRecipe(_prev: FormState, formData: FormData): Promise<
     return { error: "Не удалось прочитать форму" };
   }
 
+  const parsed = recipeInputSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { error: null, fieldErrors: fieldIssues(parsed.error.issues) };
+  }
+
   const result = recipeId
-    ? await updateRecipe(recipeId, payload)
-    : await createRecipe(payload);
+    ? await updateRecipe(recipeId, parsed.data)
+    : await createRecipe(parsed.data);
   if (result.error) return { error: result.error };
 
   redirect(`/recipes/${result.recipeId}`);

@@ -119,6 +119,12 @@ export function RecipeForm({ recipe }: Props) {
       </div>
 
       <div className="space-y-6 px-5 pb-11 pt-5">
+        {state.error && (
+          <div className="rounded-[14px] border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+            {state.error}
+          </div>
+        )}
+
         <div>
           <FieldLabel>Название</FieldLabel>
           <Input
@@ -126,6 +132,7 @@ export function RecipeForm({ recipe }: Props) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например, Тыквенный крем-суп"
             maxLength={80}
+            error={state.fieldErrors?.title}
             className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
           />
         </div>
@@ -137,6 +144,7 @@ export function RecipeForm({ recipe }: Props) {
             value={baseServings}
             onChange={setBaseServings}
           />
+          <FieldError message={state.fieldErrors?.baseServings} />
         </div>
 
         <div>
@@ -147,6 +155,7 @@ export function RecipeForm({ recipe }: Props) {
             inputMode="numeric"
             placeholder="Необязательно"
             maxLength={4}
+            error={state.fieldErrors?.cookTimeMinutes}
             className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
           />
         </div>
@@ -171,6 +180,7 @@ export function RecipeForm({ recipe }: Props) {
               );
             })}
           </ToggleGroup>
+          <FieldError message={state.fieldErrors?.cookingMethods} />
         </div>
 
         <div>
@@ -242,6 +252,7 @@ export function RecipeForm({ recipe }: Props) {
           >
             + Ещё ингредиент
           </Button>
+          <FieldError message={state.fieldErrors?.ingredients} />
         </div>
 
         <div>
@@ -297,11 +308,8 @@ export function RecipeForm({ recipe }: Props) {
           >
             + Добавить шаг
           </Button>
+          <FieldError message={state.fieldErrors?.steps} />
         </div>
-
-        {state.error && (
-          <p className="text-sm text-destructive">{state.error}</p>
-        )}
       </div>
     </form>
   );
@@ -313,4 +321,9 @@ function FieldLabel({ children }: { children: string }) {
       {children}
     </div>
   );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1.5 text-sm font-medium text-destructive">{message}</p>;
 }
