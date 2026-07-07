@@ -2,7 +2,7 @@
 
 import { Bookmark, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,16 +13,12 @@ type Props = {
 export function RecipeSortToggle({ active }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [optimistic, setOptimistic] = useState(active);
-
-  useEffect(() => {
-    setOptimistic(active);
-  }, [active]);
+  const [optimistic, setOptimistic] = useOptimistic(active);
 
   function toggle() {
     const next = !optimistic;
-    setOptimistic(next);
     startTransition(() => {
+      setOptimistic(next);
       router.push(next ? "/recipes?have=1" : "/recipes", { scroll: false });
     });
   }
