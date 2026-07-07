@@ -27,11 +27,11 @@ export function RecipeSortToggle({ active }: Props) {
     <button
       type="button"
       onClick={toggle}
+      disabled={isPending}
       aria-pressed={optimistic}
       className={cn(
         "mb-[18px] flex w-full items-center justify-between gap-3 rounded-[18px] border px-4 py-[13px] text-left transition-colors",
         optimistic ? "border-primary bg-primary" : "border-border bg-card",
-        isPending && "opacity-90",
       )}
     >
       <span className="flex items-center gap-[11px]">
