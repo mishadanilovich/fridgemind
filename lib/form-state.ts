@@ -14,6 +14,12 @@ export type FormState<TValues extends object = Record<string, never>, TData = ne
 
 export const initialFormState = { error: null } satisfies FormState;
 
+/**
+ * Результат императивных (не форм) server actions — читается клиентом для показа ошибки.
+ * Живёт здесь, а не в "use server"-модуле, где тип пришлось бы кросс-импортировать.
+ */
+export type ActionResult = { error: string | null };
+
 /** Первое сообщение об ошибке из Zod-issues — для показа под формой. */
 export function firstIssue(issues: { message: string }[]): string {
   return issues[0]?.message ?? "Проверьте введённые данные";

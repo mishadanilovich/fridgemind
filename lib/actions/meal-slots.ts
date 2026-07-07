@@ -1,22 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-import { getCurrentUser, hasRole } from "@/lib/auth";
-import { firstIssue, type FormState } from "@/lib/form-state";
+import { requireRole } from "@/lib/auth";
+import { type ActionResult, firstIssue, type FormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
 import { mealSlotNameSchema, mealSlotOrderSchema } from "@/lib/zod-schemas";
 
-import type { ActionResult } from "./household";
-
 // Управление слотами приёма пищи — только Организатор/Редактор (см. раздел 5, RLS meal_slots).
-async function requireSlotEditor() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!hasRole(user, ["ORGANIZER", "EDITOR"])) return null;
-  return user;
-}
 
 // Добавление слота — форма через useActionState (см. CLAUDE.md §10), поэтому сигнатура
 // (prevState, formData). Успех помечаем data.ok, чтобы клиент очистил поле после добавления.
@@ -24,7 +15,7 @@ export async function createMealSlot(
   _prev: FormState<Record<string, never>, { ok: true }>,
   formData: FormData,
 ): Promise<FormState<Record<string, never>, { ok: true }>> {
-  const user = await requireSlotEditor();
+  const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
   const parsed = mealSlotNameSchema.safeParse(String(formData.get("name") ?? ""));
@@ -46,11 +37,11 @@ export async function createMealSlot(
 }
 
 export async function renameMealSlot(slotId: string, name: string): Promise<ActionResult> {
-  const user = await requireSlotEditor();
+  const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
   const parsed = mealSlotNameSchema.safeParse(name);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Некорректное название" };
+  if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
 
   // Обновляем только в своём household — updateMany с householdId в фильтре не даст
   // тронуть чужой слот, даже если id угадан.
@@ -67,7 +58,7 @@ export async function renameMealSlot(slotId: string, name: string): Promise<Acti
 // Удаление слота — soft-delete (см. раздел 5): старые MenuDayMeal в прошлых неделях остаются
 // видны, но слот больше не предлагается при планировании.
 export async function deleteMealSlot(slotId: string): Promise<ActionResult> {
-  const user = await requireSlotEditor();
+  const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
   const result = await prisma.mealSlot.updateMany({
@@ -82,7 +73,7 @@ export async function deleteMealSlot(slotId: string): Promise<ActionResult> {
 
 // Новый порядок слотов после drag-and-drop — order задаётся позицией id в массиве.
 export async function reorderMealSlots(orderedIds: string[]): Promise<ActionResult> {
-  const user = await requireSlotEditor();
+  const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
   const parsed = mealSlotOrderSchema.safeParse(orderedIds);

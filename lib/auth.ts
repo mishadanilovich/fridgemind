@@ -1,11 +1,13 @@
+import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { cache } from "react";
 
 import { prisma } from "./prisma";
+import { hasRole } from "./roles";
 import { createSupabaseServerClient } from "./supabase";
-import type { User } from "./types";
+import type { HouseholdRole, User } from "./types";
 
-export { hasRole } from "./roles";
+export { hasRole };
 
 export const getAuthUser = cache(async () => {
   const supabase = await createSupabaseServerClient();
@@ -20,6 +22,14 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (!authUser) return null;
   return prisma.user.findUnique({ where: { id: authUser.id } });
 });
+
+// Требует залогиненного пользователя с одной из ролей. Не залогинен → redirect на /login;
+// роль не подходит → null (вызывающий экшен возвращает свою ошибку "Недостаточно прав").
+export async function requireRole(roles: HouseholdRole[]): Promise<User | null> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return hasRole(user, roles) ? user : null;
+}
 
 export function unauthorized() {
   return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

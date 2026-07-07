@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { getCurrentUser, hasRole } from "@/lib/auth";
-import { firstIssue, type FormState } from "@/lib/form-state";
+import { getCurrentUser, requireRole } from "@/lib/auth";
+import { type ActionResult, firstIssue, type FormState } from "@/lib/form-state";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { canLeaveHousehold, organizerCount, wouldKeepOrganizer } from "@/lib/household-rules";
 import { prisma } from "@/lib/prisma";
@@ -22,9 +22,6 @@ async function lockHouseholdMembers(
     select id, role from public.users where household_id = ${householdId} for update
   `;
 }
-
-/** Результат императивных экшенов (не форм) — читается клиентом для показа ошибки. */
-export type ActionResult = { error: string | null };
 
 export type HouseholdNameState = FormState<{ name: string }>;
 
@@ -54,11 +51,8 @@ export async function renameHousehold(
   _prev: HouseholdNameState,
   formData: FormData,
 ): Promise<HouseholdNameState> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!hasRole(user, ["ORGANIZER"])) {
-    return { error: "Только Организатор может переименовать семью" };
-  }
+  const user = await requireRole(["ORGANIZER"]);
+  if (!user) return { error: "Только Организатор может переименовать семью" };
 
   const raw = String(formData.get("name") ?? "");
   const parsed = householdNameSchema.safeParse(raw);
@@ -82,9 +76,8 @@ export async function changeMemberRole(
   targetUserId: string,
   role: HouseholdRoleValue,
 ): Promise<ActionResult> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!hasRole(user, ["ORGANIZER"])) return { error: "Недостаточно прав" };
+  const user = await requireRole(["ORGANIZER"]);
+  if (!user) return { error: "Недостаточно прав" };
 
   const parsed = householdRoleSchema.safeParse(role);
   if (!parsed.success) return { error: "Некорректная роль" };
@@ -108,9 +101,8 @@ export async function changeMemberRole(
 // Удаление участника из household — только Организатор, и не самого себя (для себя есть
 // "Покинуть семью"). Удалённый отселяется в свой новый household.
 export async function removeMember(targetUserId: string): Promise<ActionResult> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!hasRole(user, ["ORGANIZER"])) return { error: "Недостаточно прав" };
+  const user = await requireRole(["ORGANIZER"]);
+  if (!user) return { error: "Недостаточно прав" };
   if (targetUserId === user.id) return { error: "Нельзя удалить самого себя" };
 
   const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
@@ -154,9 +146,8 @@ export async function leaveHousehold(): Promise<ActionResult> {
 // единственным каналом — revalidatePath обновляет серверный компонент и прокидывает свежий
 // inviteCode пропом в InviteSection (без второго источника истины в локальном состоянии).
 export async function regenerateInviteCode(): Promise<ActionResult> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!hasRole(user, ["ORGANIZER"])) return { error: "Недостаточно прав" };
+  const user = await requireRole(["ORGANIZER"]);
+  if (!user) return { error: "Недостаточно прав" };
 
   await prisma.household.update({
     where: { id: user.householdId },
