@@ -7,7 +7,7 @@ import { useActionState, useState } from "react";
 import { saveRecipe } from "@/lib/actions/recipes";
 import { COOKING_METHOD_ICONS, COOKING_METHOD_LABELS, COOKING_METHODS } from "@/lib/cooking-methods";
 import { initialFormState } from "@/lib/form-state";
-import type { CookingMethod, Ingredient, Unit } from "@/lib/types";
+import type { CookingMethod, Ingredient, RecipeWithDetails, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
@@ -18,15 +18,7 @@ type IngredientRow = { key: string; product: { id: string; name: string; unit: U
 type StepRow = { key: string; instruction: string };
 
 type Props = {
-  recipeId?: string;
-  initial?: {
-    title: string;
-    baseServings: number;
-    cookTimeMinutes: number | null;
-    cookingMethods: CookingMethod[];
-    ingredients: { ingredientId: string; name: string; quantity: number; unit: Unit }[];
-    steps: { instruction: string }[];
-  };
+  recipe?: RecipeWithDetails;
 };
 
 const uid = () => crypto.randomUUID();
@@ -35,25 +27,25 @@ function unitForIngredient(ingredient: Ingredient): Unit {
   return UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
 }
 
-export function RecipeForm({ recipeId, initial }: Props) {
+export function RecipeForm({ recipe }: Props) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(saveRecipe, initialFormState);
 
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [baseServings, setBaseServings] = useState(initial?.baseServings ?? 2);
+  const [title, setTitle] = useState(recipe?.title ?? "");
+  const [baseServings, setBaseServings] = useState(recipe?.baseServings ?? 2);
   const [cookTime, setCookTime] = useState(
-    initial?.cookTimeMinutes != null ? String(initial.cookTimeMinutes) : "",
+    recipe?.cookTimeMinutes != null ? String(recipe.cookTimeMinutes) : "",
   );
-  const [methods, setMethods] = useState<CookingMethod[]>(initial?.cookingMethods ?? []);
+  const [methods, setMethods] = useState<CookingMethod[]>(recipe?.cookingMethods ?? []);
   const [ingredients, setIngredients] = useState<IngredientRow[]>(
-    initial?.ingredients.map((i) => ({
+    recipe?.ingredients.map((ri) => ({
       key: uid(),
-      product: { id: i.ingredientId, name: i.name, unit: i.unit },
-      qty: String(i.quantity),
+      product: { id: ri.ingredientId, name: ri.ingredient.name, unit: ri.unit },
+      qty: String(ri.quantity),
     })) ?? [{ key: uid(), product: null, qty: "" }],
   );
   const [steps, setSteps] = useState<StepRow[]>(
-    initial?.steps.map((s) => ({ key: uid(), instruction: s.instruction })) ?? [
+    recipe?.steps.map((s) => ({ key: uid(), instruction: s.instruction })) ?? [
       { key: uid(), instruction: "" },
     ],
   );
@@ -80,7 +72,7 @@ export function RecipeForm({ recipeId, initial }: Props) {
 
   return (
     <form action={formAction} className="-mx-5 -mt-4">
-      <input type="hidden" name="recipeId" value={recipeId ?? ""} />
+      <input type="hidden" name="recipeId" value={recipe?.id ?? ""} />
       <input type="hidden" name="payload" value={payload} />
 
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-5 py-4 backdrop-blur">
@@ -92,7 +84,7 @@ export function RecipeForm({ recipeId, initial }: Props) {
           Отмена
         </button>
         <div className="font-heading text-base font-bold text-foreground">
-          {recipeId ? "Изменить рецепт" : "Новый рецепт"}
+          {recipe ? "Изменить рецепт" : "Новый рецепт"}
         </div>
         <button
           type="submit"

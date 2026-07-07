@@ -15,22 +15,5 @@ export default async function EditRecipePage({ params }: Props) {
   const recipe = await getRecipeDetail(user.householdId, id);
   if (!recipe) notFound();
 
-  return (
-    <RecipeForm
-      recipeId={recipe.id}
-      initial={{
-        title: recipe.title,
-        baseServings: recipe.baseServings,
-        cookTimeMinutes: recipe.cookTimeMinutes,
-        cookingMethods: recipe.cookingMethods,
-        ingredients: recipe.ingredients.map((ri) => ({
-          ingredientId: ri.ingredientId,
-          name: ri.ingredient.name,
-          quantity: ri.quantity,
-          unit: ri.unit,
-        })),
-        steps: recipe.steps.map((s) => ({ instruction: s.instruction })),
-      }}
-    />
-  );
+  return <RecipeForm recipe={recipe} />;
 }
