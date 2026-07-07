@@ -14,6 +14,13 @@ export const UNITS_BY_TYPE: Record<UnitType, Unit[]> = {
   COUNT: ["PCS"],
 };
 
+// Базовая единица для типа продукта — сейчас у каждого типа ровно одна.
+export const UNIT_TYPE_TO_UNIT: Record<UnitType, Unit> = {
+  WEIGHT: "G",
+  VOLUME: "ML",
+  COUNT: "PCS",
+};
+
 // Локализованные названия типов продукта — для выбора при создании нового ингредиента.
 export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
   WEIGHT: "Вес (г/кг)",

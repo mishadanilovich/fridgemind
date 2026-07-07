@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/auth";
-import type { ActionResult } from "@/lib/form-state";
+import type { ActionResult, FormState } from "@/lib/form-state";
 import { firstIssue } from "@/lib/form-state";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -98,6 +99,27 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
   revalidatePath("/recipes");
   revalidatePath(`/recipes/${recipeId}`);
   return { error: null, recipeId };
+}
+
+// Форма создания/редактирования (useActionState): вложенные ингредиенты/шаги приходят JSON-
+// строкой в скрытом поле payload; recipeId непустой — режим редактирования. При успехе —
+// redirect на карточку рецепта, иначе ошибка через FormState.
+export async function saveRecipe(_prev: FormState, formData: FormData): Promise<FormState> {
+  const recipeId = String(formData.get("recipeId") ?? "").trim();
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(String(formData.get("payload") ?? ""));
+  } catch {
+    return { error: "Не удалось прочитать форму" };
+  }
+
+  const result = recipeId
+    ? await updateRecipe(recipeId, payload)
+    : await createRecipe(payload);
+  if (result.error) return { error: result.error };
+
+  redirect(`/recipes/${result.recipeId}`);
 }
 
 // Число приёмов пищи в меню, использующих рецепт — для предупреждения перед удалением.

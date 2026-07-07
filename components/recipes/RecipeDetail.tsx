@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, CookingPot, Minus, Plus } from "lucide-react";
+import { ChevronLeft, CookingPot } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,6 +9,7 @@ import type { RecipeWithDetails } from "@/lib/types";
 import { formatQuantity, UNIT_TO_TYPE } from "@/lib/units";
 
 import { CookingMethodBadges } from "./CookingMethodBadges";
+import { ServingsStepper } from "./ServingsStepper";
 
 type Props = {
   recipe: RecipeWithDetails;
@@ -56,34 +57,12 @@ export function RecipeDetail({ recipe }: Props) {
 
         <CookingMethodBadges methods={recipe.cookingMethods} variant="pill" className="mb-4" />
 
-        <div className="mb-[22px] flex items-center justify-between rounded-2xl border border-border bg-card px-[14px] py-[11px]">
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
-              Порции
-            </div>
-            <div className="font-heading text-lg font-bold text-foreground">{servings} порц.</div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Меньше порций"
-              disabled={servings <= 1}
-              onClick={() => setServings((s) => Math.max(1, s - 1))}
-              className="flex size-9 items-center justify-center rounded-[11px] border border-border bg-background text-primary disabled:opacity-40"
-            >
-              <Minus className="size-5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Больше порций"
-              disabled={servings >= 99}
-              onClick={() => setServings((s) => Math.min(99, s + 1))}
-              className="flex size-9 items-center justify-center rounded-[11px] border border-border bg-background text-primary disabled:opacity-40"
-            >
-              <Plus className="size-5" />
-            </button>
-          </div>
-        </div>
+        <ServingsStepper
+          label="Порции"
+          value={servings}
+          onChange={setServings}
+          className="mb-[22px]"
+        />
 
         <div className="mb-2 text-[13px] font-bold text-foreground">Ингредиенты</div>
         {recipe.ingredients.length === 0 ? (

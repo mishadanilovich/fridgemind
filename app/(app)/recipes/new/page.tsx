@@ -1,15 +1,12 @@
-// Форма создания/редактирования рецепта.
-// TODO (см. CLAUDE.md, раздел 5 "Ввод рецептов" + zod-схема recipeInputSchema в lib/zod-schemas.ts):
-// - название, базовое число порций, мультиселект CookingMethod
-// - ингредиенты из справочника Ingredient (автокомплит/создание нового)
-// - шаги приготовления по одному — каждый со своим текстом и опциональным фото (не одно большое поле)
-export default function NewRecipePage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Новый рецепт</h1>
-      <p className="text-sm text-muted-foreground">
-        Форма ещё не реализована — см. CLAUDE.md, раздел 5 «Ввод рецептов».
-      </p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+import { RecipeForm } from "@/components/recipes/RecipeForm";
+import { getCurrentUser, hasRole } from "@/lib/auth";
+
+export default async function NewRecipePage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  if (!hasRole(user, ["ORGANIZER", "EDITOR"])) redirect("/recipes");
+
+  return <RecipeForm />;
 }

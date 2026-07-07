@@ -1,6 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { matchCounts } from "@/lib/recipes";
-import type { RecipeCardView } from "@/lib/types";
+import type { RecipeCardView, RecipeWithDetails } from "@/lib/types";
+
+// Рецепт household со всеми шагами и ингредиентами — общий источник для экранов просмотра
+// и редактирования.
+export async function getRecipeDetail(
+  householdId: string,
+  id: string,
+): Promise<RecipeWithDetails | null> {
+  return prisma.recipe.findFirst({
+    where: { id, householdId },
+    include: {
+      steps: { orderBy: { order: "asc" } },
+      ingredients: { include: { ingredient: true } },
+    },
+  });
+}
 
 // Карточки рецептов household для экрана "Рецепты" с подсчётом совпадения с инвентарём.
 // onlyHave — сортировка по доле уже имеющихся ингредиентов (иначе по дате создания).
