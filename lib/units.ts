@@ -1,0 +1,49 @@
+// Отображение и парсинг единиц измерения (см. CLAUDE.md, раздел 5 "Единицы измерения").
+// В БД количество всегда в базовой единице: G (граммы), ML (миллилитры), PCS (штуки).
+// "кг"/"л" — только представление на UI: показываем их, когда значение ≥ 1000.
+// Чистые функции без зависимостей — покрываются юнит-тестами (раздел 10).
+
+import type { Unit, UnitType } from "./types";
+
+// К какому типу продукта относится базовая единица — для валидации выбора unit в форме.
+export const UNIT_TO_TYPE: Record<Unit, UnitType> = {
+  G: "WEIGHT",
+  ML: "VOLUME",
+  PCS: "COUNT",
+};
+
+// Единицы, допустимые для каждого типа продукта (нельзя выбрать "мл" для моркови).
+export const UNITS_BY_TYPE: Record<UnitType, Unit[]> = {
+  WEIGHT: ["G"],
+  VOLUME: ["ML"],
+  COUNT: ["PCS"],
+};
+
+// Обрезает "хвост" плавающей точки до maxDecimals знаков без завершающих нулей.
+function trimNumber(value: number, maxDecimals: number): string {
+  const rounded = Number(value.toFixed(maxDecimals));
+  return String(rounded);
+}
+
+/**
+ * Человекочитаемое представление количества в базовой единице.
+ * WEIGHT: < 1000 г → "г", ≥ 1000 → "кг"; VOLUME аналогично мл/л; COUNT → "шт".
+ * Оценка примерная (раздел 7, п.2), поэтому крупную единицу округляем до 2 знаков.
+ */
+export function formatQuantity(quantity: number, unit: Unit): string {
+  switch (unit) {
+    case "G":
+      return quantity >= 1000 ? `${trimNumber(quantity / 1000, 2)} кг` : `${trimNumber(quantity, 0)} г`;
+    case "ML":
+      return quantity >= 1000 ? `${trimNumber(quantity / 1000, 2)} л` : `${trimNumber(quantity, 0)} мл`;
+    case "PCS":
+      return `${trimNumber(quantity, 0)} шт`;
+  }
+}
+
+// Крупная единица отображения для каждой базовой (для лейблов в форме, где вводят в кг/л).
+export const DISPLAY_UNIT_LABEL: Record<Unit, string> = {
+  G: "г",
+  ML: "мл",
+  PCS: "шт",
+};
