@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
@@ -66,18 +66,28 @@ export function RecipeSortToggle({ active }: Props) {
           </span>
         </span>
       </span>
-      <span
-        className={cn(
-          "relative h-[27px] w-[46px] shrink-0 rounded-full transition-colors",
-          optimistic ? "bg-accent" : "bg-secondary",
+      <span className="flex shrink-0 items-center gap-2.5">
+        {isPending && (
+          <Loader2
+            className={cn(
+              "size-4 animate-spin",
+              optimistic ? "text-primary-foreground/80" : "text-muted-foreground",
+            )}
+          />
         )}
-      >
         <span
           className={cn(
-            "absolute top-[3px] size-[21px] rounded-full bg-white shadow transition-all",
-            optimistic ? "left-[22px]" : "left-[3px]",
+            "relative h-[27px] w-[46px] rounded-full transition-colors",
+            optimistic ? "bg-accent" : "bg-secondary",
           )}
-        />
+        >
+          <span
+            className={cn(
+              "absolute top-[3px] size-[21px] rounded-full bg-white shadow transition-all",
+              optimistic ? "left-[22px]" : "left-[3px]",
+            )}
+          />
+        </span>
       </span>
     </button>
   );
