@@ -95,7 +95,12 @@ export function MealSlotsManager({ slots }: Props) {
 
   return (
     <div className="space-y-3">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext
+        id="meal-slots-dnd"
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
         <SortableContext items={items.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <ul className="space-y-2">
             {items.map((slot) => (
