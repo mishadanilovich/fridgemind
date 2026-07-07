@@ -13,7 +13,6 @@ type Props = {
 
 export function InviteSection({ inviteCode }: Props) {
   const [open, setOpen] = useState(false);
-  const [code, setCode] = useState(inviteCode);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
@@ -26,13 +25,21 @@ export function InviteSection({ inviteCode }: Props) {
     setCanShare(typeof navigator !== "undefined" && Boolean(navigator.share));
   }, []);
 
-  const link = origin ? `${origin}/invite/${code}` : "";
+  // inviteCode — единственный источник истины: после регенерации revalidatePath приносит
+  // свежий проп, ссылка обновляется сама, без локального состояния кода.
+  const link = origin ? `${origin}/invite/${inviteCode}` : "";
 
   async function onCopy() {
     if (!link) return;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(link);
+      setError(null);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Не удалось скопировать. Скопируйте ссылку вручную.");
+    }
   }
 
   async function onShare() {
@@ -48,11 +55,7 @@ export function InviteSection({ inviteCode }: Props) {
     setError(null);
     startTransition(async () => {
       const result = await regenerateInviteCode();
-      if (result.error) {
-        setError(result.error);
-      } else if (result.inviteCode) {
-        setCode(result.inviteCode);
-      }
+      if (result.error) setError(result.error);
     });
   }
 
