@@ -5,16 +5,29 @@ import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 
 import { saveRecipe } from "@/lib/actions/recipes";
-import { COOKING_METHOD_ICONS, COOKING_METHOD_LABELS, COOKING_METHODS } from "@/lib/cooking-methods";
+import {
+  COOKING_METHOD_ICONS,
+  COOKING_METHOD_LABELS,
+  COOKING_METHODS,
+} from "@/lib/cooking-methods";
 import { initialFormState } from "@/lib/form-state";
-import type { CookingMethod, Ingredient, RecipeWithDetails, Unit } from "@/lib/types";
+import type {
+  CookingMethod,
+  Ingredient,
+  RecipeWithDetails,
+  Unit,
+} from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 import { IngredientPicker } from "./IngredientPicker";
 import { ServingsStepper } from "./ServingsStepper";
 
-type IngredientRow = { key: string; product: { id: string; name: string; unit: Unit } | null; qty: string };
+type IngredientRow = {
+  key: string;
+  product: { id: string; name: string; unit: Unit } | null;
+  qty: string;
+};
 type StepRow = { key: string; instruction: string };
 
 type Props = {
@@ -29,14 +42,19 @@ function unitForIngredient(ingredient: Ingredient): Unit {
 
 export function RecipeForm({ recipe }: Props) {
   const router = useRouter();
-  const [state, formAction, isPending] = useActionState(saveRecipe, initialFormState);
+  const [state, formAction, isPending] = useActionState(
+    saveRecipe,
+    initialFormState,
+  );
 
   const [title, setTitle] = useState(recipe?.title ?? "");
   const [baseServings, setBaseServings] = useState(recipe?.baseServings ?? 2);
   const [cookTime, setCookTime] = useState(
     recipe?.cookTimeMinutes != null ? String(recipe.cookTimeMinutes) : "",
   );
-  const [methods, setMethods] = useState<CookingMethod[]>(recipe?.cookingMethods ?? []);
+  const [methods, setMethods] = useState<CookingMethod[]>(
+    recipe?.cookingMethods ?? [],
+  );
   const [ingredients, setIngredients] = useState<IngredientRow[]>(
     recipe?.ingredients.map((ri) => ({
       key: uid(),
@@ -52,7 +70,9 @@ export function RecipeForm({ recipe }: Props) {
 
   function toggleMethod(method: CookingMethod) {
     setMethods((prev) =>
-      prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method],
+      prev.includes(method)
+        ? prev.filter((m) => m !== method)
+        : [...prev, method],
     );
   }
 
@@ -63,7 +83,11 @@ export function RecipeForm({ recipe }: Props) {
     cookingMethods: methods,
     ingredients: ingredients
       .filter((r) => r.product && Number(r.qty) > 0)
-      .map((r) => ({ ingredientId: r.product!.id, quantity: Number(r.qty), unit: r.product!.unit })),
+      .map((r) => ({
+        ingredientId: r.product!.id,
+        quantity: Number(r.qty),
+        unit: r.product!.unit,
+      })),
     steps: steps
       .map((s) => s.instruction.trim())
       .filter(Boolean)
@@ -109,7 +133,11 @@ export function RecipeForm({ recipe }: Props) {
 
         <div>
           <FieldLabel>Базовое количество порций</FieldLabel>
-          <ServingsStepper label="Порции" value={baseServings} onChange={setBaseServings} />
+          <ServingsStepper
+            label="Порции"
+            value={baseServings}
+            onChange={setBaseServings}
+          />
         </div>
 
         <div>
@@ -163,7 +191,15 @@ export function RecipeForm({ recipe }: Props) {
                       setIngredients((prev) =>
                         prev.map((r) =>
                           r.key === row.key
-                            ? { ...r, product: { id: ing.id, name: ing.name, unit: unitForIngredient(ing) } }
+                            ? {
+                                ...r,
+                                product: {
+                                  id: ing.id,
+                                  name: ing.name,
+                                  unit: unitForIngredient(ing),
+                                },
+                                qty: "",
+                              }
                             : r,
                         ),
                       )
@@ -174,7 +210,9 @@ export function RecipeForm({ recipe }: Props) {
                   value={row.qty}
                   onChange={(e) => {
                     const qty = e.target.value.replace(/[^\d.]/g, "");
-                    setIngredients((prev) => prev.map((r) => (r.key === row.key ? { ...r, qty } : r)));
+                    setIngredients((prev) =>
+                      prev.map((r) => (r.key === row.key ? { ...r, qty } : r)),
+                    );
                   }}
                   inputMode="decimal"
                   placeholder="100"
@@ -187,7 +225,9 @@ export function RecipeForm({ recipe }: Props) {
                   <button
                     type="button"
                     onClick={() =>
-                      setIngredients((prev) => prev.filter((r) => r.key !== row.key))
+                      setIngredients((prev) =>
+                        prev.filter((r) => r.key !== row.key),
+                      )
                     }
                     aria-label="Убрать ингредиент"
                     className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground"
@@ -200,7 +240,12 @@ export function RecipeForm({ recipe }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => setIngredients((prev) => [...prev, { key: uid(), product: null, qty: "" }])}
+            onClick={() =>
+              setIngredients((prev) => [
+                ...prev,
+                { key: uid(), product: null, qty: "" },
+              ])
+            }
             className="mt-2.5 w-full rounded-[13px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-primary"
           >
             + Ещё ингредиент
@@ -211,16 +256,25 @@ export function RecipeForm({ recipe }: Props) {
           <FieldLabel>Шаги приготовления</FieldLabel>
           <div className="space-y-2.5">
             {steps.map((step, index) => (
-              <div key={step.key} className="rounded-[16px] border border-border bg-card p-[13px]">
+              <div
+                key={step.key}
+                className="rounded-[16px] border border-border bg-card p-[13px]"
+              >
                 <div className="mb-2.5 flex items-center gap-2.5">
-                  <span className="flex size-[26px] items-center justify-center rounded-lg bg-primary font-heading text-[13px] font-extrabold text-primary-foreground">
+                  <span className="flex size-[26px] items-center justify-center rounded-[8px] bg-primary font-heading text-[13px] font-extrabold text-primary-foreground">
                     {index + 1}
                   </span>
-                  <span className="text-xs font-bold text-muted-foreground">Шаг {index + 1}</span>
+                  <span className="text-xs font-bold text-muted-foreground">
+                    Шаг {index + 1}
+                  </span>
                   {steps.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => setSteps((prev) => prev.filter((s) => s.key !== step.key))}
+                      onClick={() =>
+                        setSteps((prev) =>
+                          prev.filter((s) => s.key !== step.key),
+                        )
+                      }
                       aria-label="Убрать шаг"
                       className="ml-auto flex size-7 items-center justify-center rounded-lg text-muted-foreground"
                     >
@@ -232,7 +286,11 @@ export function RecipeForm({ recipe }: Props) {
                   value={step.instruction}
                   onChange={(e) =>
                     setSteps((prev) =>
-                      prev.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)),
+                      prev.map((s) =>
+                        s.key === step.key
+                          ? { ...s, instruction: e.target.value }
+                          : s,
+                      ),
                     )
                   }
                   rows={2}
@@ -244,14 +302,18 @@ export function RecipeForm({ recipe }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => setSteps((prev) => [...prev, { key: uid(), instruction: "" }])}
+            onClick={() =>
+              setSteps((prev) => [...prev, { key: uid(), instruction: "" }])
+            }
             className="mt-2.5 w-full rounded-[14px] bg-primary py-3 text-sm font-bold text-primary-foreground"
           >
             + Добавить шаг
           </button>
         </div>
 
-        {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+        {state.error && (
+          <p className="text-sm text-destructive">{state.error}</p>
+        )}
       </div>
     </form>
   );
