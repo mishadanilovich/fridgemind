@@ -133,14 +133,15 @@ export function IngredientPicker({ value, onSelect }: Props) {
           <ul className="max-h-64 space-y-1 overflow-y-auto">
             {results.map((ingredient) => (
               <li key={ingredient.id}>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => choose(ingredient)}
-                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-accent"
+                  className="w-full justify-between px-3 font-normal hover:bg-muted"
                 >
-                  <span>{ingredient.name}</span>
-                  {value?.id === ingredient.id && <Check className="size-4 text-primary" />}
-                </button>
+                  <span className="truncate">{ingredient.name}</span>
+                  {value?.id === ingredient.id && <Check className="text-primary" />}
+                </Button>
               </li>
             ))}
             {!isSearching && results.length === 0 && trimmed !== "" && (

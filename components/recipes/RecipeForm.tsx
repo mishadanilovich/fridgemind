@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { saveRecipe } from "@/lib/actions/recipes";
 import {
   COOKING_METHOD_ICONS,
@@ -19,7 +20,6 @@ import type {
   Unit,
 } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
-import { cn } from "@/lib/utils";
 
 import { IngredientPicker } from "./IngredientPicker";
 import { ServingsStepper } from "./ServingsStepper";
@@ -68,14 +68,6 @@ export function RecipeForm({ recipe }: Props) {
       { key: uid(), instruction: "" },
     ],
   );
-
-  function toggleMethod(method: CookingMethod) {
-    setMethods((prev) =>
-      prev.includes(method)
-        ? prev.filter((m) => m !== method)
-        : [...prev, method],
-    );
-  }
 
   const payload = JSON.stringify({
     title: title.trim(),
@@ -159,29 +151,24 @@ export function RecipeForm({ recipe }: Props) {
 
         <div>
           <FieldLabel>Способ приготовления</FieldLabel>
-          <div className="flex flex-wrap gap-2">
+          <ToggleGroup
+            type="multiple"
+            variant="pill"
+            size="pill"
+            value={methods}
+            onValueChange={(value) => setMethods(value as CookingMethod[])}
+            className="flex-wrap justify-start gap-2"
+          >
             {COOKING_METHODS.map((method) => {
               const Icon = COOKING_METHOD_ICONS[method];
-              const on = methods.includes(method);
               return (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => toggleMethod(method)}
-                  aria-pressed={on}
-                  className={cn(
-                    "pressable inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-semibold",
-                    on
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground",
-                  )}
-                >
-                  <Icon className="size-3.5" />
+                <ToggleGroupItem key={method} value={method}>
+                  <Icon />
                   {COOKING_METHOD_LABELS[method]}
-                </button>
+                </ToggleGroupItem>
               );
             })}
-          </div>
+          </ToggleGroup>
         </div>
 
         <div>
