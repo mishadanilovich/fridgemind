@@ -6,8 +6,7 @@ import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { RecipeSortToggle } from "@/components/recipes/RecipeSortToggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser, hasRole } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import type { RecipeCardView } from "@/lib/types";
+import { getRecipeCards } from "@/lib/queries/recipes";
 
 type Props = PageProps<"/recipes">;
 
@@ -17,39 +16,7 @@ export default async function RecipesPage({ searchParams }: Props) {
 
   const onlyHave = (await searchParams).have === "1";
   const canEdit = hasRole(user, ["ORGANIZER", "EDITOR"]);
-
-  const [recipes, pantry] = await Promise.all([
-    prisma.recipe.findMany({
-      where: { householdId: user.householdId },
-      orderBy: { createdAt: "desc" },
-      include: { ingredients: { select: { ingredientId: true } } },
-    }),
-    prisma.pantryItem.findMany({
-      where: { householdId: user.householdId },
-      select: { ingredientId: true },
-    }),
-  ]);
-
-  const pantrySet = new Set(pantry.map((p) => p.ingredientId));
-  const cards: RecipeCardView[] = recipes.map((r) => {
-    const uniqueIds = new Set(r.ingredients.map((i) => i.ingredientId));
-    let have = 0;
-    for (const id of uniqueIds) if (pantrySet.has(id)) have += 1;
-    return {
-      id: r.id,
-      title: r.title,
-      photoUrl: r.photoUrl,
-      cookTimeMinutes: r.cookTimeMinutes,
-      cookingMethods: r.cookingMethods,
-      matchHave: have,
-      matchTotal: uniqueIds.size,
-    };
-  });
-
-  if (onlyHave) {
-    const ratio = (c: RecipeCardView) => (c.matchTotal > 0 ? c.matchHave / c.matchTotal : -1);
-    cards.sort((a, b) => ratio(b) - ratio(a));
-  }
+  const cards = await getRecipeCards(user.householdId, onlyHave);
 
   return (
     <div className="pb-8">

@@ -12,16 +12,23 @@ export function scaleIngredient(
   return unitType === "COUNT" ? Math.round(scaled) : scaled;
 }
 
-export function matchPercent(
+// Сколько уникальных ингредиентов рецепта уже есть в инвентаре из общего числа.
+export function matchCounts(
   recipeIngredientIds: string[],
-  pantryIngredientIds: Iterable<string>,
-): number {
-  if (recipeIngredientIds.length === 0) return 0;
-  const pantry = new Set(pantryIngredientIds);
+  pantry: ReadonlySet<string>,
+): { have: number; total: number } {
   const unique = new Set(recipeIngredientIds);
   let have = 0;
   for (const id of unique) {
     if (pantry.has(id)) have += 1;
   }
-  return Math.round((have / unique.size) * 100);
+  return { have, total: unique.size };
+}
+
+export function matchPercent(
+  recipeIngredientIds: string[],
+  pantryIngredientIds: Iterable<string>,
+): number {
+  const { have, total } = matchCounts(recipeIngredientIds, new Set(pantryIngredientIds));
+  return total === 0 ? 0 : Math.round((have / total) * 100);
 }

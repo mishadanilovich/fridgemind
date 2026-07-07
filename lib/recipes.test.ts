@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchPercent, scaleIngredient } from "./recipes";
+import { matchCounts, matchPercent, scaleIngredient } from "./recipes";
 
 describe("scaleIngredient", () => {
   it("scales proportionally for weight without forcing rounding", () => {
@@ -21,6 +21,20 @@ describe("scaleIngredient", () => {
 
   it("returns the base quantity when baseServings is not positive", () => {
     expect(scaleIngredient(200, 4, 0, "WEIGHT")).toBe(200);
+  });
+});
+
+describe("matchCounts", () => {
+  it("counts unique recipe ingredients present in the pantry", () => {
+    expect(matchCounts(["a", "b", "c"], new Set(["a", "c"]))).toEqual({ have: 2, total: 3 });
+  });
+
+  it("deduplicates repeated recipe ingredients", () => {
+    expect(matchCounts(["a", "a", "b"], new Set(["a"]))).toEqual({ have: 1, total: 2 });
+  });
+
+  it("returns zero totals for a recipe without ingredients", () => {
+    expect(matchCounts([], new Set(["a"]))).toEqual({ have: 0, total: 0 });
   });
 });
 
