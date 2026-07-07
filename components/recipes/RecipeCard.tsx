@@ -13,8 +13,6 @@ type Props = {
   canEdit: boolean;
 };
 
-// Карточка рецепта из макета (экран "Рецепты"): фото/плейсхолдер, мета, название, бейдж
-// совпадения с инвентарём и значки способов приготовления; для Редактора — правка/удаление.
 export function RecipeCard({ recipe, canEdit }: Props) {
   const { id, title, photoUrl, cookTimeMinutes, cookingMethods, matchHave, matchTotal } = recipe;
   const meta = cookTimeMinutes ? `~${cookTimeMinutes} мин` : "Рецепт";

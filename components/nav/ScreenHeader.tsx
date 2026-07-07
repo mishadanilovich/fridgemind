@@ -3,13 +3,10 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 
 type Props = {
-  // Надзаголовок (оранжевый, капсом) — например "Библиотека".
   eyebrow: string;
   title: string;
 };
 
-// Единая шапка экрана из макета FridgeMind.dc.html: оранжевый eyebrow, крупный заголовок
-// и круглая кнопка-аватар справа, ведущая в профиль.
 export async function ScreenHeader({ eyebrow, title }: Props) {
   const user = await getCurrentUser();
   const initial = user?.name.trim().charAt(0).toUpperCase() || "?";

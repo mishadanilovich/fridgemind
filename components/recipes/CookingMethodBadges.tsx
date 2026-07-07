@@ -9,15 +9,12 @@ type Props = {
   className?: string;
 };
 
-// Тёплый тон бейджей = токен badge (#F3ECDD/#96712F), "без готовки" — зелёный success,
-// как в макете FridgeMind.dc.html.
 function toneClass(method: CookingMethod): string {
   return method === "NO_COOK"
     ? "bg-success text-success-foreground border-success-border"
     : "bg-badge text-badge-foreground border-badge-border";
 }
 
-// Бейджи способа приготовления рецепта (см. CLAUDE.md §5). Иконки — из cooking-methods.ts.
 export function CookingMethodBadges({ methods, variant = "icon", className }: Props) {
   if (methods.length === 0) return null;
 

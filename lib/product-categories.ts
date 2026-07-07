@@ -1,7 +1,3 @@
-// Категории продуктов — локализованные названия для группировки списка покупок и выбора
-// категории при создании ингредиента/ручной позиции (см. CLAUDE.md, раздел 5
-// "Категории продуктов"). Порядок ключей = порядок секций в списке покупок.
-
 import type { ProductCategory } from "./types";
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {

@@ -34,8 +34,6 @@ type Props = {
 
 const UNIT_TYPES = Object.keys(UNIT_TYPE_LABELS) as UnitType[];
 
-// Выбор продукта из справочника Ingredient с автокомплитом и созданием нового пункта
-// (см. CLAUDE.md §5 "Справочник ингредиентов"). Выбранный продукт отдаётся через onSelect.
 export function IngredientPicker({ value, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");

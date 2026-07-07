@@ -1,7 +1,3 @@
-// Способы приготовления — локализованные названия и иконки для бейджей (см. CLAUDE.md,
-// раздел 5 "Способ приготовления"). Общий источник для карточек рецептов, экрана "Сегодня"
-// и мультиселекта в форме — по образцу ROLE_LABELS, чтобы не держать параллельные списки.
-
 import { Beef, CookingPot, Flame, type LucideIcon, Microwave, Salad, Soup } from "lucide-react";
 
 import type { CookingMethod } from "./types";

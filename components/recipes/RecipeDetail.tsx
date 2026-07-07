@@ -14,8 +14,6 @@ type Props = {
   recipe: RecipeWithDetails;
 };
 
-// Экран просмотра рецепта (макет showRecipe): hero-фото, бейджи способов, степпер порций
-// с пересчётом количеств ингредиентов на лету и пошаговый просмотр приготовления.
 export function RecipeDetail({ recipe }: Props) {
   const [servings, setServings] = useState(recipe.baseServings);
   const [stepIndex, setStepIndex] = useState(0);
@@ -27,7 +25,6 @@ export function RecipeDetail({ recipe }: Props) {
 
   return (
     <div className="-mx-5 -mt-4 pb-8">
-      {/* hero */}
       <div className="relative h-[230px]">
         {recipe.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- next/image + Supabase remotePatterns подключим в этапе 4b
@@ -59,7 +56,6 @@ export function RecipeDetail({ recipe }: Props) {
 
         <CookingMethodBadges methods={recipe.cookingMethods} variant="pill" className="mb-4" />
 
-        {/* порции со степпером */}
         <div className="mb-[22px] flex items-center justify-between rounded-2xl border border-border bg-card px-[14px] py-[11px]">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-[0.05em] text-muted-foreground">
@@ -89,7 +85,6 @@ export function RecipeDetail({ recipe }: Props) {
           </div>
         </div>
 
-        {/* ингредиенты — чипы с пересчётом под порции */}
         <div className="mb-2 text-[13px] font-bold text-foreground">Ингредиенты</div>
         {recipe.ingredients.length === 0 ? (
           <p className="mb-6 text-sm text-muted-foreground">Ингредиенты не указаны.</p>
@@ -115,7 +110,6 @@ export function RecipeDetail({ recipe }: Props) {
           </div>
         )}
 
-        {/* приготовление — пошагово */}
         <div className="mb-3 flex items-center justify-between">
           <div className="text-[13px] font-bold text-foreground">Приготовление</div>
           {hasSteps && (

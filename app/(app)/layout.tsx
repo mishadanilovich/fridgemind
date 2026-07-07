@@ -5,8 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 
 type Props = LayoutProps<"/">;
 
-// Каждый экран несёт свою шапку (ScreenHeader) по макету FridgeMind.dc.html, поэтому общий
-// layout — только скролл-контейнер под контент и нижняя навигация.
 export default async function AppLayout({ children }: Props) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

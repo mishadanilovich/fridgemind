@@ -1,7 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Заглушка карточки рецепта повторяет реальную строку списка (макет skeletonCards3):
-// квадрат фото 82px слева + название и бейдж (см. CLAUDE.md, раздел 6).
 export function RecipeCardSkeleton() {
   return (
     <div className="mb-3 flex gap-3 rounded-[20px] border border-border bg-card p-[11px]">

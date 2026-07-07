@@ -18,12 +18,9 @@ import { deleteRecipe, getRecipeUsage } from "@/lib/actions/recipes";
 type Props = {
   recipeId: string;
   name: string;
-  // Нужно ли после удаления вернуться на список (со страницы просмотра рецепта).
   redirectToList?: boolean;
 };
 
-// Удаление рецепта — нижний шит с подтверждением из макета (showDelRecipe). Перед показом
-// подтягивает число приёмов пищи в меню, чтобы честно предупредить, что рецепт уйдёт и оттуда.
 export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);

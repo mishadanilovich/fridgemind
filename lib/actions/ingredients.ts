@@ -7,10 +7,8 @@ import { prisma } from "@/lib/prisma";
 import type { Ingredient } from "@/lib/types";
 import { ingredientInputSchema } from "@/lib/zod-schemas";
 
-// Справочник Ingredient глобальный (не привязан к household) — читается и пополняется любым
-// залогиненным пользователем (см. CLAUDE.md §5 "Справочник ингредиентов", RLS ingredients).
-
-// Автокомплит при вводе ингредиента в рецепт/инвентарь — поиск по подстроке имени.
+// Справочник Ingredient глобальный — читается и пополняется любым залогиненным пользователем
+// (см. CLAUDE.md §5 "Справочник ингредиентов", RLS ingredients).
 export async function searchIngredients(query: string): Promise<Ingredient[]> {
   const user = await getCurrentUser();
   if (!user) return [];
@@ -27,8 +25,7 @@ export type CreateIngredientResult =
   | { error: string; ingredient?: undefined }
   | { error: null; ingredient: Ingredient };
 
-// Создание нового пункта справочника. Имя уникально: при гонке/повторе возвращаем
-// существующую запись, а не падаем — вызывающий получает валидный ingredientId в любом случае.
+// Имя уникально: при повторе/гонке возвращаем существующую запись, а не падаем.
 export async function createIngredient(input: unknown): Promise<CreateIngredientResult> {
   const user = await getCurrentUser();
   if (!user) return { error: "Не авторизован" };
