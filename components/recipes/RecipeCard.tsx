@@ -20,7 +20,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
 
   return (
     <div className="mb-3 flex gap-3 rounded-[20px] border border-border bg-card p-[11px] shadow-[0_8px_20px_-18px_rgba(45,32,18,0.5)]">
-      <Link href={`/recipes/${id}`} className="pressable flex min-w-0 flex-1 gap-3">
+      <Link href={`/recipes/${id}`} className="flex min-w-0 flex-1 gap-3">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- next/image + Supabase remotePatterns подключим в этапе 4b
           <img
