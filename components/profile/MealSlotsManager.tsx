@@ -68,13 +68,23 @@ export function MealSlotsManager({ slots }: Props) {
 
     const oldIndex = items.findIndex((s) => s.id === active.id);
     const newIndex = items.findIndex((s) => s.id === over.id);
+    const previous = items;
     const next = arrayMove(items, oldIndex, newIndex);
     setItems(next); // оптимистично
 
     setError(null);
-    void reorderMealSlots(next.map((s) => s.id)).then((result) => {
-      if (result.error) setError(result.error);
-    });
+    reorderMealSlots(next.map((s) => s.id))
+      .then((result) => {
+        if (result.error) {
+          setItems(previous); // откат к прежнему порядку
+          setError(result.error);
+        }
+      })
+      .catch(() => {
+        // reject (например, офлайн в PWA) — тоже откатываемся, не оставляем unhandled rejection.
+        setItems(previous);
+        setError("Не удалось сохранить порядок. Попробуйте ещё раз.");
+      });
   }
 
   function onAdd() {

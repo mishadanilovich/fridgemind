@@ -106,8 +106,12 @@ export const mealSlotNameSchema = z
   .min(1, "Введите название")
   .max(40, "Слишком длинное название");
 
-// Новый порядок слотов — массив их id в нужной последовательности.
-export const mealSlotOrderSchema = z.array(z.string().min(1)).min(1);
+// Новый порядок слотов — массив их id в нужной последовательности; id не должны повторяться
+// (иначе проверка "длина == размер набора" в reorderMealSlots пропустила бы [a, a, b]).
+export const mealSlotOrderSchema = z
+  .array(z.string().min(1))
+  .min(1)
+  .refine((ids) => new Set(ids).size === ids.length, "Дублирующиеся id слотов");
 
 // ---------- Auth-формы (server actions + useActionState) ----------
 
