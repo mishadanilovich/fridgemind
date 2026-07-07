@@ -31,6 +31,7 @@ export function RecipeSortToggle({ active }: Props) {
       aria-pressed={optimistic}
       className={cn(
         "mb-[18px] flex w-full items-center justify-between gap-3 rounded-[18px] border px-4 py-[13px] text-left transition-colors",
+        "cursor-pointer disabled:cursor-not-allowed",
         optimistic ? "border-primary bg-primary" : "border-border bg-card",
       )}
     >
