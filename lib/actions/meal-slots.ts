@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser, hasRole } from "@/lib/auth";
+import { firstIssue, type FormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
 import { mealSlotNameSchema, mealSlotOrderSchema } from "@/lib/zod-schemas";
 
@@ -17,12 +18,17 @@ async function requireSlotEditor() {
   return user;
 }
 
-export async function createMealSlot(name: string): Promise<ActionResult> {
+// Добавление слота — форма через useActionState (см. CLAUDE.md §10), поэтому сигнатура
+// (prevState, formData). Успех помечаем data.ok, чтобы клиент очистил поле после добавления.
+export async function createMealSlot(
+  _prev: FormState<Record<string, never>, { ok: true }>,
+  formData: FormData,
+): Promise<FormState<Record<string, never>, { ok: true }>> {
   const user = await requireSlotEditor();
   if (!user) return { error: "Недостаточно прав" };
 
-  const parsed = mealSlotNameSchema.safeParse(name);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Некорректное название" };
+  const parsed = mealSlotNameSchema.safeParse(String(formData.get("name") ?? ""));
+  if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
 
   const last = await prisma.mealSlot.aggregate({
     where: { householdId: user.householdId, deletedAt: null },
@@ -36,7 +42,7 @@ export async function createMealSlot(name: string): Promise<ActionResult> {
     },
   });
   revalidatePath("/profile");
-  return { error: null };
+  return { error: null, data: { ok: true } };
 }
 
 export async function renameMealSlot(slotId: string, name: string): Promise<ActionResult> {
