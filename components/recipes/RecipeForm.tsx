@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { saveRecipe } from "@/lib/actions/recipes";
 import {
@@ -119,12 +121,12 @@ export function RecipeForm({ recipe }: Props) {
       <div className="space-y-6 px-5 pb-11 pt-5">
         <div>
           <FieldLabel>Название</FieldLabel>
-          <input
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например, Тыквенный крем-суп"
             maxLength={80}
-            className="w-full rounded-[15px] border border-border bg-card px-4 py-3.5 text-[15px] font-semibold text-foreground outline-none"
+            className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
           />
         </div>
 
@@ -139,13 +141,13 @@ export function RecipeForm({ recipe }: Props) {
 
         <div>
           <FieldLabel>Время приготовления, мин</FieldLabel>
-          <input
+          <Input
             value={cookTime}
             onChange={(e) => setCookTime(e.target.value.replace(/\D/g, ""))}
             inputMode="numeric"
             placeholder="Необязательно"
             maxLength={4}
-            className="w-full rounded-[15px] border border-border bg-card px-4 py-3.5 text-[15px] font-semibold text-foreground outline-none"
+            className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
           />
         </div>
 
@@ -198,7 +200,7 @@ export function RecipeForm({ recipe }: Props) {
                     }
                   />
                 </div>
-                <input
+                <Input
                   value={row.qty}
                   onChange={(e) => {
                     const qty = e.target.value.replace(/[^\d.]/g, "");
@@ -208,7 +210,7 @@ export function RecipeForm({ recipe }: Props) {
                   }}
                   inputMode="decimal"
                   placeholder="100"
-                  className="w-[62px] shrink-0 rounded-[13px] border border-border bg-card px-2 py-3 text-center text-sm font-semibold text-foreground outline-none"
+                  className="w-[62px] shrink-0 rounded-[13px] px-2 text-center font-semibold"
                 />
                 <span className="w-[38px] shrink-0 text-center text-sm font-semibold text-muted-foreground">
                   {row.product ? DISPLAY_UNIT_LABEL[row.product.unit] : "—"}
@@ -270,7 +272,7 @@ export function RecipeForm({ recipe }: Props) {
                     </Button>
                   )}
                 </div>
-                <textarea
+                <Textarea
                   value={step.instruction}
                   onChange={(e) =>
                     setSteps((prev) =>
@@ -283,7 +285,7 @@ export function RecipeForm({ recipe }: Props) {
                   }
                   rows={2}
                   placeholder="Опишите этот шаг…"
-                  className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground outline-none"
+                  className="min-h-0 resize-none rounded-xl bg-background font-medium"
                 />
               </div>
             ))}
