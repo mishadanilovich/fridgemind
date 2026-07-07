@@ -1,6 +1,7 @@
 import { CookingPot, Pencil } from "lucide-react";
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { RecipeCardView } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -43,14 +44,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {matchTotal > 0 && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-bold",
-                  allInStock
-                    ? "bg-success text-success-foreground"
-                    : "bg-badge text-badge-foreground",
-                )}
-              >
+              <Badge variant={allInStock ? "success" : "warm"} size="md" className="font-bold">
                 <span
                   className={cn(
                     "size-1.5 rounded-full",
@@ -58,7 +52,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
                   )}
                 />
                 {matchHave}/{matchTotal} есть
-              </span>
+              </Badge>
             )}
             <CookingMethodBadges methods={cookingMethods} />
           </div>

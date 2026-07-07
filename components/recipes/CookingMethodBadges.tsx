@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { COOKING_METHOD_ICONS, COOKING_METHOD_LABELS } from "@/lib/cooking-methods";
 import type { CookingMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -9,10 +10,8 @@ type Props = {
   className?: string;
 };
 
-function toneClass(method: CookingMethod): string {
-  return method === "NO_COOK"
-    ? "bg-success text-success-foreground border-success-border"
-    : "bg-badge text-badge-foreground border-badge-border";
+function tone(method: CookingMethod): "success" | "warm" {
+  return method === "NO_COOK" ? "success" : "warm";
 }
 
 export function CookingMethodBadges({ methods, variant = "icon", className }: Props) {
@@ -25,16 +24,10 @@ export function CookingMethodBadges({ methods, variant = "icon", className }: Pr
         const label = COOKING_METHOD_LABELS[method];
         if (variant === "pill") {
           return (
-            <span
-              key={method}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold",
-                toneClass(method),
-              )}
-            >
+            <Badge key={method} variant={tone(method)} size="md">
               <Icon className="size-3.5" />
               {label}
-            </span>
+            </Badge>
           );
         }
         return (
@@ -43,7 +36,9 @@ export function CookingMethodBadges({ methods, variant = "icon", className }: Pr
             title={label}
             className={cn(
               "flex size-6 items-center justify-center rounded-[7px] border",
-              toneClass(method),
+              tone(method) === "success"
+                ? "border-success-border bg-success text-success-foreground"
+                : "border-badge-border bg-badge text-badge-foreground",
             )}
           >
             <Icon className="size-3.5" />

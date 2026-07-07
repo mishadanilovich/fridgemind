@@ -4,6 +4,7 @@ import { ChevronLeft, CookingPot } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { scaleIngredient } from "@/lib/recipes";
 import type { RecipeWithDetails } from "@/lib/types";
@@ -51,7 +52,9 @@ export function RecipeDetail({ recipe }: Props) {
       </div>
 
       <div className="px-[22px]">
-        <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-accent">{meta}</div>
+        <Badge variant="accent" className="font-bold uppercase tracking-[0.06em]">
+          {meta}
+        </Badge>
         <h1 className="mb-3 mt-[5px] font-heading text-[29px] font-bold leading-[1.08] text-foreground">
           {recipe.title}
         </h1>
@@ -78,13 +81,10 @@ export function RecipeDetail({ recipe }: Props) {
                 UNIT_TO_TYPE[ri.unit],
               );
               return (
-                <span
-                  key={ri.id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-[7px] text-[12.5px] font-semibold text-foreground"
-                >
+                <Badge key={ri.id} variant="chip" size="lg">
                   <span className="size-1.5 rounded-full bg-primary" />
                   {ri.ingredient.name} · {formatQuantity(amount, ri.unit)}
-                </span>
+                </Badge>
               );
             })}
           </div>
