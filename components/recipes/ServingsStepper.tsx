@@ -2,6 +2,7 @@
 
 import { Minus, Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -39,24 +40,28 @@ export function ServingsStepper({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           aria-label="Меньше"
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="flex size-9 items-center justify-center rounded-[11px] border border-border bg-background text-primary disabled:opacity-40"
+          className="size-9 rounded-[11px] bg-background text-primary"
         >
-          <Minus className="size-5" />
-        </button>
-        <button
+          <Minus />
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           aria-label="Больше"
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
-          className="flex size-9 items-center justify-center rounded-[11px] border border-border bg-background text-primary disabled:opacity-40"
+          className="size-9 rounded-[11px] bg-background text-primary"
         >
-          <Plus className="size-5" />
-        </button>
+          <Plus />
+        </Button>
       </div>
     </div>
   );

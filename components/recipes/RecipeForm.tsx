@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { saveRecipe } from "@/lib/actions/recipes";
 import {
   COOKING_METHOD_ICONS,
@@ -100,23 +101,27 @@ export function RecipeForm({ recipe }: Props) {
       <input type="hidden" name="payload" value={payload} />
 
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-5 py-4 backdrop-blur">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => router.back()}
-          className="text-sm font-semibold text-muted-foreground"
+          className="px-2 font-semibold text-muted-foreground"
         >
           Отмена
-        </button>
+        </Button>
         <div className="font-heading text-base font-bold text-foreground">
           {recipe ? "Изменить рецепт" : "Новый рецепт"}
         </div>
-        <button
+        <Button
           type="submit"
+          variant="ghost"
+          size="sm"
           disabled={isPending}
-          className="text-sm font-extrabold text-accent disabled:opacity-50"
+          className="px-2 font-extrabold text-accent"
         >
           Сохранить
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-6 px-5 pb-11 pt-5">
@@ -222,34 +227,32 @@ export function RecipeForm({ recipe }: Props) {
                   {row.product ? DISPLAY_UNIT_LABEL[row.product.unit] : "—"}
                 </span>
                 {ingredients.length > 1 && (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() =>
-                      setIngredients((prev) =>
-                        prev.filter((r) => r.key !== row.key),
-                      )
+                      setIngredients((prev) => prev.filter((r) => r.key !== row.key))
                     }
                     aria-label="Убрать ингредиент"
-                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground"
+                    className="size-8 shrink-0 text-muted-foreground"
                   >
-                    <X className="size-4" />
-                  </button>
+                    <X />
+                  </Button>
                 )}
               </div>
             ))}
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() =>
-              setIngredients((prev) => [
-                ...prev,
-                { key: uid(), product: null, qty: "" },
-              ])
+              setIngredients((prev) => [...prev, { key: uid(), product: null, qty: "" }])
             }
-            className="mt-2.5 w-full rounded-[13px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-primary"
+            className="mt-2.5 h-auto w-full rounded-[13px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-primary"
           >
             + Ещё ингредиент
-          </button>
+          </Button>
         </div>
 
         <div>
@@ -268,18 +271,16 @@ export function RecipeForm({ recipe }: Props) {
                     Шаг {index + 1}
                   </span>
                   {steps.length > 1 && (
-                    <button
+                    <Button
                       type="button"
-                      onClick={() =>
-                        setSteps((prev) =>
-                          prev.filter((s) => s.key !== step.key),
-                        )
-                      }
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSteps((prev) => prev.filter((s) => s.key !== step.key))}
                       aria-label="Убрать шаг"
-                      className="ml-auto flex size-7 items-center justify-center rounded-lg text-muted-foreground"
+                      className="ml-auto size-7 text-muted-foreground"
                     >
-                      <X className="size-4" />
-                    </button>
+                      <X />
+                    </Button>
                   )}
                 </div>
                 <textarea
@@ -300,15 +301,13 @@ export function RecipeForm({ recipe }: Props) {
               </div>
             ))}
           </div>
-          <button
+          <Button
             type="button"
-            onClick={() =>
-              setSteps((prev) => [...prev, { key: uid(), instruction: "" }])
-            }
-            className="mt-2.5 w-full rounded-[14px] bg-primary py-3 text-sm font-bold text-primary-foreground"
+            onClick={() => setSteps((prev) => [...prev, { key: uid(), instruction: "" }])}
+            className="mt-2.5 h-auto w-full rounded-[14px] py-3 font-bold"
           >
             + Добавить шаг
-          </button>
+          </Button>
         </div>
 
         {state.error && (

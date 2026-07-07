@@ -4,6 +4,7 @@ import { ChevronLeft, CookingPot } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { scaleIngredient } from "@/lib/recipes";
 import type { RecipeWithDetails } from "@/lib/types";
 import { formatQuantity, UNIT_TO_TYPE } from "@/lib/units";
@@ -117,22 +118,24 @@ export function RecipeDetail({ recipe }: Props) {
 
             {steps.length > 1 && (
               <div className="mt-4 flex gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={stepIndex === 0}
                   onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
-                  className="flex-1 rounded-[15px] border border-border bg-card py-3.5 text-sm font-bold text-foreground disabled:opacity-40"
+                  className="h-auto flex-1 rounded-[15px] bg-card py-3.5 font-bold"
                 >
                   Назад
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="accent"
                   disabled={stepIndex >= steps.length - 1}
                   onClick={() => setStepIndex((i) => Math.min(steps.length - 1, i + 1))}
-                  className="flex-1 rounded-[15px] bg-accent py-3.5 text-sm font-bold text-accent-foreground disabled:opacity-40"
+                  className="h-auto flex-1 rounded-[15px] py-3.5 font-bold"
                 >
                   Далее
-                </button>
+                </Button>
               </div>
             )}
           </>
