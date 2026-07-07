@@ -50,7 +50,7 @@ export function RecipeDetail({ recipe }: Props) {
         </Link>
       </div>
 
-      <div className="relative -mt-1.5 px-[22px]">
+      <div className="px-[22px]">
         <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-accent">{meta}</div>
         <h1 className="mb-3 mt-[5px] font-heading text-[29px] font-bold leading-[1.08] text-foreground">
           {recipe.title}
