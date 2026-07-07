@@ -2,6 +2,7 @@
 // Типы слоя БД идут напрямую из Prisma Client и не дублируются руками.
 
 import type {
+  CookingMethod,
   Ingredient,
   MealSlot,
   MenuDayMeal,
@@ -48,6 +49,20 @@ export type {
 export type RecipeWithDetails = Recipe & {
   steps: RecipeStep[];
   ingredients: (RecipeIngredient & { ingredient: Ingredient })[];
+};
+
+/**
+ * Карточка рецепта в списке (экран "Рецепты"). matchHave/matchTotal — сколько ингредиентов
+ * рецепта уже есть в инвентаре из общего числа, для сортировки "приготовить из того, что есть".
+ */
+export type RecipeCardView = {
+  id: string;
+  title: string;
+  photoUrl: string | null;
+  cookTimeMinutes: number | null;
+  cookingMethods: CookingMethod[];
+  matchHave: number;
+  matchTotal: number;
 };
 
 /** Слот дня меню с назначенным рецептом (если есть) — форма для "Сегодня"/"Меню на неделю". */

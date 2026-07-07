@@ -1,16 +1,47 @@
-// Экран "Рецепты".
-// TODO (см. CLAUDE.md, раздел 6):
-// - карточка "+ Добавить рецепт" ПЕРВЫМ элементом списка, не кнопкой в шапке
-// - на карточках: бейджи CookingMethod, cookTimeMinutes, редактирование/удаление (с подтверждением)
-// - фильтр "что приготовить из того, что есть" — % совпадения с PantryItem
-// - для роли MEMBER: карточка добавления и редактирование/удаление не показываются (только просмотр)
-export default function RecipesPage() {
+import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { RecipesScreen } from "@/components/recipes/RecipesScreen";
+import { getCurrentUser, hasRole } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import type { RecipeCardView } from "@/lib/types";
+
+export default async function RecipesPage() {
+  const user = await getCurrentUser();
+  if (!user) return null; // layout уже редиректит неавторизованных
+
+  const canEdit = hasRole(user, ["ORGANIZER", "EDITOR"]);
+
+  const [recipes, pantry] = await Promise.all([
+    prisma.recipe.findMany({
+      where: { householdId: user.householdId },
+      orderBy: { createdAt: "desc" },
+      include: { ingredients: { select: { ingredientId: true } } },
+    }),
+    prisma.pantryItem.findMany({
+      where: { householdId: user.householdId },
+      select: { ingredientId: true },
+    }),
+  ]);
+
+  const pantrySet = new Set(pantry.map((p) => p.ingredientId));
+  const cards: RecipeCardView[] = recipes.map((r) => {
+    const uniqueIds = new Set(r.ingredients.map((i) => i.ingredientId));
+    let have = 0;
+    for (const id of uniqueIds) if (pantrySet.has(id)) have += 1;
+    return {
+      id: r.id,
+      title: r.title,
+      photoUrl: r.photoUrl,
+      cookTimeMinutes: r.cookTimeMinutes,
+      cookingMethods: r.cookingMethods,
+      matchHave: have,
+      matchTotal: uniqueIds.size,
+    };
+  });
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Рецепты</h1>
-      <p className="text-sm text-muted-foreground">
-        Список рецептов ещё не реализован — см. CLAUDE.md, раздел 6.
-      </p>
+    <div className="pb-8">
+      <ScreenHeader eyebrow="Библиотека" title="Рецепты" />
+      <RecipesScreen recipes={cards} canEdit={canEdit} />
     </div>
   );
 }
