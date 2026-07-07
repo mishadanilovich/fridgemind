@@ -34,12 +34,21 @@ const buttonVariants = cva(
   }
 )
 
-export type ButtonProps = {
-  asChild?: boolean
-  loading?: boolean
-  /** Ведущая иконка; при loading заменяется спиннером. Игнорируется с asChild. */
-  icon?: ReactNode
-} & ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>
+type ButtonBaseProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>
+
+// asChild рендерит через Slot (<a> и т.п.), где спиннер/иконка не выводятся, а disabled —
+// no-op. Разводим варианты discriminated union'ом, чтобы <Button asChild loading icon>
+// падало на компиляции, а не молча (латентный double-submit).
+export type ButtonProps = ButtonBaseProps &
+  (
+    | { asChild: true; loading?: never; icon?: never }
+    | {
+        asChild?: false
+        loading?: boolean
+        /** Ведущая иконка; при loading заменяется спиннером. */
+        icon?: ReactNode
+      }
+  )
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
