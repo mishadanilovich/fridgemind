@@ -102,12 +102,9 @@ export function IngredientPicker({ value, onSelect }: Props) {
       }}
     >
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex w-full items-center rounded-[13px] border border-border bg-card px-[13px] py-3 text-left text-sm font-medium text-foreground outline-none"
-        >
+        <Button type="button" variant="outline" className="w-full justify-start bg-card font-normal">
           {value ? value.name : <span className="text-muted-foreground">Продукт</span>}
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
