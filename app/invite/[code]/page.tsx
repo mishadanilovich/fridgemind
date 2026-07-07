@@ -8,8 +8,9 @@ import { prisma } from "@/lib/prisma";
 
 type Props = PageProps<"/invite/[code]">;
 
-export default async function InvitePage({ params }: Props) {
+export default async function InvitePage({ params, searchParams }: Props) {
   const { code } = await params;
+  const { error } = await searchParams;
   const household = await prisma.household.findUnique({
     where: { inviteCode: code },
   });
@@ -36,6 +37,21 @@ export default async function InvitePage({ params }: Props) {
 
   if (user.householdId === household.id) {
     redirect("/");
+  }
+
+  if (error === "cannot-leave") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center space-y-3 px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold">Сначала назначьте Организатора</h1>
+        <p className="text-sm text-muted-foreground">
+          Вы единственный Организатор своей текущей семьи. Назначьте Организатором кого-то ещё
+          в профиле, иначе после ухода семья останется без управления.
+        </p>
+        <Link href="/" className="text-sm font-semibold text-primary">
+          На главную
+        </Link>
+      </main>
+    );
   }
 
   return (
