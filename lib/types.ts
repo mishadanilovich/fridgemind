@@ -34,6 +34,7 @@ export type {
 export type {
   CookingMethodValue,
   HouseholdRoleValue,
+  IngredientInput,
   ManualShoppingItemInput,
   ProductCategoryValue,
   RecipeInput,

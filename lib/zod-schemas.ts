@@ -63,6 +63,15 @@ export type VisionRecognitionResponse = z.infer<typeof visionRecognitionResponse
 
 // ---------- Формы ----------
 
+// Новый пункт справочника Ingredient — создаётся при вводе рецепта/инвентаря, когда нужного
+// продукта в каталоге ещё нет (см. раздел 5 "Справочник ингредиентов").
+export const ingredientInputSchema = z.object({
+  name: z.string().trim().min(1, "Введите название").max(60, "Слишком длинное название"),
+  defaultUnitType: unitTypeSchema,
+  category: productCategorySchema,
+});
+export type IngredientInput = z.infer<typeof ingredientInputSchema>;
+
 export const recipeIngredientInputSchema = z.object({
   ingredientId: z.string().min(1),
   quantity: z.number().positive(),

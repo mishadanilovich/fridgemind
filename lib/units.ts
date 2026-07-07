@@ -19,6 +19,13 @@ export const UNITS_BY_TYPE: Record<UnitType, Unit[]> = {
   COUNT: ["PCS"],
 };
 
+// Локализованные названия типов продукта — для выбора при создании нового ингредиента.
+export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
+  WEIGHT: "Вес (г/кг)",
+  VOLUME: "Объём (мл/л)",
+  COUNT: "Штучно (шт)",
+};
+
 // Обрезает "хвост" плавающей точки до maxDecimals знаков без завершающих нулей.
 function trimNumber(value: number, maxDecimals: number): string {
   const rounded = Number(value.toFixed(maxDecimals));
