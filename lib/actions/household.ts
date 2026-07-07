@@ -5,10 +5,23 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { firstIssue, type FormState } from "@/lib/form-state";
-import { canLeaveHousehold, wouldKeepOrganizer } from "@/lib/household-rules";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { canLeaveHousehold, organizerCount, wouldKeepOrganizer } from "@/lib/household-rules";
 import { prisma } from "@/lib/prisma";
-import type { HouseholdRoleValue } from "@/lib/types";
+import type { HouseholdRole, HouseholdRoleValue } from "@/lib/types";
 import { householdNameSchema, householdRoleSchema } from "@/lib/zod-schemas";
+
+// Участники household, перечитанные с блокировкой строк (FOR UPDATE) внутри транзакции —
+// чтобы проверка инварианта "хотя бы один Организатор" и запись были атомарны и две
+// одновременные операции не прошли проверку обе (см. CLAUDE.md §5, TOCTOU-гонка).
+async function lockHouseholdMembers(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+): Promise<{ id: string; role: HouseholdRole }[]> {
+  return tx.$queryRaw<{ id: string; role: HouseholdRole }[]>`
+    select id, role from public.users where household_id = ${householdId} for update
+  `;
+}
 
 /** Результат императивных экшенов (не форм) — читается клиентом для показа ошибки. */
 export type ActionResult = { error: string | null };
@@ -22,16 +35,16 @@ const DEFAULT_MEAL_SLOTS = ["Завтрак", "Обед", "Ужин"];
 // Отселяет пользователя в новый пустой household (с дефолтными слотами) и делает его
 // Организатором. Используется и при выходе, и при удалении участника Организатором —
 // у пользователя всегда должен быть ровно один household (schema: householdId обязателен).
-async function moveUserToFreshHousehold(userId: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const household = await tx.household.create({ data: {} });
-    await tx.mealSlot.createMany({
-      data: DEFAULT_MEAL_SLOTS.map((name, order) => ({ householdId: household.id, name, order })),
-    });
-    await tx.user.update({
-      where: { id: userId },
-      data: { householdId: household.id, role: "ORGANIZER" },
-    });
+// Принимает транзакционный клиент, чтобы вызываться внутри уже открытой транзакции с
+// заблокированными строками участников (см. lockHouseholdMembers).
+async function moveUserToFreshHousehold(tx: Prisma.TransactionClient, userId: string): Promise<void> {
+  const household = await tx.household.create({ data: {} });
+  await tx.mealSlot.createMany({
+    data: DEFAULT_MEAL_SLOTS.map((name, order) => ({ householdId: household.id, name, order })),
+  });
+  await tx.user.update({
+    where: { id: userId },
+    data: { householdId: household.id, role: "ORGANIZER" },
   });
 }
 
@@ -58,7 +71,10 @@ export async function renameHousehold(
     data: { name: parsed.data || null },
   });
   revalidatePath("/profile");
-  return { error: null, values: { name: parsed.data } };
+  // На успехе values не возвращаем: по контракту FormState они только для восстановления
+  // введённого после ошибки, иначе defaultValue={state.values?.name} навсегда затенил бы
+  // revalidated-проп name (см. CLAUDE.md §10, FormState).
+  return { error: null };
 }
 
 // Смена роли участника — только Организатор; нельзя понизить последнего Организатора.
@@ -73,20 +89,20 @@ export async function changeMemberRole(
   const parsed = householdRoleSchema.safeParse(role);
   if (!parsed.success) return { error: "Некорректная роль" };
 
-  const members = await prisma.user.findMany({
-    where: { householdId: user.householdId },
-    select: { id: true, role: true },
+  const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
+    const members = await lockHouseholdMembers(tx, user.householdId);
+    if (!members.some((m) => m.id === targetUserId)) {
+      return { error: "Участник не найден в вашей семье" };
+    }
+    if (!wouldKeepOrganizer(members, targetUserId, parsed.data)) {
+      return { error: "В семье должен остаться хотя бы один Организатор" };
+    }
+    await tx.user.update({ where: { id: targetUserId }, data: { role: parsed.data } });
+    return { error: null };
   });
-  if (!members.some((m) => m.id === targetUserId)) {
-    return { error: "Участник не найден в вашей семье" };
-  }
-  if (!wouldKeepOrganizer(members, targetUserId, parsed.data)) {
-    return { error: "В семье должен остаться хотя бы один Организатор" };
-  }
 
-  await prisma.user.update({ where: { id: targetUserId }, data: { role: parsed.data } });
-  revalidatePath("/profile");
-  return { error: null };
+  if (!result.error) revalidatePath("/profile");
+  return result;
 }
 
 // Удаление участника из household — только Организатор, и не самого себя (для себя есть
@@ -97,17 +113,24 @@ export async function removeMember(targetUserId: string): Promise<ActionResult> 
   if (!hasRole(user, ["ORGANIZER"])) return { error: "Недостаточно прав" };
   if (targetUserId === user.id) return { error: "Нельзя удалить самого себя" };
 
-  const target = await prisma.user.findUnique({
-    where: { id: targetUserId },
-    select: { householdId: true },
+  const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
+    const members = await lockHouseholdMembers(tx, user.householdId);
+    if (!members.some((m) => m.id === targetUserId)) {
+      return { error: "Участник не найден в вашей семье" };
+    }
+    // Перечитанный с блокировкой набор защищает от гонки, где параллельная смена ролей
+    // понизила единственного оставшегося Организатора: после удаления цели в семье всё ещё
+    // должен остаться хотя бы один Организатор.
+    const remaining = members.filter((m) => m.id !== targetUserId);
+    if (organizerCount(remaining) < 1) {
+      return { error: "В семье должен остаться хотя бы один Организатор" };
+    }
+    await moveUserToFreshHousehold(tx, targetUserId);
+    return { error: null };
   });
-  if (!target || target.householdId !== user.householdId) {
-    return { error: "Участник не найден в вашей семье" };
-  }
 
-  await moveUserToFreshHousehold(targetUserId);
-  revalidatePath("/profile");
-  return { error: null };
+  if (!result.error) revalidatePath("/profile");
+  return result;
 }
 
 // Выход из household — с проверкой инварианта "хотя бы один Организатор" (см. household-rules).
@@ -115,28 +138,30 @@ export async function leaveHousehold(): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const members = await prisma.user.findMany({
-    where: { householdId: user.householdId },
-    select: { id: true, role: true },
+  const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
+    const members = await lockHouseholdMembers(tx, user.householdId);
+    const check = canLeaveHousehold(user.id, members);
+    if (!check.allowed) return { error: check.reason ?? "Сейчас нельзя покинуть семью" };
+    await moveUserToFreshHousehold(tx, user.id);
+    return { error: null };
   });
-  const check = canLeaveHousehold(user.id, members);
-  if (!check.allowed) return { error: check.reason ?? "Сейчас нельзя покинуть семью" };
 
-  await moveUserToFreshHousehold(user.id);
+  if (result.error) return result;
   redirect("/");
 }
 
-// Регенерация ссылки-приглашения — только Организатор. Возвращает новый код клиенту,
-// чтобы обновить отображаемую ссылку без перезагрузки.
-export async function regenerateInviteCode(): Promise<ActionResult & { inviteCode?: string }> {
+// Регенерация ссылки-приглашения — только Организатор. Новый код доносится до клиента
+// единственным каналом — revalidatePath обновляет серверный компонент и прокидывает свежий
+// inviteCode пропом в InviteSection (без второго источника истины в локальном состоянии).
+export async function regenerateInviteCode(): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!hasRole(user, ["ORGANIZER"])) return { error: "Недостаточно прав" };
 
-  const household = await prisma.household.update({
+  await prisma.household.update({
     where: { id: user.householdId },
     data: { inviteCode: crypto.randomUUID() },
   });
   revalidatePath("/profile");
-  return { error: null, inviteCode: household.inviteCode };
+  return { error: null };
 }
