@@ -1,8 +1,6 @@
 import { RecipeCardSkeletonList } from "@/components/skeletons/RecipeCardSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Совпадает по разметке с экраном "Рецепты": та же шапка и горизонтальные карточки-строки,
-// чтобы при загрузке не было "прыжка" layout (см. CLAUDE.md, раздел 6).
 export default function RecipesLoading() {
   return (
     <div className="pb-8">
@@ -17,7 +15,11 @@ export default function RecipesLoading() {
         </div>
         <Skeleton className="size-11 rounded-full" />
       </div>
-      <RecipeCardSkeletonList count={5} />
+
+      <Skeleton className="mb-[18px] h-[62px] w-full rounded-[18px]" />
+      <Skeleton className="mb-3 h-[92px] w-full rounded-[20px]" />
+
+      <RecipeCardSkeletonList count={4} />
     </div>
   );
 }
