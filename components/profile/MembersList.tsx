@@ -1,4 +1,5 @@
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { Avatar } from "@/components/ui/avatar";
 import type { User } from "@/lib/types";
 
 import { MemberControls } from "./MemberControls";
@@ -14,15 +15,12 @@ export function MembersList({ members, currentUserId, viewerIsOrganizer }: Props
     <ul className="space-y-3">
       {members.map((member) => {
         const isSelf = member.id === currentUserId;
-        const initial = member.name.trim().charAt(0).toUpperCase() || "?";
         // Контролы (смена роли, удаление) — только у Организатора и только над другими.
         const showControls = viewerIsOrganizer && !isSelf;
 
         return (
           <li key={member.id} className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-              {initial}
-            </div>
+            <Avatar name={member.name} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">
                 {member.name}

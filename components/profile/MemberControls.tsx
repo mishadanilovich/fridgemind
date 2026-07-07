@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -71,9 +71,9 @@ export function MemberControls({ userId, name, role }: Props) {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="ghost"
+              variant="ghostDestructive"
               size="icon"
-              className="h-9 w-9 text-destructive hover:text-destructive"
+              className="h-9 w-9"
               aria-label={`Удалить ${name} из семьи`}
               disabled={isPending}
             >
@@ -92,7 +92,7 @@ export function MemberControls({ userId, name, role }: Props) {
               <AlertDialogCancel>Отмена</AlertDialogCancel>
               <AlertDialogAction
                 onClick={onRemove}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className={buttonVariants({ variant: "destructive" })}
               >
                 Удалить
               </AlertDialogAction>

@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/actions/auth";
 import { leaveHousehold } from "@/lib/actions/household";
 
@@ -63,7 +63,7 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
                 <AlertDialogCancel>Отмена</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={onLeave}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className={buttonVariants({ variant: "destructive" })}
                 >
                   Покинуть
                 </AlertDialogAction>

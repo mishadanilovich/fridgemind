@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createMealSlot,
@@ -191,9 +191,9 @@ function SlotRow({ slot, onError }: SlotRowProps) {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
-            variant="ghost"
+            variant="ghostDestructive"
             size="icon"
-            className="h-9 w-9 shrink-0 text-destructive hover:text-destructive"
+            className="h-9 w-9 shrink-0"
             aria-label={`Удалить «${slot.name}»`}
             disabled={isPending}
           >
@@ -212,7 +212,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
             <AlertDialogCancel>Отмена</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className={buttonVariants({ variant: "destructive" })}
             >
               Удалить
             </AlertDialogAction>
