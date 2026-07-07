@@ -170,7 +170,7 @@ export function RecipeForm({ recipe }: Props) {
                   onClick={() => toggleMethod(method)}
                   aria-pressed={on}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors",
+                    "pressable inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-semibold",
                     on
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card text-foreground",

@@ -36,6 +36,17 @@
   }
 }
 
+@layer components {
+  /* Единый hover из макета (style-hover): затемнение + лёгкое сжатие, кроме disabled. */
+  .pressable {
+    transition: filter 150ms ease, transform 150ms ease;
+  }
+  .pressable:not(:disabled):hover {
+    filter: brightness(0.9);
+    transform: scale(0.97);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

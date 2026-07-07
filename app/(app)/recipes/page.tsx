@@ -26,7 +26,7 @@ export default async function RecipesPage({ searchParams }: Props) {
       {canEdit && (
         <Link
           href="/recipes/new"
-          className="mb-3 flex items-center gap-[13px] rounded-[20px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] px-[11px] py-[19px]"
+          className="pressable mb-3 flex items-center gap-[13px] rounded-[20px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] px-[11px] py-[19px]"
         >
           <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[15px] bg-success text-primary">
             <Plus className="size-[26px]" strokeWidth={2.4} />

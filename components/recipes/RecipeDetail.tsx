@@ -44,7 +44,7 @@ export function RecipeDetail({ recipe }: Props) {
         <Link
           href="/recipes"
           aria-label="Назад к рецептам"
-          className="absolute left-4 top-4 flex size-10 items-center justify-center rounded-full bg-background/90 backdrop-blur"
+          className="pressable absolute left-4 top-4 flex size-10 items-center justify-center rounded-full bg-background/90 backdrop-blur"
         >
           <ChevronLeft className="size-5 text-foreground" strokeWidth={2.4} />
         </Link>
