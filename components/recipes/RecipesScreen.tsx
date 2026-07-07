@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Plus } from "lucide-react";
+import { Bookmark, BookOpen, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -35,24 +35,34 @@ export function RecipesScreen({ recipes, canEdit }: Props) {
         type="button"
         onClick={() => setOnlyHave((v) => !v)}
         className={cn(
-          "mb-[18px] flex w-full items-center justify-between gap-3 rounded-[18px] border px-4 py-[13px] text-left",
-          onlyHave ? "border-primary/30 bg-success" : "border-border bg-card",
+          "mb-[18px] flex w-full items-center justify-between gap-3 rounded-[18px] border px-4 py-[13px] text-left transition-colors",
+          onlyHave ? "border-primary bg-primary" : "border-border bg-card",
         )}
       >
         <span className="flex items-center gap-[11px]">
           <span
             className={cn(
               "flex size-[34px] items-center justify-center rounded-[11px]",
-              onlyHave ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground",
+              onlyHave ? "bg-black/15 text-primary-foreground" : "bg-success text-primary",
             )}
           >
-            <BookOpen className="size-[19px]" />
+            <Bookmark className="size-[19px]" />
           </span>
           <span>
-            <span className="block text-sm font-bold text-foreground">
+            <span
+              className={cn(
+                "block text-sm font-bold",
+                onlyHave ? "text-primary-foreground" : "text-foreground",
+              )}
+            >
               Приготовить из того, что есть
             </span>
-            <span className="block text-[11.5px] font-medium text-muted-foreground">
+            <span
+              className={cn(
+                "block text-[11.5px] font-medium",
+                onlyHave ? "text-primary-foreground/70" : "text-muted-foreground",
+              )}
+            >
               Сортировка по наличию продуктов
             </span>
           </span>
@@ -60,7 +70,7 @@ export function RecipesScreen({ recipes, canEdit }: Props) {
         <span
           className={cn(
             "relative h-[27px] w-[46px] shrink-0 rounded-full transition-colors",
-            onlyHave ? "bg-primary" : "bg-secondary",
+            onlyHave ? "bg-accent" : "bg-secondary",
           )}
         >
           <span
