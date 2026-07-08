@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, CookingPot } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -30,11 +31,13 @@ export function RecipeDetail({ recipe }: Props) {
     <div className="-mx-5 -mt-4 pb-8">
       <div className="relative h-[230px]">
         {recipe.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- next/image + Supabase remotePatterns подключим в этапе 4b
-          <img
+          <Image
             src={recipe.photoUrl}
             alt={recipe.title}
-            className="size-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 448px) 100vw, 448px"
+            className="object-cover"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-secondary text-muted-foreground">
@@ -103,8 +106,15 @@ export function RecipeDetail({ recipe }: Props) {
           <>
             <div className="overflow-hidden rounded-[22px] border border-border bg-card">
               {step.photoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element -- next/image + Supabase remotePatterns подключим в этапе 4b
-                <img src={step.photoUrl} alt="" className="h-[180px] w-full object-cover" />
+                <div className="relative h-[180px] w-full">
+                  <Image
+                    src={step.photoUrl}
+                    alt=""
+                    fill
+                    sizes="(max-width: 448px) 100vw, 448px"
+                    className="object-cover"
+                  />
+                </div>
               )}
               <div className="flex items-start gap-[13px] p-5">
                 <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[11px] bg-primary font-heading text-base font-extrabold text-primary-foreground">

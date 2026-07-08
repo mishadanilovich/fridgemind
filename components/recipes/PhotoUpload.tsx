@@ -1,6 +1,7 @@
 "use client";
 
 import { Camera, Loader2, X } from "lucide-react";
+import Image from "next/image";
 import { type ChangeEvent, useState } from "react";
 
 import { uploadRecipePhoto } from "@/lib/actions/uploads";
@@ -52,8 +53,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
   if (value) {
     return (
       <div className={`relative overflow-hidden ${box}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- превью загруженного фото */}
-        <img src={value} alt="" className="size-full object-cover" />
+        <Image src={value} alt="" fill sizes="(max-width: 448px) 100vw, 448px" className="object-cover" />
         {variant === "cover" ? (
           <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2">
             <label className="pressable flex-1 cursor-pointer rounded-xl bg-background/90 py-2.5 text-center text-[12.5px] font-bold text-primary backdrop-blur">

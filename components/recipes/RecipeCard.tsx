@@ -1,4 +1,5 @@
 import { CookingPot, Pencil } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +24,11 @@ export function RecipeCard({ recipe, canEdit }: Props) {
     <div className="mb-3 flex gap-3 rounded-[20px] border border-border bg-card p-[11px] shadow-[0_8px_20px_-18px_rgba(45,32,18,0.5)]">
       <Link href={`/recipes/${id}`} className="flex min-w-0 flex-1 gap-3">
         {photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- next/image + Supabase remotePatterns подключим в этапе 4b
-          <img
+          <Image
             src={photoUrl}
             alt={title}
-            loading="lazy"
+            width={82}
+            height={82}
             className="size-[82px] shrink-0 rounded-[15px] object-cover"
           />
         ) : (
