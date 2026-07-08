@@ -4,6 +4,8 @@ import { Camera, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { uploadRecipePhoto } from "@/lib/actions/uploads";
 import { compressImage } from "@/lib/compress-image";
 
@@ -12,6 +14,12 @@ type Props = {
   onChange: (url: string | null) => void;
   variant: "cover" | "step";
 };
+
+// Скрытый файловый инпут (примитив Input) внутри <label> — стандартный паттерн выбора файла;
+// сам <label> — не кнопка/инпут, а обёртка-триггер, поэтому остаётся как есть.
+function FileInput({ onSelect }: { onSelect: (e: ChangeEvent<HTMLInputElement>) => void }) {
+  return <Input type="file" accept="image/*" onChange={onSelect} className="hidden" />;
+}
 
 export function PhotoUpload({ value, onChange, variant }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -58,25 +66,28 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2">
             <label className="pressable flex-1 cursor-pointer rounded-xl bg-background/90 py-2.5 text-center text-[12.5px] font-bold text-primary backdrop-blur">
               Заменить
-              <input type="file" accept="image/*" onChange={onSelect} className="hidden" />
+              <FileInput onSelect={onSelect} />
             </label>
-            <button
+            <Button
               type="button"
+              variant="destructive"
               onClick={() => onChange(null)}
-              className="pressable flex-1 rounded-xl bg-destructive/90 py-2.5 text-[12.5px] font-bold text-white"
+              className="h-auto flex-1 rounded-xl bg-destructive/90 py-2.5 text-[12.5px] font-bold backdrop-blur"
             >
               Убрать
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => onChange(null)}
             aria-label="Убрать фото шага"
-            className="pressable absolute right-2 top-2 flex size-7 items-center justify-center rounded-lg bg-foreground/60 text-white backdrop-blur"
+            className="absolute right-2 top-2 size-7 rounded-lg bg-foreground/60 text-white backdrop-blur"
           >
-            <X className="size-4" />
-          </button>
+            <X />
+          </Button>
         )}
       </div>
     );
@@ -93,7 +104,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           <span className="text-[11.5px] font-medium text-[hsl(var(--nav-inactive))]">
             Показывается в списке рецептов и на карточке
           </span>
-          <input type="file" accept="image/*" onChange={onSelect} className="hidden" />
+          <FileInput onSelect={onSelect} />
         </label>
         {error && <p className="mt-1.5 text-sm font-medium text-destructive">{error}</p>}
       </>
@@ -105,7 +116,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
       <label className="pressable flex cursor-pointer items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-muted-foreground">
         <Camera className="size-[18px] shrink-0" />
         Добавить фото шага
-        <input type="file" accept="image/*" onChange={onSelect} className="hidden" />
+        <FileInput onSelect={onSelect} />
       </label>
       {error && <p className="mt-1.5 text-sm font-medium text-destructive">{error}</p>}
     </>
