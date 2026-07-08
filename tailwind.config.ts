@@ -39,10 +39,13 @@ const config: Config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          muted: "hsl(var(--accent-muted))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          muted: "hsl(var(--destructive-muted))",
+          border: "hsl(var(--destructive-border))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -52,16 +55,13 @@ const config: Config = {
           DEFAULT: "hsl(var(--success))",
           border: "hsl(var(--success-border))",
           foreground: "hsl(var(--success-foreground))",
+          dot: "hsl(var(--success-dot))",
         },
+        "tan-dashed": "hsl(var(--tan-dashed))",
         badge: {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",
           foreground: "hsl(var(--badge-foreground))",
-        },
-        terracotta: {
-          DEFAULT: "hsl(var(--terracotta))",
-          muted: "hsl(var(--terracotta-muted))",
-          border: "hsl(var(--terracotta-border))",
         },
       },
       borderRadius: {

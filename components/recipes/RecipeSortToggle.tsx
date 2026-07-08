@@ -75,7 +75,7 @@ export function RecipeSortToggle({ active }: Props) {
         <span
           className={cn(
             "relative h-[27px] w-[46px] rounded-full transition-colors",
-            optimistic ? "bg-accent" : "bg-secondary",
+            optimistic ? "bg-accent" : "bg-tan-dashed",
           )}
         >
           <span

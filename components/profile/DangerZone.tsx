@@ -43,7 +43,7 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
-                variant="terracotta"
+                variant="destructiveMuted"
                 className="w-full"
                 loading={isPending}
                 icon={<DoorOpen />}

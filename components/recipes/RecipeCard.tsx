@@ -18,7 +18,8 @@ type Props = {
 export function RecipeCard({ recipe, canEdit }: Props) {
   const { id, title, photoUrl, cookTimeMinutes, cookingMethods, matchHave, matchTotal } = recipe;
   const meta = cookTimeMinutes ? `~${cookTimeMinutes} мин` : "Рецепт";
-  const allInStock = matchTotal > 0 && matchHave === matchTotal;
+  const matchPct = matchTotal > 0 ? Math.round((matchHave / matchTotal) * 10) * 10 : 0;
+  const allInStock = matchPct >= 100;
 
   return (
     <div className="mb-3 flex gap-3 rounded-card border border-border bg-card p-[11px] shadow-card">
@@ -45,14 +46,18 @@ export function RecipeCard({ recipe, canEdit }: Props) {
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {matchTotal > 0 && (
-              <Badge variant={allInStock ? "success" : "warm"} size="md" className="font-bold">
+              <Badge
+                variant={matchPct >= 80 ? "success" : "warning"}
+                size="md"
+                className={cn("font-bold", allInStock && "text-primary")}
+              >
                 <span
                   className={cn(
                     "size-1.5 rounded-full",
-                    allInStock ? "bg-success-foreground" : "bg-badge-foreground",
+                    allInStock ? "bg-primary" : matchPct >= 80 ? "bg-success-dot" : "bg-accent",
                   )}
                 />
-                {matchHave}/{matchTotal} есть
+                {allInStock ? "Всё есть дома" : `${matchPct}% есть дома`}
               </Badge>
             )}
             <CookingMethodBadges methods={cookingMethods} />
@@ -66,6 +71,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
             asChild
             variant="outline"
             size="iconSm"
+            className="bg-background text-primary"
             aria-label={`Изменить «${title}»`}
           >
             <Link href={`/recipes/${id}/edit`}>

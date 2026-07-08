@@ -196,7 +196,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
-            variant="terracottaGhost"
+            variant="destructiveMuted"
             size="icon"
             className="h-9 w-9 shrink-0"
             aria-label={`Удалить «${slot.name}»`}

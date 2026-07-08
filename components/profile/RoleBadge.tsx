@@ -4,7 +4,7 @@ import type { HouseholdRole } from "@/lib/types";
 
 const ROLE_VARIANT: Record<HouseholdRole, BadgeProps["variant"]> = {
   ORGANIZER: "success",
-  EDITOR: "terracotta",
+  EDITOR: "destructiveMuted",
   MEMBER: "muted",
 };
 

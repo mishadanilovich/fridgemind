@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 
 const ROLE_TINT: Record<HouseholdRole, string> = {
   ORGANIZER: "border-transparent bg-success text-success-foreground",
-  EDITOR: "border-transparent bg-terracotta-muted text-terracotta",
+  EDITOR: "border-transparent bg-destructive-muted text-destructive",
   MEMBER: "border-transparent bg-secondary text-muted-foreground",
 };
 
@@ -81,7 +81,7 @@ export function MemberControls({ userId, name, role }: Props) {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="terracottaGhost"
+              variant="destructiveMuted"
               size="icon"
               className="h-9 w-9"
               aria-label={`Удалить ${name} из семьи`}

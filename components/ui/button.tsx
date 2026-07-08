@@ -16,9 +16,7 @@ const buttonVariants = cva(
         outline: "border border-input bg-transparent",
         secondary: "bg-secondary text-secondary-foreground",
         ghost: "",
-        ghostDestructive: "text-destructive",
-        terracotta: "border border-terracotta-border bg-terracotta-muted text-terracotta",
-        terracottaGhost: "text-terracotta",
+        destructiveMuted: "border border-destructive-border bg-destructive-muted text-destructive",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
