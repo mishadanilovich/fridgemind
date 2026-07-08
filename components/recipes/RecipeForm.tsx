@@ -143,7 +143,7 @@ export function RecipeForm({ recipe }: Props) {
             placeholder="Например, Тыквенный крем-суп"
             maxLength={80}
             error={state.fieldErrors?.title}
-            className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
+            className="h-12 rounded-lg px-4 text-[15px] font-semibold"
           />
         </div>
 
@@ -166,7 +166,7 @@ export function RecipeForm({ recipe }: Props) {
             placeholder="Необязательно"
             maxLength={4}
             error={state.fieldErrors?.cookTimeMinutes}
-            className="h-12 rounded-[15px] px-4 text-[15px] font-semibold"
+            className="h-12 rounded-lg px-4 text-[15px] font-semibold"
           />
         </div>
 
@@ -230,7 +230,7 @@ export function RecipeForm({ recipe }: Props) {
                   }}
                   inputMode="decimal"
                   placeholder="100"
-                  className="w-[62px] shrink-0 rounded-[13px] px-2 text-center font-semibold"
+                  className="w-[62px] shrink-0 rounded-md px-2 text-center font-semibold"
                 />
                 <span className="w-[38px] shrink-0 text-center text-sm font-semibold text-muted-foreground">
                   {row.product ? DISPLAY_UNIT_LABEL[row.product.unit] : "—"}
@@ -239,12 +239,12 @@ export function RecipeForm({ recipe }: Props) {
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
+                    size="iconSm"
                     onClick={() =>
                       setIngredients((prev) => prev.filter((r) => r.key !== row.key))
                     }
                     aria-label="Убрать ингредиент"
-                    className="size-8 shrink-0 text-muted-foreground"
+                    className="shrink-0 text-muted-foreground"
                   >
                     <X />
                   </Button>
@@ -255,10 +255,11 @@ export function RecipeForm({ recipe }: Props) {
           <Button
             type="button"
             variant="outline"
+            size="block"
             onClick={() =>
               setIngredients((prev) => [...prev, { key: uid(), product: null, qty: "" }])
             }
-            className="mt-2.5 h-auto w-full rounded-[13px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-primary"
+            className="mt-2.5 w-full border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] text-[13px] font-bold text-primary"
           >
             + Ещё ингредиент
           </Button>
@@ -284,10 +285,10 @@ export function RecipeForm({ recipe }: Props) {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      size="iconSm"
                       onClick={() => setSteps((prev) => prev.filter((s) => s.key !== step.key))}
                       aria-label="Убрать шаг"
-                      className="ml-auto size-7 text-muted-foreground"
+                      className="ml-auto text-muted-foreground"
                     >
                       <X />
                     </Button>
@@ -322,10 +323,11 @@ export function RecipeForm({ recipe }: Props) {
           </div>
           <Button
             type="button"
+            size="block"
             onClick={() =>
               setSteps((prev) => [...prev, { key: uid(), instruction: "", photoUrl: null }])
             }
-            className="mt-2.5 h-auto w-full rounded-[14px] py-3 font-bold"
+            className="mt-2.5 w-full font-bold"
           >
             + Добавить шаг
           </Button>

@@ -65,8 +65,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
           <Button
             asChild
             variant="outline"
-            size="icon"
-            className="size-[34px] rounded-[10px]"
+            size="iconSm"
             aria-label={`Изменить «${title}»`}
           >
             <Link href={`/recipes/${id}/edit`}>

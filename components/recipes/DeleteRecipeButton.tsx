@@ -57,8 +57,8 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
       <SheetTrigger asChild>
         <Button
           variant="ghostDestructive"
-          size="icon"
-          className="size-[34px] rounded-[10px] border border-destructive/20 bg-destructive/10"
+          size="iconSm"
+          className="border border-destructive/20 bg-destructive/10"
           aria-label={`Удалить «${name}»`}
         >
           <Trash2 />
@@ -86,13 +86,14 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
         {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
         <div className="flex gap-3">
           <SheetClose asChild>
-            <Button variant="outline" className="h-[52px] flex-1 rounded-2xl text-[15px]">
+            <Button variant="outline" size="block" className="flex-1">
               Отмена
             </Button>
           </SheetClose>
           <Button
             variant="destructive"
-            className="h-[52px] flex-1 rounded-2xl text-[15px]"
+            size="block"
+            className="flex-1"
             loading={isPending}
             onClick={onConfirm}
           >

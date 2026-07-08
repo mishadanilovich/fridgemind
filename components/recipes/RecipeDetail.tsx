@@ -131,18 +131,20 @@ export function RecipeDetail({ recipe }: Props) {
                 <Button
                   type="button"
                   variant="outline"
+                  size="block"
                   disabled={stepIndex === 0}
                   onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
-                  className="h-auto flex-1 rounded-[15px] bg-card py-3.5 font-bold"
+                  className="flex-1 bg-card font-bold"
                 >
                   Назад
                 </Button>
                 <Button
                   type="button"
                   variant="accent"
+                  size="block"
                   disabled={stepIndex >= steps.length - 1}
                   onClick={() => setStepIndex((i) => Math.min(steps.length - 1, i + 1))}
-                  className="h-auto flex-1 rounded-[15px] py-3.5 font-bold"
+                  className="flex-1 font-bold"
                 >
                   Далее
                 </Button>

@@ -67,7 +67,8 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
             <Button
               asChild
               variant="ghost"
-              className="h-9 flex-1 rounded-xl bg-background/90 text-[12.5px] font-bold text-primary backdrop-blur"
+              size="sm"
+              className="flex-1 bg-background/90 text-[12.5px] font-bold text-primary backdrop-blur"
             >
               <label className="cursor-pointer">
                 Заменить
@@ -77,8 +78,9 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
             <Button
               type="button"
               variant="destructive"
+              size="sm"
               onClick={() => onChange(null)}
-              className="h-9 flex-1 rounded-xl bg-destructive/90 text-[12.5px] font-bold backdrop-blur"
+              className="flex-1 bg-destructive/90 text-[12.5px] font-bold backdrop-blur"
             >
               Убрать
             </Button>
@@ -87,10 +89,10 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="iconSm"
             onClick={() => onChange(null)}
             aria-label="Убрать фото шага"
-            className="absolute right-2 top-2 size-7 rounded-lg bg-foreground/60 text-white backdrop-blur"
+            className="absolute right-2 top-2 bg-foreground/60 text-white backdrop-blur"
           >
             <X />
           </Button>

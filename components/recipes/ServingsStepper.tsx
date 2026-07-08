@@ -43,22 +43,22 @@ export function ServingsStepper({
         <Button
           type="button"
           variant="outline"
-          size="icon"
+          size="iconSm"
           aria-label="Меньше"
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="size-9 rounded-[11px] bg-background text-primary"
+          className="bg-background text-primary"
         >
           <Minus />
         </Button>
         <Button
           type="button"
           variant="outline"
-          size="icon"
+          size="iconSm"
           aria-label="Больше"
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
-          className="size-9 rounded-[11px] bg-background text-primary"
+          className="bg-background text-primary"
         >
           <Plus />
         </Button>
