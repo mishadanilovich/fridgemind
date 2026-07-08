@@ -21,10 +21,14 @@ type Props = {
   redirectToList?: boolean;
 };
 
+// Явные статусы вместо number|null: и "ещё грузится", и "не удалось проверить" должны
+// показывать более строгое предупреждение по умолчанию, а не молча трактоваться как "не используется".
+type UsageState = { status: "loading" } | { status: "ready"; count: number } | { status: "error" };
+
 export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [usage, setUsage] = useState<number | null>(null);
+  const [usage, setUsage] = useState<UsageState>({ status: "loading" });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -32,12 +36,16 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
     setOpen(next);
     setError(null);
     if (next) {
-      setUsage(null);
+      setUsage({ status: "loading" });
       getRecipeUsage(recipeId)
-        .then(setUsage)
-        .catch(() => setUsage(0));
+        .then((count) => setUsage({ status: "ready", count }))
+        .catch(() => setUsage({ status: "error" }));
     }
   }
+
+  // Пока не подтверждено, что рецепт нигде не используется, — предполагаем худшее и показываем
+  // более строгий текст предупреждения (safe default), а не "если был там запланирован".
+  const definitelyUnused = usage.status === "ready" && usage.count === 0;
 
   function onConfirm() {
     setError(null);
@@ -79,9 +87,8 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
         </div>
         <SheetDescription className="mb-[18px] mt-0.5 text-sm font-medium text-foreground/70">
           «<b className="text-foreground">{name}</b>» будет удалён без возможности восстановить.
-          {usage && usage > 0
-            ? " Он также пропадёт из меню на неделю."
-            : " Он также пропадёт из меню, если был там запланирован."}
+          {!definitelyUnused &&
+            " Он также пропадёт из меню на неделю и из истории приёмов пищи, включая уже отмеченные «скушано»."}
         </SheetDescription>
         {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
         <div className="flex gap-3">

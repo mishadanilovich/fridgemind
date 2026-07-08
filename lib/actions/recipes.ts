@@ -52,7 +52,7 @@ export async function createRecipe(input: unknown): Promise<SaveRecipeResult> {
       data: {
         householdId: user.householdId,
         title: data.title,
-        photoUrl: data.photoUrl ?? null,
+        photoUrl: data.photoUrl,
         baseServings: data.baseServings,
         cookTimeMinutes: data.cookTimeMinutes ?? null,
         cookingMethods: data.cookingMethods,
@@ -74,27 +74,27 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
   if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
   const data = parsed.data;
 
-  const owned = await prisma.recipe.findFirst({
-    where: { id: recipeId, householdId: user.householdId },
-    select: { id: true },
-  });
-  if (!owned) return { error: "Рецепт не найден" };
-
-  await prisma.$transaction(async (tx) => {
-    await tx.recipe.update({
-      where: { id: recipeId },
+  // updateMany вместо findFirst+update: ownership-проверка и мутация — одна атомарная операция
+  // внутри транзакции, без разрыва между "проверили" и "изменили" (см. code review PR #2).
+  const notOwned = await prisma.$transaction(async (tx) => {
+    const updated = await tx.recipe.updateMany({
+      where: { id: recipeId, householdId: user.householdId },
       data: {
         title: data.title,
-        photoUrl: data.photoUrl ?? null,
+        photoUrl: data.photoUrl,
         baseServings: data.baseServings,
         cookTimeMinutes: data.cookTimeMinutes ?? null,
         cookingMethods: data.cookingMethods,
       },
     });
+    if (updated.count === 0) return true;
+
     await tx.recipeStep.deleteMany({ where: { recipeId } });
     await tx.recipeIngredient.deleteMany({ where: { recipeId } });
     await writeChildren(tx, recipeId, data);
+    return false;
   });
+  if (notOwned) return { error: "Рецепт не найден" };
 
   revalidatePath("/recipes");
   revalidatePath(`/recipes/${recipeId}`);
@@ -141,17 +141,19 @@ export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
-  const owned = await prisma.recipe.findFirst({
-    where: { id: recipeId, householdId: user.householdId },
-    select: { id: true },
+  // Ownership-проверка и удаление — одна атомарная транзакция, без разрыва между "проверили"
+  // и "удалили" (см. code review PR #2). MenuDayMeal.recipe без onDelete cascade — снимаем
+  // рецепт из меню сами, иначе БД отклонит; scoped householdId защищает от гонки/чужого id.
+  const notOwned = await prisma.$transaction(async (tx) => {
+    await tx.menuDayMeal.deleteMany({
+      where: { recipeId, recipe: { householdId: user.householdId } },
+    });
+    const deleted = await tx.recipe.deleteMany({
+      where: { id: recipeId, householdId: user.householdId },
+    });
+    return deleted.count === 0;
   });
-  if (!owned) return { error: "Рецепт не найден" };
-
-  // MenuDayMeal.recipe без onDelete cascade — снимаем рецепт из меню сами, иначе БД отклонит.
-  await prisma.$transaction([
-    prisma.menuDayMeal.deleteMany({ where: { recipeId } }),
-    prisma.recipe.delete({ where: { id: recipeId } }),
-  ]);
+  if (notOwned) return { error: "Рецепт не найден" };
 
   revalidatePath("/recipes");
   return { error: null };
