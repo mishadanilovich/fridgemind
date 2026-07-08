@@ -27,7 +27,7 @@ export function BottomNav() {
             href={href}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-bold tracking-wide",
-              isActive ? "text-foreground" : "text-[hsl(var(--nav-inactive))]",
+              isActive ? "text-foreground" : "text-nav-inactive",
             )}
           >
             <Icon size={24} strokeWidth={2} />

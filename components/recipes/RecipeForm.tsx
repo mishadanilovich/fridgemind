@@ -263,7 +263,7 @@ export function RecipeForm({ recipe }: Props) {
             onClick={() =>
               setIngredients((prev) => [...prev, { key: uid(), product: null, qty: "" }])
             }
-            className="mt-2.5 w-full border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] text-[13px] font-bold text-primary"
+            className="mt-2.5 w-full border-[1.5px] border-dashed border-nav-inactive text-[13px] font-bold text-primary"
           >
             + Ещё ингредиент
           </Button>

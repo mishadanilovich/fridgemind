@@ -108,12 +108,12 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
   if (variant === "cover") {
     return (
       <>
-        <label className="pressable flex h-[168px] cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] bg-card text-muted-foreground">
+        <label className="pressable flex h-[168px] cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-[1.5px] border-dashed border-nav-inactive bg-card text-muted-foreground">
           <span className="flex size-[50px] items-center justify-center rounded-full bg-secondary">
             <Camera className="size-6" />
           </span>
           <span className="text-[13.5px] font-bold">Добавить фото</span>
-          <span className="text-[11.5px] font-medium text-[hsl(var(--nav-inactive))]">
+          <span className="text-[11.5px] font-medium text-nav-inactive">
             Показывается в списке рецептов и на карточке
           </span>
           <FileInput onSelect={onSelect} />
@@ -125,7 +125,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
 
   return (
     <>
-      <label className="pressable flex cursor-pointer items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] py-2.5 text-[13px] font-bold text-muted-foreground">
+      <label className="pressable flex cursor-pointer items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-nav-inactive py-2.5 text-[13px] font-bold text-muted-foreground">
         <Camera className="size-[18px] shrink-0" />
         Добавить фото шага
         <FileInput onSelect={onSelect} />

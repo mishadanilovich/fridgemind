@@ -40,6 +40,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
           muted: "hsl(var(--accent-muted))",
+          border: "hsl(var(--accent-border))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -58,6 +59,7 @@ const config: Config = {
           dot: "hsl(var(--success-dot))",
         },
         "tan-dashed": "hsl(var(--tan-dashed))",
+        "nav-inactive": "hsl(var(--nav-inactive))",
         badge: {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",
