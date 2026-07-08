@@ -82,10 +82,14 @@ export function RecipeForm({ recipe }: Props) {
     cookTimeMinutes: cookTime.trim() === "" ? null : Number(cookTime),
     cookingMethods: methods,
     ingredients: ingredients
-      .filter((r) => r.product && Number(r.qty) > 0)
+      // Строка с выбранным продуктом остаётся в payload даже при невалидном количестве —
+      // иначе она молча исчезает и пользователь видит обманчивое "добавьте хотя бы один
+      // ингредиент", хотя строка заполнена. Number(r.qty)||0 превращает NaN в 0, и Zod-схема
+      // ingredient.quantity.positive() сама покажет точную ошибку "Укажите количество".
+      .filter((r) => r.product)
       .map((r) => ({
         ingredientId: r.product!.id,
-        quantity: Number(r.qty),
+        quantity: Number(r.qty) || 0,
         unit: r.product!.unit,
       })),
     steps: steps
