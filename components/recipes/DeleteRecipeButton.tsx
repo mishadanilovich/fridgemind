@@ -64,9 +64,8 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button
-          variant="ghostDestructive"
+          variant="destructiveMuted"
           size="iconSm"
-          className="border border-destructive/20 bg-destructive/10"
           aria-label={`Удалить «${name}»`}
         >
           <Trash2 />

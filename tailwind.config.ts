@@ -43,6 +43,8 @@ const config: Config = {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          muted: "hsl(var(--destructive-muted))",
+          border: "hsl(var(--destructive-border))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -57,11 +59,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",
           foreground: "hsl(var(--badge-foreground))",
-        },
-        terracotta: {
-          DEFAULT: "hsl(var(--terracotta))",
-          muted: "hsl(var(--terracotta-muted))",
-          border: "hsl(var(--terracotta-border))",
         },
       },
       borderRadius: {
