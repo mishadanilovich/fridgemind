@@ -86,9 +86,9 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
           </SheetTitle>
         </div>
         <SheetDescription className="mb-[18px] mt-0.5 text-sm font-medium text-foreground/70">
-          «<b className="text-foreground">{name}</b>» будет удалён без возможности восстановить.
-          {!definitelyUnused &&
-            " Он также пропадёт из меню на неделю и из истории приёмов пищи, включая уже отмеченные «скушано»."}
+          «<b className="text-foreground">{name}</b>» пропадёт из списка рецептов
+          {!definitelyUnused && " и будет убран из запланированных приёмов пищи в меню"}. Уже
+          отмеченные «скушано» приёмы пищи останутся в истории.
         </SheetDescription>
         {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
         <div className="flex gap-3">

@@ -9,7 +9,7 @@ export async function GET() {
   if (!user) return unauthorized();
 
   const recipes = await prisma.recipe.findMany({
-    where: { householdId: user.householdId },
+    where: { householdId: user.householdId, deletedAt: null },
     include: {
       steps: { orderBy: { order: "asc" } },
       ingredients: { include: { ingredient: true } },

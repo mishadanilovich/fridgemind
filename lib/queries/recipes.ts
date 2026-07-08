@@ -3,13 +3,15 @@ import { matchCounts } from "@/lib/recipes";
 import type { RecipeCardView, RecipeWithDetails } from "@/lib/types";
 
 // Рецепт household со всеми шагами и ингредиентами — общий источник для экранов просмотра
-// и редактирования.
+// и редактирования. Soft-deleted рецепты по умолчанию скрыты; includeDeleted: true нужен
+// только для read-only просмотра из истории меню (см. issue #5), не для редактирования.
 export async function getRecipeDetail(
   householdId: string,
   id: string,
+  opts?: { includeDeleted?: boolean },
 ): Promise<RecipeWithDetails | null> {
   return prisma.recipe.findFirst({
-    where: { id, householdId },
+    where: { id, householdId, deletedAt: opts?.includeDeleted ? undefined : null },
     include: {
       steps: { orderBy: { order: "asc" } },
       ingredients: { include: { ingredient: true } },
@@ -25,7 +27,7 @@ export async function getRecipeCards(
 ): Promise<RecipeCardView[]> {
   const [recipes, pantry] = await Promise.all([
     prisma.recipe.findMany({
-      where: { householdId },
+      where: { householdId, deletedAt: null },
       orderBy: { createdAt: "desc" },
       include: { ingredients: { select: { ingredientId: true } } },
     }),
