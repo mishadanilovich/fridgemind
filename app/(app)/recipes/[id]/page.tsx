@@ -11,7 +11,10 @@ export default async function RecipeDetailPage({ params }: Props) {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const recipe = await getRecipeDetail(user.householdId, id);
+  // includeDeleted: страница просмотра открывается и для soft-deleted рецепта — по ссылке из
+  // истории меню (уже отмеченные "скушано"). Edit/delete в самом рецепте нет, так что она
+  // остаётся read-only; список рецептов такой рецепт не показывает (см. issue #5).
+  const recipe = await getRecipeDetail(user.householdId, id, { includeDeleted: true });
   if (!recipe) notFound();
 
   return <RecipeDetail recipe={recipe} />;

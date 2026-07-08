@@ -78,7 +78,7 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
   // внутри транзакции, без разрыва между "проверили" и "изменили" (см. code review PR #2).
   const notOwned = await prisma.$transaction(async (tx) => {
     const updated = await tx.recipe.updateMany({
-      where: { id: recipeId, householdId: user.householdId },
+      where: { id: recipeId, householdId: user.householdId, deletedAt: null },
       data: {
         title: data.title,
         photoUrl: data.photoUrl,
@@ -128,12 +128,13 @@ export async function saveRecipe(_prev: FormState, formData: FormData): Promise<
   redirect(`/recipes/${result.recipeId}`);
 }
 
-// Число приёмов пищи в меню, использующих рецепт — для предупреждения перед удалением.
+// Число будущих (не съеденных) приёмов пищи, которые удаление уберёт из плана — для
+// предупреждения. Отмеченные "скушано" сюда не входят: soft-delete их сохраняет (issue #5).
 export async function getRecipeUsage(recipeId: string): Promise<number> {
   const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return 0;
   return prisma.menuDayMeal.count({
-    where: { recipeId, recipe: { householdId: user.householdId } },
+    where: { recipeId, isEaten: false, recipe: { householdId: user.householdId } },
   });
 }
 
@@ -141,17 +142,23 @@ export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
-  // Ownership-проверка и удаление — одна атомарная транзакция, без разрыва между "проверили"
-  // и "удалили" (см. code review PR #2). MenuDayMeal.recipe без onDelete cascade — снимаем
-  // рецепт из меню сами, иначе БД отклонит; scoped householdId защищает от гонки/чужого id.
+  // Soft-delete вместо жёсткого удаления (см. CLAUDE.md §5, GitHub issue #5): рецепт помечается
+  // deletedAt и пропадает из списков/планов, но строка и её ингредиенты/шаги остаются в БД —
+  // чтобы уже отмеченные "скушано" приёмы пищи в прошлых неделях сохранили полную историю.
+  // Гибрид: будущие (не съеденные) MenuDayMeal всё же убираем из плана, eaten-записи не трогаем.
+  // Ownership-проверка и мутация — одна атомарная транзакция; deletedAt: null защищает от
+  // повторного удаления, scoped householdId — от гонки/чужого id.
   const notOwned = await prisma.$transaction(async (tx) => {
+    const updated = await tx.recipe.updateMany({
+      where: { id: recipeId, householdId: user.householdId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+    if (updated.count === 0) return true;
+
     await tx.menuDayMeal.deleteMany({
-      where: { recipeId, recipe: { householdId: user.householdId } },
+      where: { recipeId, isEaten: false, recipe: { householdId: user.householdId } },
     });
-    const deleted = await tx.recipe.deleteMany({
-      where: { id: recipeId, householdId: user.householdId },
-    });
-    return deleted.count === 0;
+    return false;
   });
   if (notOwned) return { error: "Рецепт не найден" };
 
