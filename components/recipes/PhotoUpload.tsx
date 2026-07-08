@@ -2,6 +2,7 @@
 
 import { Camera, Loader2, X } from "lucide-react";
 import Image from "next/image";
+import { unstable_rethrow } from "next/navigation";
 import { type ChangeEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,10 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
       const result = await uploadRecipePhoto(fd);
       if (result.error !== null) setError(result.error);
       else onChange(result.url);
-    } catch {
+    } catch (e) {
+      // requireRole() внутри uploadRecipePhoto делает redirect("/login") при истёкшей сессии —
+      // это спецошибка Next.js, которая должна долететь до фреймворка, а не быть проглоченной тут.
+      unstable_rethrow(e);
       setError("Не удалось обработать фото");
     } finally {
       setUploading(false);
