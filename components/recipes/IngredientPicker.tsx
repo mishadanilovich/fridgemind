@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Plus, Search } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,13 +47,17 @@ export function IngredientPicker({ value, onSelect }: Props) {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, startCreate] = useTransition();
 
-  // Дебаунс поиска: 250 мс после последнего нажатия.
+  // Дебаунс поиска: 250 мс после последнего нажатия. requestId защищает от гонки — если ответ
+  // на более раннюю раскладку придёт позже (сетевой джиттер), он не перезапишет свежие results.
+  const latestRequestId = useRef(0);
   useEffect(() => {
     if (!open) return;
     const q = query;
     const t = setTimeout(() => {
+      const requestId = ++latestRequestId.current;
       startSearch(async () => {
-        setResults(await searchIngredients(q));
+        const found = await searchIngredients(q);
+        if (requestId === latestRequestId.current) setResults(found);
       });
     }, 250);
     return () => clearTimeout(t);
