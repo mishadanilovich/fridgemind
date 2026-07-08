@@ -24,6 +24,7 @@ import type {
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
 import { IngredientPicker } from "./IngredientPicker";
+import { PhotoUpload } from "./PhotoUpload";
 import { ServingsStepper } from "./ServingsStepper";
 
 type IngredientRow = {
@@ -31,7 +32,7 @@ type IngredientRow = {
   product: { id: string; name: string; unit: Unit } | null;
   qty: string;
 };
-type StepRow = { key: string; instruction: string };
+type StepRow = { key: string; instruction: string; photoUrl: string | null };
 
 type Props = {
   recipe?: RecipeWithDetails;
@@ -50,6 +51,7 @@ export function RecipeForm({ recipe }: Props) {
     initialFormState,
   );
 
+  const [coverUrl, setCoverUrl] = useState<string | null>(recipe?.photoUrl ?? null);
   const [title, setTitle] = useState(recipe?.title ?? "");
   const [baseServings, setBaseServings] = useState(recipe?.baseServings ?? 2);
   const [cookTime, setCookTime] = useState(
@@ -66,13 +68,16 @@ export function RecipeForm({ recipe }: Props) {
     })) ?? [{ key: uid(), product: null, qty: "" }],
   );
   const [steps, setSteps] = useState<StepRow[]>(
-    recipe?.steps.map((s) => ({ key: uid(), instruction: s.instruction })) ?? [
-      { key: uid(), instruction: "" },
-    ],
+    recipe?.steps.map((s) => ({
+      key: uid(),
+      instruction: s.instruction,
+      photoUrl: s.photoUrl,
+    })) ?? [{ key: uid(), instruction: "", photoUrl: null }],
   );
 
   const payload = JSON.stringify({
     title: title.trim(),
+    photoUrl: coverUrl,
     baseServings,
     cookTimeMinutes: cookTime.trim() === "" ? null : Number(cookTime),
     cookingMethods: methods,
@@ -84,9 +89,8 @@ export function RecipeForm({ recipe }: Props) {
         unit: r.product!.unit,
       })),
     steps: steps
-      .map((s) => s.instruction.trim())
-      .filter(Boolean)
-      .map((instruction, order) => ({ order, instruction })),
+      .filter((s) => s.instruction.trim() !== "")
+      .map((s, order) => ({ order, instruction: s.instruction.trim(), photoUrl: s.photoUrl })),
   });
 
   return (
@@ -124,6 +128,11 @@ export function RecipeForm({ recipe }: Props) {
             {state.error}
           </div>
         )}
+
+        <div>
+          <FieldLabel>Фото рецепта</FieldLabel>
+          <PhotoUpload variant="cover" value={coverUrl} onChange={setCoverUrl} />
+        </div>
 
         <div>
           <FieldLabel>Название</FieldLabel>
@@ -296,14 +305,25 @@ export function RecipeForm({ recipe }: Props) {
                   }
                   rows={2}
                   placeholder="Опишите этот шаг…"
-                  className="min-h-0 resize-none rounded-xl bg-background font-medium"
+                  className="mb-2.5 min-h-0 resize-none rounded-xl bg-background font-medium"
+                />
+                <PhotoUpload
+                  variant="step"
+                  value={step.photoUrl}
+                  onChange={(url) =>
+                    setSteps((prev) =>
+                      prev.map((s) => (s.key === step.key ? { ...s, photoUrl: url } : s)),
+                    )
+                  }
                 />
               </div>
             ))}
           </div>
           <Button
             type="button"
-            onClick={() => setSteps((prev) => [...prev, { key: uid(), instruction: "" }])}
+            onClick={() =>
+              setSteps((prev) => [...prev, { key: uid(), instruction: "", photoUrl: null }])
+            }
             className="mt-2.5 h-auto w-full rounded-[14px] py-3 font-bold"
           >
             + Добавить шаг
