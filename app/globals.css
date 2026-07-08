@@ -29,6 +29,9 @@
     --badge: 41 48% 91%;
     --badge-border: 41 37% 85%;
     --badge-foreground: 38 52% 39%;
+    --terracotta: 22 42% 50%;
+    --terracotta-muted: 26 62% 95%;
+    --terracotta-border: 24 43% 83%;
     --nav-inactive: 42 21% 63%;
     --radius: 1rem;
     --shadow-card: 0 8px 20px -18px rgba(45, 32, 18, 0.5);
