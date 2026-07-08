@@ -21,7 +21,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
   const allInStock = matchTotal > 0 && matchHave === matchTotal;
 
   return (
-    <div className="mb-3 flex gap-3 rounded-[20px] border border-border bg-card p-[11px] shadow-[0_8px_20px_-18px_rgba(45,32,18,0.5)]">
+    <div className="mb-3 flex gap-3 rounded-card border border-border bg-card p-[11px] shadow-card">
       <Link href={`/recipes/${id}`} className="flex min-w-0 flex-1 gap-3">
         {photoUrl ? (
           <Image
@@ -29,10 +29,10 @@ export function RecipeCard({ recipe, canEdit }: Props) {
             alt={title}
             width={82}
             height={82}
-            className="size-[82px] shrink-0 rounded-[15px] object-cover"
+            className="size-[82px] shrink-0 rounded-lg object-cover"
           />
         ) : (
-          <div className="flex size-[82px] shrink-0 items-center justify-center rounded-[15px] bg-secondary text-muted-foreground">
+          <div className="flex size-[82px] shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <CookingPot className="size-8" />
           </div>
         )}

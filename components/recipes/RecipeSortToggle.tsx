@@ -30,7 +30,7 @@ export function RecipeSortToggle({ active }: Props) {
       disabled={isPending}
       aria-pressed={optimistic}
       className={cn(
-        "pressable mb-[18px] flex w-full items-center justify-between gap-3 rounded-[18px] border px-4 py-[13px] text-left",
+        "pressable mb-[18px] flex w-full items-center justify-between gap-3 rounded-toggle border px-4 py-[13px] text-left",
         "cursor-pointer disabled:cursor-not-allowed disabled:opacity-80",
         optimistic ? "border-primary bg-primary" : "border-border bg-card",
       )}
@@ -38,7 +38,7 @@ export function RecipeSortToggle({ active }: Props) {
       <span className="flex items-center gap-[11px]">
         <span
           className={cn(
-            "flex size-[34px] items-center justify-center rounded-[11px]",
+            "flex size-[34px] items-center justify-center rounded-sm",
             optimistic ? "bg-black/15 text-primary-foreground" : "bg-success text-primary",
           )}
         >

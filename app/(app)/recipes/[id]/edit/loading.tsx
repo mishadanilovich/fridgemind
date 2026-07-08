@@ -20,7 +20,7 @@ export default function EditRecipeLoading() {
       <div className="space-y-6 px-5 pb-11 pt-5">
         <div>
           <Label>Фото рецепта</Label>
-          <Skeleton className="h-[168px] rounded-[20px]" />
+          <Skeleton className="h-[168px] rounded-card" />
         </div>
         <div>
           <Label>Название</Label>
@@ -48,7 +48,7 @@ export default function EditRecipeLoading() {
         </div>
         <div>
           <Label>Шаги приготовления</Label>
-          <Skeleton className="h-40 rounded-[16px]" />
+          <Skeleton className="h-40 rounded-lg" />
         </div>
       </div>
     </div>

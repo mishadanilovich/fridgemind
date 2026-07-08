@@ -74,11 +74,11 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        className="gap-0 rounded-t-[28px] border-0 bg-background px-5 pb-7 pt-3.5 [&>button]:hidden"
+        className="gap-0 rounded-t-sheet border-0 bg-background px-5 pb-7 pt-3.5 [&>button]:hidden"
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[hsl(var(--nav-inactive))]" />
         <div className="mb-2 flex items-center gap-2.5">
-          <span className="flex size-[38px] items-center justify-center rounded-[11px] bg-destructive/10 text-destructive">
+          <span className="flex size-[38px] items-center justify-center rounded-sm bg-destructive/10 text-destructive">
             <Trash2 className="size-5" />
           </span>
           <SheetTitle className="font-heading text-[19px] font-bold text-foreground">

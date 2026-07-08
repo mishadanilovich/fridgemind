@@ -35,7 +35,7 @@ export function CookingMethodBadges({ methods, variant = "icon", className }: Pr
             key={method}
             title={label}
             className={cn(
-              "flex size-6 items-center justify-center rounded-[7px] border",
+              "flex size-6 items-center justify-center rounded-xs border",
               tone(method) === "success"
                 ? "border-success-border bg-success text-success-foreground"
                 : "border-badge-border bg-badge text-badge-foreground",

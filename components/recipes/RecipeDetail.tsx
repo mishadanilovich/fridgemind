@@ -104,7 +104,7 @@ export function RecipeDetail({ recipe }: Props) {
 
         {step ? (
           <>
-            <div className="overflow-hidden rounded-[22px] border border-border bg-card">
+            <div className="overflow-hidden rounded-hero border border-border bg-card">
               {step.photoUrl && (
                 <div className="relative h-[180px] w-full">
                   <Image
@@ -117,7 +117,7 @@ export function RecipeDetail({ recipe }: Props) {
                 </div>
               )}
               <div className="flex items-start gap-[13px] p-5">
-                <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[11px] bg-primary font-heading text-base font-extrabold text-primary-foreground">
+                <span className="flex size-[34px] shrink-0 items-center justify-center rounded-sm bg-primary font-heading text-base font-extrabold text-primary-foreground">
                   {stepIndex + 1}
                 </span>
                 <p className="mt-1 text-[15.5px] font-medium leading-[1.45] text-foreground">

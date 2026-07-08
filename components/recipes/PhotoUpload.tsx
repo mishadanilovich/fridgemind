@@ -50,7 +50,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
     }
   }
 
-  const box = variant === "cover" ? "h-[168px] rounded-[20px]" : "h-[120px] rounded-xl";
+  const box = variant === "cover" ? "h-[168px] rounded-card" : "h-[120px] rounded-xl";
 
   if (uploading) {
     return (
@@ -108,7 +108,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
   if (variant === "cover") {
     return (
       <>
-        <label className="pressable flex h-[168px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[20px] border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] bg-card text-muted-foreground">
+        <label className="pressable flex h-[168px] cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-[1.5px] border-dashed border-[hsl(var(--nav-inactive))] bg-card text-muted-foreground">
           <span className="flex size-[50px] items-center justify-center rounded-full bg-secondary">
             <Camera className="size-6" />
           </span>

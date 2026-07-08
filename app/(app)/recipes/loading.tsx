@@ -16,8 +16,8 @@ export default function RecipesLoading() {
         <Skeleton className="size-11 rounded-full" />
       </div>
 
-      <Skeleton className="mb-[18px] h-[62px] w-full rounded-[18px]" />
-      <Skeleton className="mb-3 h-[92px] w-full rounded-[20px]" />
+      <Skeleton className="mb-[18px] h-[62px] w-full rounded-toggle" />
+      <Skeleton className="mb-3 h-[92px] w-full rounded-card" />
 
       <RecipeCardSkeletonList count={4} />
     </div>

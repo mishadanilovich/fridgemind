@@ -17,7 +17,7 @@ export default function RecipeDetailLoading() {
             <Skeleton key={i} className="h-8 w-28 rounded-full" />
           ))}
         </div>
-        <Skeleton className="h-40 w-full rounded-[22px]" />
+        <Skeleton className="h-40 w-full rounded-hero" />
       </div>
     </div>
   );

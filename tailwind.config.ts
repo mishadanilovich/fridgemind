@@ -63,6 +63,16 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xs: "calc(var(--radius) - 8px)",
+        // Крупные декоративные радиусы карточек/шитов из макета Claude Design — не влезают
+        // в 3-тиерную шкалу выше без искажения дизайна, поэтому именованы по смыслу, а не по px.
+        toggle: "calc(var(--radius) + 2px)",
+        card: "calc(var(--radius) + 4px)",
+        hero: "calc(var(--radius) + 6px)",
+        sheet: "calc(var(--radius) + 12px)",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
       },
     },
   },

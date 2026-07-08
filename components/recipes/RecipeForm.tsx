@@ -128,7 +128,7 @@ export function RecipeForm({ recipe }: Props) {
 
       <div className="space-y-6 px-5 pb-11 pt-5">
         {state.error && (
-          <div className="rounded-[14px] border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
             {state.error}
           </div>
         )}
@@ -276,10 +276,10 @@ export function RecipeForm({ recipe }: Props) {
             {steps.map((step, index) => (
               <div
                 key={step.key}
-                className="rounded-[16px] border border-border bg-card p-[13px]"
+                className="rounded-lg border border-border bg-card p-[13px]"
               >
                 <div className="mb-2.5 flex items-center gap-2.5">
-                  <span className="flex size-[26px] items-center justify-center rounded-[8px] bg-primary font-heading text-[13px] font-extrabold text-primary-foreground">
+                  <span className="flex size-[26px] items-center justify-center rounded-xs bg-primary font-heading text-[13px] font-extrabold text-primary-foreground">
                     {index + 1}
                   </span>
                   <span className="text-xs font-bold text-muted-foreground">
