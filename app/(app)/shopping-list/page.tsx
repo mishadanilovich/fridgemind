@@ -1,3 +1,5 @@
+import { ScreenHeader } from "@/components/nav/ScreenHeader";
+
 // Экран "Список покупок".
 // TODO (см. CLAUDE.md, раздел 6, потоки "фильтр по дням", "отметил что купил",
 // "массовое обновление инвентаря", "общий список покупок в реальном времени"):
@@ -9,7 +11,7 @@
 export default function ShoppingListPage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Список покупок</h1>
+      <ScreenHeader eyebrow="На неделю" title="Список покупок" />
       <p className="text-sm text-muted-foreground">
         Список покупок ещё не реализован — см. CLAUDE.md, раздел 6.
       </p>

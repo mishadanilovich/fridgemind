@@ -1,23 +1,20 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Заглушка карточки рецепта — экран "Рецепты" (см. CLAUDE.md, раздел 6). */
 export function RecipeCardSkeleton() {
   return (
-    <div className="space-y-2 rounded-lg border border-border p-2">
-      <Skeleton className="h-32 w-full" />
-      <Skeleton className="h-4 w-4/5" />
-      <div className="flex gap-1.5">
-        <Skeleton className="h-4 w-4 rounded-full" />
-        <Skeleton className="h-4 w-4 rounded-full" />
-        <Skeleton className="h-4 w-4 rounded-full" />
+    <div className="mb-3 flex gap-3 rounded-[20px] border border-border bg-card p-[11px]">
+      <Skeleton className="size-[82px] shrink-0 rounded-[15px]" />
+      <div className="flex flex-1 flex-col justify-center gap-2">
+        <Skeleton className="h-[18px] w-[70%]" />
+        <Skeleton className="h-5 w-[100px] rounded-full" />
       </div>
     </div>
   );
 }
 
-export function RecipeCardSkeletonGrid({ count = 4 }: { count?: number }) {
+export function RecipeCardSkeletonList({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div>
       {Array.from({ length: count }).map((_, i) => (
         <RecipeCardSkeleton key={i} />
       ))}

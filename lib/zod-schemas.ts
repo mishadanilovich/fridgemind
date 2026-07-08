@@ -63,26 +63,42 @@ export type VisionRecognitionResponse = z.infer<typeof visionRecognitionResponse
 
 // ---------- Формы ----------
 
+// Новый пункт справочника Ingredient — создаётся при вводе рецепта/инвентаря, когда нужного
+// продукта в каталоге ещё нет (см. раздел 5 "Справочник ингредиентов").
+export const ingredientInputSchema = z.object({
+  name: z.string().trim().min(1, "Введите название").max(60, "Слишком длинное название"),
+  defaultUnitType: unitTypeSchema,
+  category: productCategorySchema,
+});
+export type IngredientInput = z.infer<typeof ingredientInputSchema>;
+
 export const recipeIngredientInputSchema = z.object({
-  ingredientId: z.string().min(1),
-  quantity: z.number().positive(),
+  ingredientId: z.string().min(1, "Выберите продукт"),
+  quantity: z.number().positive("Укажите количество"),
   unit: unitSchema,
 });
 
 export const recipeStepInputSchema = z.object({
   order: z.number().int().nonnegative(),
-  instruction: z.string().min(1),
+  instruction: z.string().min(1, "Опишите шаг"),
   photoUrl: z.string().url().nullable().optional(),
 });
 
 export const recipeInputSchema = z.object({
-  title: z.string().min(1),
-  photoUrl: z.string().url().nullable().optional(),
-  baseServings: z.number().int().positive(),
-  cookTimeMinutes: z.number().int().positive().nullable().optional(),
+  title: z.string().trim().min(1, "Введите название"),
+  photoUrl: z
+    .string({ invalid_type_error: "Добавьте фото рецепта" })
+    .url("Добавьте фото рецепта"),
+  baseServings: z.number().int().positive("Укажите число порций"),
+  cookTimeMinutes: z
+    .number()
+    .int("Время — в целых минутах")
+    .positive("Время должно быть больше нуля")
+    .nullable()
+    .optional(),
   cookingMethods: z.array(cookingMethodSchema),
-  ingredients: z.array(recipeIngredientInputSchema).min(1),
-  steps: z.array(recipeStepInputSchema).min(1),
+  ingredients: z.array(recipeIngredientInputSchema).min(1, "Добавьте хотя бы один ингредиент"),
+  steps: z.array(recipeStepInputSchema).min(1, "Добавьте хотя бы один шаг"),
 });
 export type RecipeInput = z.infer<typeof recipeInputSchema>;
 

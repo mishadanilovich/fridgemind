@@ -1,3 +1,5 @@
+import { ScreenHeader } from "@/components/nav/ScreenHeader";
+
 // Экран "Домашние запасы (инвентарь)".
 // TODO (см. CLAUDE.md, раздел 6 "Поток фото холодильника"):
 // - список PantryItem, сгруппированный по ProductCategory, с редактированием/удалением
@@ -6,7 +8,7 @@
 export default function InventoryPage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Домашние запасы</h1>
+      <ScreenHeader eyebrow="Дома есть" title="Запасы" />
       <p className="text-sm text-muted-foreground">
         Инвентарь ещё не реализован — см. CLAUDE.md, раздел 6.
       </p>

@@ -1,3 +1,5 @@
+import { ScreenHeader } from "@/components/nav/ScreenHeader";
+
 // Экран "Меню на неделю".
 // TODO (см. CLAUDE.md, раздел 6):
 // - 7 дней, в каждом дне — слоты MealSlot household'а в заданном порядке
@@ -8,7 +10,7 @@
 export default function MenuPage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Меню на неделю</h1>
+      <ScreenHeader eyebrow="Планирование" title="Меню на неделю" />
       <p className="text-sm text-muted-foreground">
         Конструктор недели ещё не реализован — см. CLAUDE.md, раздел 6.
       </p>

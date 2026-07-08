@@ -31,8 +31,24 @@
     --badge-foreground: 38 52% 39%;
     --nav-inactive: 42 21% 63%;
     --radius: 1rem;
+    --shadow-card: 0 8px 20px -18px rgba(45, 32, 18, 0.5);
     --font-heading: "Bricolage Grotesque", sans-serif;
     --font-sans: "Hanken Grotesk", sans-serif;
+  }
+}
+
+@layer components {
+  /* Единый hover из макета (style-hover): затемнение + лёгкое сжатие, кроме disabled.
+     Ограничено устройствами с настоящим hover (мышь/трекпад) — на тач-экранах :hover
+     срабатывает по тапу и не всегда снимается, отчего кнопка выглядит "залипшей". */
+  .pressable {
+    transition: filter 150ms ease, transform 150ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pressable:not(:disabled):hover {
+      filter: brightness(0.9);
+      transform: scale(0.97);
+    }
   }
 }
 
