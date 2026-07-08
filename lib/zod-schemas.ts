@@ -86,7 +86,9 @@ export const recipeStepInputSchema = z.object({
 
 export const recipeInputSchema = z.object({
   title: z.string().trim().min(1, "Введите название"),
-  photoUrl: z.string().url().nullable().optional(),
+  photoUrl: z
+    .string({ invalid_type_error: "Добавьте фото рецепта" })
+    .url("Добавьте фото рецепта"),
   baseServings: z.number().int().positive("Укажите число порций"),
   cookTimeMinutes: z
     .number()

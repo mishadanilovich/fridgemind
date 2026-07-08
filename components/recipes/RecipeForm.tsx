@@ -132,6 +132,7 @@ export function RecipeForm({ recipe }: Props) {
         <div>
           <FieldLabel>Фото рецепта</FieldLabel>
           <PhotoUpload variant="cover" value={coverUrl} onChange={setCoverUrl} />
+          <FieldError message={state.fieldErrors?.photoUrl} />
         </div>
 
         <div>

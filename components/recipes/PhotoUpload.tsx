@@ -91,7 +91,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           </span>
           <span className="text-[13.5px] font-bold">Добавить фото</span>
           <span className="text-[11.5px] font-medium text-[hsl(var(--nav-inactive))]">
-            Необязательно · показывается в списке рецептов
+            Показывается в списке рецептов и на карточке
           </span>
           <input type="file" accept="image/*" onChange={onSelect} className="hidden" />
         </label>

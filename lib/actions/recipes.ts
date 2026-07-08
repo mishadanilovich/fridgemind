@@ -98,6 +98,7 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
 
   revalidatePath("/recipes");
   revalidatePath(`/recipes/${recipeId}`);
+  revalidatePath(`/recipes/${recipeId}/edit`);
   return { error: null, recipeId };
 }
 
