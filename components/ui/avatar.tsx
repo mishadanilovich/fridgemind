@@ -3,12 +3,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const avatarVariants = cva(
-  "flex shrink-0 items-center justify-center rounded-full font-semibold",
+  "flex shrink-0 items-center justify-center rounded-full font-heading font-extrabold",
   {
     variants: {
       size: {
-        sm: "h-9 w-9 text-sm",
-        lg: "h-14 w-14 text-xl",
+        sm: "size-10 text-[15px]",
+        lg: "size-[60px] text-[26px]",
       },
       tone: {
         primary: "bg-primary text-primary-foreground",

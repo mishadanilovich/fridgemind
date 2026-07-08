@@ -61,7 +61,7 @@ export function InviteSection({ inviteCode }: Props) {
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} className="w-full" icon={<UserPlus />}>
+      <Button onClick={() => setOpen(true)} variant="accent" className="w-full" icon={<UserPlus />}>
         Пригласить
       </Button>
     );

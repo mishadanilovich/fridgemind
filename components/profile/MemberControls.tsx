@@ -25,6 +25,13 @@ import {
 import { changeMemberRole, removeMember } from "@/lib/actions/household";
 import { ASSIGNABLE_ROLES, ROLE_LABELS } from "@/lib/roles";
 import type { HouseholdRole, HouseholdRoleValue } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+const ROLE_TINT: Record<HouseholdRole, string> = {
+  ORGANIZER: "border-transparent bg-success text-success-foreground",
+  EDITOR: "border-transparent bg-terracotta-muted text-terracotta",
+  MEMBER: "border-transparent bg-secondary text-muted-foreground",
+};
 
 type Props = {
   userId: string;
@@ -56,7 +63,10 @@ export function MemberControls({ userId, name, role }: Props) {
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <Select value={role} onValueChange={onRoleChange} disabled={isPending}>
-          <SelectTrigger className="h-9 w-36" aria-label={`Роль участника ${name}`}>
+          <SelectTrigger
+            className={cn("h-9 w-36 font-semibold", ROLE_TINT[role])}
+            aria-label={`Роль участника ${name}`}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -71,7 +81,7 @@ export function MemberControls({ userId, name, role }: Props) {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="ghostDestructive"
+              variant="terracottaGhost"
               size="icon"
               className="h-9 w-9"
               aria-label={`Удалить ${name} из семьи`}

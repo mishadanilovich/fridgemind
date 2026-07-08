@@ -15,6 +15,8 @@ const badgeVariants = cva(
         // Тёплый тон из макета — способы готовки, совпадение с запасами.
         warm: "border-badge-border bg-badge text-badge-foreground",
         success: "border-success-border bg-success text-success-foreground",
+        terracotta: "border-terracotta-border bg-terracotta-muted text-terracotta",
+        muted: "border-transparent bg-secondary text-muted-foreground",
         // Нейтральный чип на карточном фоне — ингредиенты рецепта.
         chip: "border-border bg-card text-foreground",
         // Оранжевая метка — время приготовления.
