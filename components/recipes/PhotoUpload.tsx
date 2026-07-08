@@ -64,15 +64,21 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
         <Image src={value} alt="" fill sizes="(max-width: 448px) 100vw, 448px" className="object-cover" />
         {variant === "cover" ? (
           <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2">
-            <label className="pressable flex-1 cursor-pointer rounded-xl bg-background/90 py-2.5 text-center text-[12.5px] font-bold text-primary backdrop-blur">
-              Заменить
-              <FileInput onSelect={onSelect} />
-            </label>
+            <Button
+              asChild
+              variant="ghost"
+              className="h-9 flex-1 rounded-xl bg-background/90 text-[12.5px] font-bold text-primary backdrop-blur"
+            >
+              <label className="cursor-pointer">
+                Заменить
+                <FileInput onSelect={onSelect} />
+              </label>
+            </Button>
             <Button
               type="button"
               variant="destructive"
               onClick={() => onChange(null)}
-              className="h-auto flex-1 rounded-xl bg-destructive/90 py-2.5 text-[12.5px] font-bold backdrop-blur"
+              className="h-9 flex-1 rounded-xl bg-destructive/90 text-[12.5px] font-bold backdrop-blur"
             >
               Убрать
             </Button>
