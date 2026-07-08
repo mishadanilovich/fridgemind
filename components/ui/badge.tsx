@@ -16,7 +16,7 @@ const badgeVariants = cva(
         warm: "border-badge-border bg-badge text-badge-foreground",
         success: "border-success-border bg-success text-success-foreground",
         // Оранжевый тинт из макета — низкое совпадение с запасами.
-        warning: "border-transparent bg-accent-muted text-destructive",
+        warning: "border-accent-border bg-accent-muted text-destructive",
         destructiveMuted: "border-destructive-border bg-destructive-muted text-destructive",
         muted: "border-transparent bg-secondary text-muted-foreground",
         // Нейтральный чип на карточном фоне — ингредиенты рецепта.
