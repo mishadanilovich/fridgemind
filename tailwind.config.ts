@@ -39,6 +39,7 @@ const config: Config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          muted: "hsl(var(--accent-muted))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -54,7 +55,9 @@ const config: Config = {
           DEFAULT: "hsl(var(--success))",
           border: "hsl(var(--success-border))",
           foreground: "hsl(var(--success-foreground))",
+          dot: "hsl(var(--success-dot))",
         },
+        "tan-dashed": "hsl(var(--tan-dashed))",
         badge: {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",
