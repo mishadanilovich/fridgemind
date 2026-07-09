@@ -1,9 +1,9 @@
 "use server";
 
 import { requireRole } from "@/lib/auth";
+import { RECIPE_PHOTOS_BUCKET } from "@/lib/recipe-photos";
 import { createStorageAdminClient } from "@/lib/supabase-admin";
 
-const BUCKET = "recipe-photos";
 const MAX_BYTES = 2 * 1024 * 1024; // с запасом: клиент сжимает до ~0.6 МБ
 const ALLOWED = new Set(["image/webp", "image/jpeg", "image/png"]);
 const EXT: Record<string, string> = {
@@ -28,12 +28,12 @@ export async function uploadRecipePhoto(formData: FormData): Promise<UploadResul
   const path = `${user.householdId}/${crypto.randomUUID()}.${EXT[file.type]}`;
 
   const storage = createStorageAdminClient();
-  const { error } = await storage.from(BUCKET).upload(path, file, {
+  const { error } = await storage.from(RECIPE_PHOTOS_BUCKET).upload(path, file, {
     contentType: file.type,
     upsert: false,
   });
   if (error) return { error: "Не удалось загрузить фото. Попробуйте ещё раз." };
 
-  const { data } = storage.from(BUCKET).getPublicUrl(path);
+  const { data } = storage.from(RECIPE_PHOTOS_BUCKET).getPublicUrl(path);
   return { error: null, url: data.publicUrl };
 }
