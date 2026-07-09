@@ -61,6 +61,12 @@ export const visionRecognitionResponseSchema = z.object({
 });
 export type VisionRecognitionResponse = z.infer<typeof visionRecognitionResponseSchema>;
 
+// Подтверждение распознанного списка пользователем (после правок на экране проверки).
+export const confirmRecognizedProductsSchema = z.object({
+  products: z.array(recognizedProductSchema).min(1, "Нет продуктов для добавления"),
+});
+export type ConfirmRecognizedProductsInput = z.infer<typeof confirmRecognizedProductsSchema>;
+
 // ---------- Формы ----------
 
 // Новый пункт справочника Ingredient — создаётся при вводе рецепта/инвентаря, когда нужного
