@@ -92,8 +92,10 @@ export function RecipeForm({ recipe }: Props) {
         quantity: Number(r.qty) || 0,
         unit: r.product!.unit,
       })),
+    // Шаг с фото, но без текста остаётся в payload по той же причине: иначе он молча пропадёт
+    // вместе с загруженным фото, а Zod-схема step.instruction сама покажет "Опишите шаг".
     steps: steps
-      .filter((s) => s.instruction.trim() !== "")
+      .filter((s) => s.instruction.trim() !== "" || s.photoUrl !== null)
       .map((s, order) => ({ order, instruction: s.instruction.trim(), photoUrl: s.photoUrl })),
   });
 

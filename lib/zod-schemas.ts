@@ -97,7 +97,13 @@ export const recipeInputSchema = z.object({
     .nullable()
     .optional(),
   cookingMethods: z.array(cookingMethodSchema),
-  ingredients: z.array(recipeIngredientInputSchema).min(1, "Добавьте хотя бы один ингредиент"),
+  ingredients: z
+    .array(recipeIngredientInputSchema)
+    .min(1, "Добавьте хотя бы один ингредиент")
+    .refine(
+      (list) => new Set(list.map((i) => i.ingredientId)).size === list.length,
+      "Один и тот же продукт добавлен несколько раз",
+    ),
   steps: z.array(recipeStepInputSchema).min(1, "Добавьте хотя бы один шаг"),
 });
 export type RecipeInput = z.infer<typeof recipeInputSchema>;
