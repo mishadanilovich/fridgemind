@@ -28,3 +28,8 @@ yarn-debug.log*
 yarn-error.log*
 
 .vercel
+
+playwright-report/
+test-results/
+blob-report/
+e2e/.test-user.json
