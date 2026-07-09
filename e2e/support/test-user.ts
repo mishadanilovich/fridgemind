@@ -49,14 +49,25 @@ export function readTestUser(): TestUser {
 export async function deleteTestUser(user: TestUser): Promise<void> {
   const supabase = adminClient();
 
-  const { data: userRow } = await supabase
+  const { data: userRow, error: selectError } = await supabase
     .from("users")
     .select("household_id")
     .eq("id", user.id)
     .maybeSingle();
+  if (selectError) {
+    throw new Error(`Не удалось найти household тестового пользователя: ${selectError.message}`);
+  }
 
   if (userRow?.household_id) {
-    await supabase.from("households").delete().eq("id", userRow.household_id);
+    const { error: deleteError } = await supabase
+      .from("households")
+      .delete()
+      .eq("id", userRow.household_id);
+    if (deleteError) {
+      // Не удаляем auth-пользователя, если household не удалился — иначе он останется
+      // осиротевшим (без владельца) и потеряется как мусор в общем dev-проекте Supabase.
+      throw new Error(`Не удалось удалить тестовый household: ${deleteError.message}`);
+    }
   }
   await supabase.auth.admin.deleteUser(user.id);
 
