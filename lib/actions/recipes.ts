@@ -8,6 +8,8 @@ import type { ActionResult, FormState } from "@/lib/form-state";
 import { fieldIssues, firstIssue } from "@/lib/form-state";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { orphanedStoragePaths, RECIPE_PHOTOS_BUCKET } from "@/lib/recipe-photos";
+import { createStorageAdminClient } from "@/lib/supabase-admin";
 import { type RecipeInput, recipeInputSchema } from "@/lib/zod-schemas";
 
 // Запись рецептов — только Организатору/Редактору (см. CLAUDE.md §5, RLS recipes).
@@ -15,6 +17,23 @@ import { type RecipeInput, recipeInputSchema } from "@/lib/zod-schemas";
 export type SaveRecipeResult =
   | { error: string; recipeId?: undefined }
   | { error: null; recipeId: string };
+
+// Диф старых/новых photoUrl после успешного сохранения: файлы, на которые рецепт больше не
+// ссылается, удаляются из Storage best-effort — неудача не откатывает сохранение, файл просто
+// останется сиротой, как до чистки (issue #3). При soft-delete рецепта файлы НЕ трогаются:
+// история меню открывает удалённый рецепт read-only вместе с фото (issue #5).
+async function removeOrphanedPhotos(
+  oldUrls: (string | null)[],
+  keptUrls: (string | null)[],
+): Promise<void> {
+  const paths = orphanedStoragePaths(oldUrls, keptUrls);
+  if (paths.length === 0) return;
+  try {
+    await createStorageAdminClient().from(RECIPE_PHOTOS_BUCKET).remove(paths);
+  } catch {
+    // намеренно проглатываем: best-effort
+  }
+}
 
 async function writeChildren(
   tx: Prisma.TransactionClient,
@@ -76,7 +95,13 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
 
   // updateMany вместо findFirst+update: ownership-проверка и мутация — одна атомарная операция
   // внутри транзакции, без разрыва между "проверили" и "изменили" (см. code review PR #2).
-  const notOwned = await prisma.$transaction(async (tx) => {
+  // findFirst здесь только собирает старые photoUrl для чистки Storage — гейтом остаётся
+  // updateMany, поэтому от его результата зависит лишь best-effort диф, не сама мутация.
+  const oldPhotoUrls = await prisma.$transaction(async (tx) => {
+    const existing = await tx.recipe.findFirst({
+      where: { id: recipeId, householdId: user.householdId, deletedAt: null },
+      select: { photoUrl: true, steps: { select: { photoUrl: true } } },
+    });
     const updated = await tx.recipe.updateMany({
       where: { id: recipeId, householdId: user.householdId, deletedAt: null },
       data: {
@@ -87,14 +112,19 @@ export async function updateRecipe(recipeId: string, input: unknown): Promise<Sa
         cookingMethods: data.cookingMethods,
       },
     });
-    if (updated.count === 0) return true;
+    if (updated.count === 0) return null;
 
     await tx.recipeStep.deleteMany({ where: { recipeId } });
     await tx.recipeIngredient.deleteMany({ where: { recipeId } });
     await writeChildren(tx, recipeId, data);
-    return false;
+    return existing ? [existing.photoUrl, ...existing.steps.map((s) => s.photoUrl)] : [];
   });
-  if (notOwned) return { error: "Рецепт не найден" };
+  if (oldPhotoUrls === null) return { error: "Рецепт не найден" };
+
+  await removeOrphanedPhotos(oldPhotoUrls, [
+    data.photoUrl,
+    ...data.steps.map((s) => s.photoUrl ?? null),
+  ]);
 
   revalidatePath("/recipes");
   revalidatePath(`/recipes/${recipeId}`);
