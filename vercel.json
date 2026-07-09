@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-recipe-photos",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

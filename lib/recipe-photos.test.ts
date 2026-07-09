@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { orphanedStoragePaths, storagePathFromPublicUrl } from "./recipe-photos";
+import { orphanedStoragePaths, staleOrphanPaths, storagePathFromPublicUrl } from "./recipe-photos";
 
 const publicUrl = (path: string) =>
   `https://abc.supabase.co/storage/v1/object/public/recipe-photos/${path}`;
@@ -43,5 +43,36 @@ describe("orphanedStoragePaths", () => {
         [null],
       ),
     ).toEqual(["hh-1/a.webp"]);
+  });
+});
+
+describe("staleOrphanPaths", () => {
+  const now = new Date("2026-07-09T12:00:00Z");
+  const twoDaysAgo = "2026-07-07T12:00:00Z";
+  const hourAgo = "2026-07-09T11:00:00Z";
+
+  it("returns unreferenced files older than a day", () => {
+    expect(
+      staleOrphanPaths(
+        [
+          { path: "hh-1/orphan.webp", createdAt: twoDaysAgo },
+          { path: "hh-1/used.webp", createdAt: twoDaysAgo },
+        ],
+        new Set(["hh-1/used.webp"]),
+        now,
+      ),
+    ).toEqual(["hh-1/orphan.webp"]);
+  });
+
+  it("keeps recent orphans: they may belong to an unsaved form", () => {
+    expect(
+      staleOrphanPaths([{ path: "hh-1/fresh.webp", createdAt: hourAgo }], new Set(), now),
+    ).toEqual([]);
+  });
+
+  it("keeps files without createdAt", () => {
+    expect(
+      staleOrphanPaths([{ path: "hh-1/unknown.webp", createdAt: null }], new Set(), now),
+    ).toEqual([]);
   });
 });
