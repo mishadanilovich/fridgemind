@@ -4,7 +4,9 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 
+import { IngredientPicker } from "@/components/ingredients/IngredientPicker";
 import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -23,7 +25,6 @@ import type {
 } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
-import { IngredientPicker } from "./IngredientPicker";
 import { PhotoUpload } from "./PhotoUpload";
 import { ServingsStepper } from "./ServingsStepper";
 
@@ -350,9 +351,4 @@ function FieldLabel({ children }: { children: string }) {
       {children}
     </div>
   );
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="mt-1.5 text-sm font-medium text-destructive">{message}</p>;
 }

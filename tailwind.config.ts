@@ -60,6 +60,13 @@ const config: Config = {
         },
         "tan-dashed": "hsl(var(--tan-dashed))",
         "nav-inactive": "hsl(var(--nav-inactive))",
+        dot: {
+          dairy: "hsl(var(--dot-dairy))",
+          meat: "hsl(var(--dot-meat))",
+          produce: "hsl(var(--dot-produce))",
+          grocery: "hsl(var(--dot-grocery))",
+          neutral: "hsl(var(--dot-neutral))",
+        },
         badge: {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",

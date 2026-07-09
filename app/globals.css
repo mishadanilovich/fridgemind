@@ -36,6 +36,12 @@
     --badge-foreground: 38 52% 39%;
     --nav-inactive: 42 21% 63%;
     --tan-dashed: 40 33% 78%;
+    /* Точки категорий продуктов (инвентарь, позже — список покупок), из dotFor макета. */
+    --dot-dairy: 39 81% 59%;
+    --dot-meat: 10 52% 62%;
+    --dot-produce: 91 25% 50%;
+    --dot-grocery: 34 50% 57%;
+    --dot-neutral: 210 6% 63%;
     --radius: 1rem;
     --shadow-card: 0 8px 20px -18px rgba(45, 32, 18, 0.5);
     --font-heading: "Bricolage Grotesque", sans-serif;
