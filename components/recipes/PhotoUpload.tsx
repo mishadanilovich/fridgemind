@@ -22,6 +22,11 @@ function FileInput({ onSelect }: { onSelect: (e: ChangeEvent<HTMLInputElement>) 
   return <Input type="file" accept="image/*" onChange={onSelect} className="hidden" />;
 }
 
+function ErrorText({ message }: { message: string | null }) {
+  if (!message) return null;
+  return <p className="mt-1.5 text-sm font-medium text-destructive">{message}</p>;
+}
+
 export function PhotoUpload({ value, onChange, variant }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,44 +69,47 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
 
   if (value) {
     return (
-      <div className={`relative overflow-hidden ${box}`}>
-        <Image src={value} alt="" fill sizes="(max-width: 448px) 100vw, 448px" className="object-cover" />
-        {variant === "cover" ? (
-          <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="flex-1 bg-background/90 text-[12.5px] font-bold text-primary backdrop-blur"
-            >
-              <label className="cursor-pointer">
-                Заменить
-                <FileInput onSelect={onSelect} />
-              </label>
-            </Button>
+      <>
+        <div className={`relative overflow-hidden ${box}`}>
+          <Image src={value} alt="" fill sizes="(max-width: 448px) 100vw, 448px" className="object-cover" />
+          {variant === "cover" ? (
+            <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="flex-1 bg-background/90 text-[12.5px] font-bold text-primary backdrop-blur"
+              >
+                <label className="cursor-pointer">
+                  Заменить
+                  <FileInput onSelect={onSelect} />
+                </label>
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => onChange(null)}
+                className="flex-1 bg-destructive/90 text-[12.5px] font-bold backdrop-blur"
+              >
+                Убрать
+              </Button>
+            </div>
+          ) : (
             <Button
               type="button"
-              variant="destructive"
-              size="sm"
+              variant="ghost"
+              size="iconSm"
               onClick={() => onChange(null)}
-              className="flex-1 bg-destructive/90 text-[12.5px] font-bold backdrop-blur"
+              aria-label="Убрать фото шага"
+              className="absolute right-2 top-2 bg-foreground/60 text-white backdrop-blur"
             >
-              Убрать
+              <X />
             </Button>
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="iconSm"
-            onClick={() => onChange(null)}
-            aria-label="Убрать фото шага"
-            className="absolute right-2 top-2 bg-foreground/60 text-white backdrop-blur"
-          >
-            <X />
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+        <ErrorText message={error} />
+      </>
     );
   }
 
@@ -118,7 +126,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           </span>
           <FileInput onSelect={onSelect} />
         </label>
-        {error && <p className="mt-1.5 text-sm font-medium text-destructive">{error}</p>}
+        <ErrorText message={error} />
       </>
     );
   }
@@ -130,7 +138,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
         Добавить фото шага
         <FileInput onSelect={onSelect} />
       </label>
-      {error && <p className="mt-1.5 text-sm font-medium text-destructive">{error}</p>}
+      <ErrorText message={error} />
     </>
   );
 }
