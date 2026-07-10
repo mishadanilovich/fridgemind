@@ -88,6 +88,7 @@ model Household {
   menuWeeks         MenuWeek[]
   mealSlots         MealSlot[]
   shoppingListItems ShoppingListItem[]
+  visionUsage       VisionUsage[]
 
   @@map("households")
 }
@@ -200,6 +201,22 @@ model PantryItem {
   @@unique([householdId, ingredientId]) // одна строка на продукт в household — количество пополняется/уменьшается
   @@index([householdId])
   @@map("pantry_items")
+}
+
+// ---------- Vision usage (счётчик фото-распознаваний в день, см. CLAUDE.md §7 п.4) ----------
+
+// Лимит VISION_DAILY_LIMIT вызовов Claude Vision в день на household — защита от случайной
+// накрутки счёта. Таблица служебная: пишется только сервером (Prisma), через PostgREST закрыта.
+model VisionUsage {
+  id          String   @id @default(cuid())
+  householdId String   @map("household_id")
+  day         DateTime @db.Date
+  count       Int      @default(0)
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, day])
+  @@map("vision_usage")
 }
 
 // ---------- Meal slots (динамические, настраиваемые household'ом) ----------

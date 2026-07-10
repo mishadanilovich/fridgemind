@@ -4,10 +4,10 @@ import { Camera, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { AddPantrySheet } from "./AddPantrySheet";
+import { ScanSheet } from "./ScanSheet";
 
-// Кнопка "Сфотографировать запасы" — заглушка до подключения Claude Vision (этап 5,
-// вторая часть): распознавание фото делается следом за ручным вводом.
 export function InventoryActions() {
+  const [scanOpen, setScanOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
   return (
@@ -15,12 +15,11 @@ export function InventoryActions() {
       <div className="mb-5 flex gap-2.5">
         <button
           type="button"
-          disabled
-          className="flex flex-1 flex-col items-center gap-[7px] rounded-card bg-primary px-3 py-[15px] text-[13.5px] font-bold text-primary-foreground opacity-50 shadow-card"
+          onClick={() => setScanOpen(true)}
+          className="pressable flex flex-1 flex-col items-center gap-[7px] rounded-card bg-primary px-3 py-[15px] text-[13.5px] font-bold text-primary-foreground shadow-card"
         >
           <Camera className="size-[22px]" />
           Сфотографировать запасы
-          <span className="-mt-1 text-[10.5px] font-semibold opacity-80">скоро</span>
         </button>
         <button
           type="button"
@@ -32,6 +31,7 @@ export function InventoryActions() {
         </button>
       </div>
 
+      <ScanSheet open={scanOpen} onOpenChange={setScanOpen} />
       <AddPantrySheet open={addOpen} onOpenChange={setAddOpen} />
     </>
   );

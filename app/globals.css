@@ -62,6 +62,15 @@
       transform: scale(0.97);
     }
   }
+  /* Выключатель эффекта нажатия для триггеров-«полей» (выбор продукта и т.п.):
+     контрол выглядит как input и не должен вести себя как кнопка. Селектор с :hover
+     повторяет специфичность правила выше и объявлен позже — поэтому побеждает. */
+  .pressable-off,
+  .pressable-off:not(:disabled):hover {
+    filter: none;
+    transform: none;
+    transition: none;
+  }
 }
 
 @layer base {

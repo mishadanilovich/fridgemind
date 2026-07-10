@@ -57,3 +57,12 @@ export const DISPLAY_UNIT_LABEL: Record<Unit, string> = {
 export function sanitizeQuantityInput(raw: string): string {
   return raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
 }
+
+// Безопасное количество, когда оценка сделана под другой unitType: WEIGHT/VOLUME/COUNT между
+// собой не конвертируются, поэтому чужое число не переносится, а заменяется минимальным
+// правдоподобным — пользователь поправит его на экране проверки или в инвентаре.
+export const FALLBACK_QUANTITY_BY_TYPE: Record<UnitType, number> = {
+  WEIGHT: 100,
+  VOLUME: 100,
+  COUNT: 1,
+};
