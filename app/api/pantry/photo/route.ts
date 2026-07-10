@@ -15,6 +15,9 @@ import { consumeVisionCall, releaseVisionCall, visionDailyLimit } from "@/lib/vi
 const MAX_PHOTOS = 5;
 const MAX_BYTES = 2 * 1024 * 1024; // с запасом: клиент сжимает до ~0.6 МБ
 const ALLOWED_TYPES = new Set(["image/webp", "image/jpeg", "image/png", "image/gif"]);
+// Стоимость промпта растёт линейно со справочником — отправляем не больше этого числа пунктов.
+// Продукт за пределами среза модель пометит новым, а resolveIngredient склеит его по имени.
+const CATALOG_PROMPT_LIMIT = 200;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -49,6 +52,7 @@ export async function POST(request: Request) {
     const catalog = await prisma.ingredient.findMany({
       select: { id: true, name: true, defaultUnitType: true },
       orderBy: { name: "asc" },
+      take: CATALOG_PROMPT_LIMIT,
     });
 
     const images: VisionImage[] = await Promise.all(

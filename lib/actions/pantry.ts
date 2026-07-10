@@ -7,7 +7,7 @@ import type { ActionResult, FormState } from "@/lib/form-state";
 import { fieldIssues, firstIssue } from "@/lib/form-state";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { Ingredient } from "@/lib/types";
+import type { Ingredient, PantryItemSource, UnitType } from "@/lib/types";
 import { FALLBACK_QUANTITY_BY_TYPE, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 import type { RecognizedProduct } from "@/lib/zod-schemas";
 import {
@@ -20,6 +20,36 @@ import {
 // достаточно залогиненного пользователя, роль не проверяется.
 
 export type PantrySaved = { savedId: string };
+
+type PantryUpsertArgs = {
+  householdId: string;
+  ingredient: Ingredient;
+  quantity: number;
+  /** unitType, под которым количество было введено/оценено. */
+  claimedUnitType: UnitType;
+  addedVia: PantryItemSource;
+};
+
+// Единственная точка записи количества в PantryItem: единица всегда из справочника; количество,
+// оценённое под другим unitType, не переносится (WEIGHT/VOLUME/COUNT не конвертируются) и
+// заменяется безопасным минимумом; штучные значения округляются; повторное добавление продукта
+// атомарно пополняет количество по (householdId, ingredientId).
+function upsertPantryItemQuantity(
+  db: Prisma.TransactionClient,
+  { householdId, ingredient, quantity, claimedUnitType, addedVia }: PantryUpsertArgs,
+) {
+  const unit = UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
+  const trusted =
+    claimedUnitType === ingredient.defaultUnitType
+      ? quantity
+      : FALLBACK_QUANTITY_BY_TYPE[ingredient.defaultUnitType];
+  const normalized = unit === "PCS" ? Math.max(1, Math.round(trusted)) : trusted;
+  return db.pantryItem.upsert({
+    where: { householdId_ingredientId: { householdId, ingredientId: ingredient.id } },
+    create: { householdId, ingredientId: ingredient.id, quantity: normalized, unit, addedVia },
+    update: { quantity: { increment: normalized } },
+  });
+}
 
 export async function addPantryItem(
   _prev: FormState<Record<string, never>, PantrySaved>,
@@ -36,28 +66,18 @@ export async function addPantryItem(
   }
   const data = parsed.data;
 
-  // Единица выводится из справочника на сервере — скрытому инпуту с клиента не доверяем.
+  // Единица выводится из справочника на сервере — клиентскому вводу не доверяем.
   const ingredient = await prisma.ingredient.findUnique({ where: { id: data.ingredientId } });
   if (!ingredient) {
     return { error: null, fieldErrors: { ingredientId: "Выберите продукт" } };
   }
-  const unit = UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
-  const quantity = unit === "PCS" ? Math.max(1, Math.round(data.quantity)) : data.quantity;
 
-  // Атомарный upsert по (householdId, ingredientId): повторное добавление продукта пополняет
-  // количество, а гонка параллельных добавлений не создаёт дублей и не теряет инкременты.
-  const saved = await prisma.pantryItem.upsert({
-    where: {
-      householdId_ingredientId: { householdId: user.householdId, ingredientId: ingredient.id },
-    },
-    create: {
-      householdId: user.householdId,
-      ingredientId: ingredient.id,
-      quantity,
-      unit,
-      addedVia: "MANUAL",
-    },
-    update: { quantity: { increment: quantity } },
+  const saved = await upsertPantryItemQuantity(prisma, {
+    householdId: user.householdId,
+    ingredient,
+    quantity: data.quantity,
+    claimedUnitType: ingredient.defaultUnitType,
+    addedVia: "MANUAL",
   });
 
   revalidatePath("/inventory");
@@ -140,26 +160,12 @@ export async function confirmRecognizedProducts(input: unknown): Promise<ActionR
 
   await prisma.$transaction(async (tx) => {
     for (const { ingredient, product } of resolved) {
-      // Единица всегда из справочника. Количество, оценённое под другим unitType, не
-      // переносится (WEIGHT/VOLUME/COUNT не конвертируются) — вместо него безопасный минимум.
-      const unit = UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
-      const raw =
-        ingredient.defaultUnitType === product.unitType
-          ? product.quantity
-          : FALLBACK_QUANTITY_BY_TYPE[ingredient.defaultUnitType];
-      const quantity = unit === "PCS" ? Math.max(1, Math.round(raw)) : raw;
-      await tx.pantryItem.upsert({
-        where: {
-          householdId_ingredientId: { householdId: user.householdId, ingredientId: ingredient.id },
-        },
-        create: {
-          householdId: user.householdId,
-          ingredientId: ingredient.id,
-          quantity,
-          unit,
-          addedVia: "PHOTO",
-        },
-        update: { quantity: { increment: quantity } },
+      await upsertPantryItemQuantity(tx, {
+        householdId: user.householdId,
+        ingredient,
+        quantity: product.quantity,
+        claimedUnitType: product.unitType,
+        addedVia: "PHOTO",
       });
     }
   });

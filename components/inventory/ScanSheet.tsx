@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Minus, Plus, X } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
 
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
+import { Stepper } from "@/components/ui/stepper";
 import { confirmRecognizedProducts } from "@/lib/actions/pantry";
 import { compressImage } from "@/lib/compress-image";
 import type { RecognizedProduct, Unit } from "@/lib/types";
@@ -116,14 +117,8 @@ export function ScanSheet({ open, onOpenChange }: Props) {
     }
   }
 
-  function changeQuantity(key: string, direction: 1 | -1) {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.key !== key) return item;
-        const step = QUANTITY_STEP[item.unit];
-        return { ...item, quantity: Math.max(step, item.quantity + direction * step) };
-      }),
-    );
+  function setQuantity(key: string, quantity: number) {
+    setItems((prev) => prev.map((item) => (item.key === key ? { ...item, quantity } : item)));
   }
 
   function confirm() {
@@ -253,29 +248,17 @@ export function ScanSheet({ open, onOpenChange }: Props) {
                     </Badge>
                   )}
                 </span>
-                <Button
-                  type="button"
-                  variant="outline"
+                <Stepper
+                  value={item.quantity}
+                  onValueChange={(next) => setQuantity(item.key, next)}
+                  min={QUANTITY_STEP[item.unit]}
+                  max={999_999}
+                  step={QUANTITY_STEP[item.unit]}
+                  formatValue={(value) => formatQuantity(value, item.unit)}
                   size="iconSm"
-                  aria-label="Меньше"
-                  onClick={() => changeQuantity(item.key, -1)}
-                  className="size-7 shrink-0 rounded-sm bg-background text-primary"
-                >
-                  <Minus />
-                </Button>
-                <span className="min-w-[52px] shrink-0 text-center text-[13px] font-bold text-foreground">
-                  {formatQuantity(item.quantity, item.unit)}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="iconSm"
-                  aria-label="Больше"
-                  onClick={() => changeQuantity(item.key, 1)}
-                  className="size-7 shrink-0 rounded-sm bg-background text-primary"
-                >
-                  <Plus />
-                </Button>
+                  label={`Количество «${item.name}»`}
+                  className="shrink-0 gap-1.5"
+                />
                 <Button
                   type="button"
                   variant="ghost"
