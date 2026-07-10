@@ -3,8 +3,8 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 
 // Bricolage Grotesque не отдаёт кириллицу через next/font (нет subset'а "cyrillic" в
-// текущей версии next/font/google) — подключаем оба шрифта как в макете Claude Design,
-// через сам Google Fonts CSS2, который сам отдаёт нужный unicode-range subset.
+// текущей версии next/font/google) — поэтому оба шрифта подключаются напрямую через
+// Google Fonts CSS2, который сам отдаёт нужный unicode-range subset.
 
 export const metadata: Metadata = {
   title: "FridgeMind",
