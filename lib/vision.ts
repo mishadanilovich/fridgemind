@@ -15,8 +15,8 @@ export type VisionImage = {
   data: string; // base64 без переносов строк
 };
 
-// Haiku 4.5 — достаточен для распознавания продуктов и на порядок дешевле старших моделей
-// (решение из обсуждения стоимости); модель можно переопределить через env VISION_MODEL.
+// Haiku 4.5: качества хватает для распознавания продуктов, а стоимость на порядок ниже
+// старших моделей; переопределяется через env VISION_MODEL без правки кода.
 const DEFAULT_VISION_MODEL = "claude-haiku-4-5";
 
 export function visionModel(): string {
