@@ -39,3 +39,12 @@ export async function consumeVisionCall(householdId: string): Promise<boolean> {
     throw e;
   }
 }
+
+// Возвращает занятый вызов в лимит, если распознавание не состоялось (ошибка API, невалидный
+// ответ модели) — квота списывается только за реально удавшиеся распознавания.
+export async function releaseVisionCall(householdId: string): Promise<void> {
+  await prisma.visionUsage.updateMany({
+    where: { householdId, day: utcToday(), count: { gt: 0 } },
+    data: { count: { decrement: 1 } },
+  });
+}

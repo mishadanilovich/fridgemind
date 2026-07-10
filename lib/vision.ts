@@ -1,14 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-import { UNIT_TYPE_TO_UNIT } from "./units";
-import type { VisionRecognitionResponse } from "./zod-schemas";
+import { FALLBACK_QUANTITY_BY_TYPE, UNIT_TYPE_TO_UNIT } from "./units";
+import type { UnitTypeValue, VisionRecognitionResponse } from "./zod-schemas";
 import { visionRecognitionResponseSchema } from "./zod-schemas";
 
 // Изолированный модуль "фото → JSON списка продуктов" (см. CLAUDE.md §9): один вызов Claude
 // Vision сразу со всеми фото и списком справочника; сопоставление с существующими Ingredient
 // делает сама модель, отдельный fuzzy-matching на бэкенде не нужен.
 
-export type CatalogEntry = { id: string; name: string };
+export type CatalogEntry = { id: string; name: string; defaultUnitType: UnitTypeValue };
 
 export type VisionImage = {
   mediaType: "image/webp" | "image/jpeg" | "image/png" | "image/gif";
@@ -59,10 +59,13 @@ function extractJson(raw: string): string {
 
 // Валидирует и нормализует ответ модели: unit всегда выводится из unitType (модель не может
 // назначить "мл" моркови), неизвестные справочнику matchedIngredientId сбрасываются в null,
-// штучные количества округляются, продукты с пустым названием отбрасываются.
+// штучные количества округляются, продукты с пустым названием отбрасываются. Для продуктов,
+// сопоставленных со справочником, unitType существующего пункта главнее догадки модели, а
+// количество, оценённое под другим типом, не переносится (WEIGHT/VOLUME/COUNT между собой
+// не конвертируются) — подставляется минимум, который пользователь поправит на проверке.
 export function parseVisionResponse(
   raw: string,
-  catalogIds: ReadonlySet<string>,
+  catalog: ReadonlyMap<string, UnitTypeValue>,
 ): VisionRecognitionResponse {
   let data: unknown;
   try {
@@ -80,16 +83,21 @@ export function parseVisionResponse(
     products: parsed.data.products
       .filter((p) => p.name.trim() !== "")
       .map((p) => {
-        const unit = UNIT_TYPE_TO_UNIT[p.unitType];
+        const matchedIngredientId =
+          p.matchedIngredientId !== null && catalog.has(p.matchedIngredientId)
+            ? p.matchedIngredientId
+            : null;
+        const unitType =
+          matchedIngredientId !== null ? catalog.get(matchedIngredientId)! : p.unitType;
+        const unit = UNIT_TYPE_TO_UNIT[unitType];
+        const quantity = unitType === p.unitType ? p.quantity : FALLBACK_QUANTITY_BY_TYPE[unitType];
         return {
           ...p,
           name: p.name.trim(),
+          matchedIngredientId,
+          unitType,
           unit,
-          quantity: unit === "PCS" ? Math.max(1, Math.round(p.quantity)) : p.quantity,
-          matchedIngredientId:
-            p.matchedIngredientId !== null && catalogIds.has(p.matchedIngredientId)
-              ? p.matchedIngredientId
-              : null,
+          quantity: unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity,
         };
       }),
   };
@@ -123,5 +131,5 @@ export async function recognizeProducts(
     .map((block) => block.text)
     .join("\n");
 
-  return parseVisionResponse(text, new Set(catalog.map((c) => c.id)));
+  return parseVisionResponse(text, new Map(catalog.map((c) => [c.id, c.defaultUnitType])));
 }

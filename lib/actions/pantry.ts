@@ -5,9 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import type { ActionResult, FormState } from "@/lib/form-state";
 import { fieldIssues, firstIssue } from "@/lib/form-state";
-import type { Prisma } from "@/lib/generated/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { UNIT_TYPE_TO_UNIT } from "@/lib/units";
+import type { Ingredient } from "@/lib/types";
+import { FALLBACK_QUANTITY_BY_TYPE, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 import type { RecognizedProduct } from "@/lib/zod-schemas";
 import {
   confirmRecognizedProductsSchema,
@@ -90,22 +91,35 @@ export async function updatePantryItem(
 
 // Ингредиент для распознанного продукта: сопоставленный моделью id → поиск по имени (модель
 // могла не знать про недавно созданный пункт) → создание нового пункта справочника.
-async function resolveIngredient(tx: Prisma.TransactionClient, product: RecognizedProduct) {
+async function resolveIngredient(product: RecognizedProduct): Promise<Ingredient> {
   if (product.matchedIngredientId !== null) {
-    const matched = await tx.ingredient.findUnique({ where: { id: product.matchedIngredientId } });
+    const matched = await prisma.ingredient.findUnique({
+      where: { id: product.matchedIngredientId },
+    });
     if (matched) return matched;
   }
-  const byName = await tx.ingredient.findFirst({
+  const byName = await prisma.ingredient.findFirst({
     where: { name: { equals: product.name, mode: "insensitive" } },
   });
   if (byName) return byName;
-  return tx.ingredient.create({
-    data: {
-      name: product.name,
-      defaultUnitType: product.unitType,
-      category: product.category,
-    },
-  });
+  try {
+    return await prisma.ingredient.create({
+      data: {
+        name: product.name,
+        defaultUnitType: product.unitType,
+        category: product.category,
+      },
+    });
+  } catch (e) {
+    // Одноимённый продукт создали параллельно (name @unique) — забираем победителя гонки.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const raced = await prisma.ingredient.findFirst({
+        where: { name: { equals: product.name, mode: "insensitive" } },
+      });
+      if (raced) return raced;
+    }
+    throw e;
+  }
 }
 
 // Сохранение подтверждённого пользователем распознанного списка: новые продукты попадают
@@ -116,12 +130,24 @@ export async function confirmRecognizedProducts(input: unknown): Promise<ActionR
   const parsed = confirmRecognizedProductsSchema.safeParse(input);
   if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
 
+  // Справочник пополняется до транзакции: ошибку внутри interactive-транзакции (в т.ч.
+  // P2002-гонку) Postgres не даёт обработать без отката всей транзакции, а созданный
+  // глобальный пункт справочника безвреден, даже если upsert'ы ниже не удадутся.
+  const resolved: { ingredient: Ingredient; product: RecognizedProduct }[] = [];
+  for (const product of parsed.data.products) {
+    resolved.push({ ingredient: await resolveIngredient(product), product });
+  }
+
   await prisma.$transaction(async (tx) => {
-    for (const product of parsed.data.products) {
-      const ingredient = await resolveIngredient(tx, product);
-      // Тип единицы существующего пункта справочника важнее догадки модели.
+    for (const { ingredient, product } of resolved) {
+      // Единица всегда из справочника. Количество, оценённое под другим unitType, не
+      // переносится (WEIGHT/VOLUME/COUNT не конвертируются) — вместо него безопасный минимум.
       const unit = UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
-      const quantity = unit === "PCS" ? Math.max(1, Math.round(product.quantity)) : product.quantity;
+      const raw =
+        ingredient.defaultUnitType === product.unitType
+          ? product.quantity
+          : FALLBACK_QUANTITY_BY_TYPE[ingredient.defaultUnitType];
+      const quantity = unit === "PCS" ? Math.max(1, Math.round(raw)) : raw;
       await tx.pantryItem.upsert({
         where: {
           householdId_ingredientId: { householdId: user.householdId, ingredientId: ingredient.id },

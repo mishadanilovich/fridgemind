@@ -5,7 +5,7 @@ import { getCurrentUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { VisionImage } from "@/lib/vision";
 import { recognizeProducts, VisionParseError } from "@/lib/vision";
-import { consumeVisionCall, visionDailyLimit } from "@/lib/vision-usage";
+import { consumeVisionCall, releaseVisionCall, visionDailyLimit } from "@/lib/vision-usage";
 
 // Поток "фото холодильника" (см. CLAUDE.md, раздел 6): одно или несколько сжатых на клиенте
 // фото за один запрос → один вызов Claude Vision со всеми изображениями и справочником →
@@ -45,22 +45,24 @@ export async function POST(request: Request) {
     );
   }
 
-  const catalog = await prisma.ingredient.findMany({
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
-
-  const images: VisionImage[] = await Promise.all(
-    photos.map(async (photo) => ({
-      mediaType: photo.type as VisionImage["mediaType"],
-      data: Buffer.from(await photo.arrayBuffer()).toString("base64"),
-    })),
-  );
-
   try {
+    const catalog = await prisma.ingredient.findMany({
+      select: { id: true, name: true, defaultUnitType: true },
+      orderBy: { name: "asc" },
+    });
+
+    const images: VisionImage[] = await Promise.all(
+      photos.map(async (photo) => ({
+        mediaType: photo.type as VisionImage["mediaType"],
+        data: Buffer.from(await photo.arrayBuffer()).toString("base64"),
+      })),
+    );
+
     const result = await recognizeProducts(images, catalog);
     return NextResponse.json(result);
   } catch (e) {
+    // Любой сбой после списания квоты возвращает вызов в лимит: платим только за удавшееся.
+    await releaseVisionCall(user.householdId);
     if (e instanceof VisionParseError) {
       return NextResponse.json(
         { error: "Не удалось распознать продукты. Попробуйте ещё раз." },
