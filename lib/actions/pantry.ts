@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import type { ActionResult, FormState } from "@/lib/form-state";
 import { fieldIssues } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
+import { UNIT_TYPE_TO_UNIT } from "@/lib/units";
 import { pantryItemAddSchema, pantryItemUpdateSchema } from "@/lib/zod-schemas";
 
 // Инвентарь доступен на запись всем ролям household (см. CLAUDE.md §5, RLS pantry_items) —
@@ -24,31 +25,35 @@ export async function addPantryItem(
   const parsed = pantryItemAddSchema.safeParse({
     ingredientId: String(formData.get("ingredientId") ?? ""),
     quantity: Number(formData.get("quantity")) || 0,
-    unit: formData.get("unit"),
   });
   if (!parsed.success) {
     return { error: null, fieldErrors: fieldIssues(parsed.error.issues) };
   }
   const data = parsed.data;
 
-  // Продукт уже есть в запасах — пополняем количество, а не создаём дубль строки.
-  const existing = await prisma.pantryItem.findFirst({
-    where: { householdId: user.householdId, ingredientId: data.ingredientId },
+  // Единица выводится из справочника на сервере — скрытому инпуту с клиента не доверяем.
+  const ingredient = await prisma.ingredient.findUnique({ where: { id: data.ingredientId } });
+  if (!ingredient) {
+    return { error: null, fieldErrors: { ingredientId: "Выберите продукт" } };
+  }
+  const unit = UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType];
+  const quantity = unit === "PCS" ? Math.max(1, Math.round(data.quantity)) : data.quantity;
+
+  // Атомарный upsert по (householdId, ingredientId): повторное добавление продукта пополняет
+  // количество, а гонка параллельных добавлений не создаёт дублей и не теряет инкременты.
+  const saved = await prisma.pantryItem.upsert({
+    where: {
+      householdId_ingredientId: { householdId: user.householdId, ingredientId: ingredient.id },
+    },
+    create: {
+      householdId: user.householdId,
+      ingredientId: ingredient.id,
+      quantity,
+      unit,
+      addedVia: "MANUAL",
+    },
+    update: { quantity: { increment: quantity } },
   });
-  const saved = existing
-    ? await prisma.pantryItem.update({
-        where: { id: existing.id },
-        data: { quantity: { increment: data.quantity }, unit: data.unit },
-      })
-    : await prisma.pantryItem.create({
-        data: {
-          householdId: user.householdId,
-          ingredientId: data.ingredientId,
-          quantity: data.quantity,
-          unit: data.unit,
-          addedVia: "MANUAL",
-        },
-      });
 
   revalidatePath("/inventory");
   return { error: null, data: { savedId: saved.id } };

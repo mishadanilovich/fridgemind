@@ -51,3 +51,9 @@ export const DISPLAY_UNIT_LABEL: Record<Unit, string> = {
   ML: "мл",
   PCS: "шт",
 };
+
+// Ввод количества: запятая с мобильных клавиатур приводится к точке (иначе "1,5" превращалось
+// бы в "15"), всё прочее, кроме цифр и точки, отбрасывается.
+export function sanitizeQuantityInput(raw: string): string {
+  return raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
+}

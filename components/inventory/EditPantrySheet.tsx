@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { QuantityInput } from "@/components/ui/quantity-input";
 import { deletePantryItem, updatePantryItem } from "@/lib/actions/pantry";
 import { initialFormState } from "@/lib/form-state";
 import type { PantryItemView } from "@/lib/types";
@@ -18,6 +18,7 @@ type Props = {
 export function EditPantrySheet({ item, onClose }: Props) {
   const [state, formAction, isPending] = useActionState(updatePantryItem, initialFormState);
   const [qty, setQty] = useState(String(item.quantity));
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, startDelete] = useTransition();
 
@@ -34,7 +35,7 @@ export function EditPantrySheet({ item, onClose }: Props) {
     });
   }
 
-  const error = state.error ?? deleteError;
+  const error = confirmingDelete ? deleteError : state.error;
 
   return (
     <BottomSheet
@@ -42,49 +43,70 @@ export function EditPantrySheet({ item, onClose }: Props) {
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      eyebrow="Изменить продукт"
-      title={item.ingredient.name}
+      eyebrow={confirmingDelete ? undefined : "Изменить продукт"}
+      title={confirmingDelete ? "Удалить из запасов?" : item.ingredient.name}
+      description={
+        confirmingDelete
+          ? `«${item.ingredient.name}» пропадёт из домашних запасов.`
+          : undefined
+      }
     >
-      <form action={formAction}>
-        <input type="hidden" name="pantryItemId" value={item.id} />
-
-        {error && (
-          <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-            {error}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2.5">
-          <Input
-            name="quantity"
-            value={qty}
-            onChange={(e) => setQty(e.target.value.replace(/[^\d.]/g, ""))}
-            inputMode="decimal"
-            placeholder="Кол-во"
-            error={state.fieldErrors?.quantity}
-            className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
-          />
-          <span className="w-[52px] shrink-0 text-center text-sm font-semibold text-muted-foreground">
-            {DISPLAY_UNIT_LABEL[item.unit]}
-          </span>
+      {error && (
+        <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+          {error}
         </div>
+      )}
 
-        <div className="mt-5 flex gap-2.5">
+      {confirmingDelete ? (
+        <div className="flex gap-2.5">
           <Button
             type="button"
-            variant="destructiveMuted"
+            variant="outline"
+            size="block"
+            onClick={() => setConfirmingDelete(false)}
+            className="flex-1 bg-card font-bold text-primary"
+          >
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
             size="block"
             loading={isDeleting}
             onClick={onDelete}
-            className="shrink-0 font-bold"
+            className="flex-1 font-bold"
           >
             Удалить
           </Button>
-          <Button type="submit" size="block" loading={isPending} className="flex-1 font-bold">
-            Сохранить
-          </Button>
         </div>
-      </form>
+      ) : (
+        <form action={formAction}>
+          <input type="hidden" name="pantryItemId" value={item.id} />
+
+          <QuantityInput
+            name="quantity"
+            value={qty}
+            onChange={setQty}
+            unitLabel={DISPLAY_UNIT_LABEL[item.unit]}
+            error={state.fieldErrors?.quantity}
+          />
+
+          <div className="mt-5 flex gap-2.5">
+            <Button
+              type="button"
+              variant="destructiveMuted"
+              size="block"
+              onClick={() => setConfirmingDelete(true)}
+              className="shrink-0 font-bold"
+            >
+              Удалить
+            </Button>
+            <Button type="submit" size="block" loading={isPending} className="flex-1 font-bold">
+              Сохранить
+            </Button>
+          </div>
+        </form>
+      )}
     </BottomSheet>
   );
 }
