@@ -8,13 +8,12 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  /** Оранжевый надзаголовок над названием (как в шитах макета "Изменить продукт"). */
+  /** Оранжевый надзаголовок над названием ("Изменить продукт" и т.п.). */
   eyebrow?: string
   description?: string
   children: ReactNode
 }
 
-/** Нижний шит из макета: ручка-полоска, скруглённый верх, фон экрана (не карточки). */
 export function BottomSheet({ open, onOpenChange, title, eyebrow, description, children }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
