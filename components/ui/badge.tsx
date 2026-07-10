@@ -12,10 +12,10 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-destructive-foreground",
         outline: "text-foreground",
-        // Тёплый тон из макета — способы готовки, совпадение с запасами.
+        // Тёплый тон — способы готовки, совпадение с запасами.
         warm: "border-badge-border bg-badge text-badge-foreground",
         success: "border-success-border bg-success text-success-foreground",
-        // Оранжевый тинт из макета — низкое совпадение с запасами.
+        // Оранжевый тинт — низкое совпадение с запасами.
         warning: "border-accent-border bg-accent-muted text-destructive",
         destructiveMuted: "border-destructive-border bg-destructive-muted text-destructive",
         muted: "border-transparent bg-secondary text-muted-foreground",
