@@ -50,7 +50,7 @@ const sheetVariants = cva(
 )
 
 type SheetContentProps = {
-  /** Нижние шиты из макета закрываются ручкой/тапом по оверлею — без крестика. */
+  /** Для шитов, закрывающихся тапом по оверлею: крестик дублировал бы этот жест и налезал на ручку. */
   hideClose?: boolean
 } & ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & VariantProps<typeof sheetVariants>
 

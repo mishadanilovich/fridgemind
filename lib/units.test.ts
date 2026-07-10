@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatQuantity, UNIT_TO_TYPE, UNITS_BY_TYPE } from "./units";
+import { formatQuantity, sanitizeQuantityInput, UNIT_TO_TYPE, UNITS_BY_TYPE } from "./units";
 
 describe("formatQuantity", () => {
   it("shows grams below 1000 and kilograms at or above", () => {
@@ -23,6 +23,17 @@ describe("formatQuantity", () => {
   it("renders count as pieces and drops fractional noise", () => {
     expect(formatQuantity(3, "PCS")).toBe("3 шт");
     expect(formatQuantity(2.4, "PCS")).toBe("2 шт");
+  });
+});
+
+describe("sanitizeQuantityInput", () => {
+  it("normalizes a comma decimal separator to a dot", () => {
+    expect(sanitizeQuantityInput("1,5")).toBe("1.5");
+  });
+
+  it("strips everything except digits and the dot", () => {
+    expect(sanitizeQuantityInput("1.5 кг")).toBe("1.5");
+    expect(sanitizeQuantityInput("abc")).toBe("");
   });
 });
 
