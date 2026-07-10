@@ -108,6 +108,20 @@ export const recipeInputSchema = z.object({
 });
 export type RecipeInput = z.infer<typeof recipeInputSchema>;
 
+// Ручное добавление в инвентарь: продукт из справочника + количество в базовой единице.
+// Единицу клиент не передаёт — сервер выводит её из Ingredient.defaultUnitType.
+export const pantryItemAddSchema = z.object({
+  ingredientId: z.string().min(1, "Выберите продукт"),
+  quantity: z.number().positive("Укажите количество"),
+});
+export type PantryItemAddInput = z.infer<typeof pantryItemAddSchema>;
+
+export const pantryItemUpdateSchema = z.object({
+  pantryItemId: z.string().min(1),
+  quantity: z.number().positive("Укажите количество"),
+});
+export type PantryItemUpdateInput = z.infer<typeof pantryItemUpdateSchema>;
+
 export const manualShoppingItemInputSchema = z.object({
   name: z.string().min(1),
   quantity: z.number().positive(),

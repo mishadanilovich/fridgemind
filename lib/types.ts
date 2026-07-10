@@ -6,6 +6,7 @@ import type {
   Ingredient,
   MealSlot,
   MenuDayMeal,
+  PantryItem,
   Recipe,
   RecipeIngredient,
   RecipeStep,
@@ -37,6 +38,8 @@ export type {
   HouseholdRoleValue,
   IngredientInput,
   ManualShoppingItemInput,
+  PantryItemAddInput,
+  PantryItemUpdateInput,
   ProductCategoryValue,
   RecipeInput,
   RecognizedProduct,
@@ -70,3 +73,6 @@ export type MenuSlotView = {
   mealSlot: MealSlot;
   meal: (MenuDayMeal & { recipe: Recipe }) | null;
 };
+
+/** Позиция инвентаря с продуктом из справочника — форма для экрана "Запасы". */
+export type PantryItemView = PantryItem & { ingredient: Ingredient };

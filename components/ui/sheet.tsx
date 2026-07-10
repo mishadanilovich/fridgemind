@@ -49,12 +49,15 @@ const sheetVariants = cva(
   }
 )
 
-type SheetContentProps = {} & ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & VariantProps<typeof sheetVariants>
+type SheetContentProps = {
+  /** Для шитов, закрывающихся тапом по оверлею: крестик дублировал бы этот жест и налезал на ручку. */
+  hideClose?: boolean
+} & ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & VariantProps<typeof sheetVariants>
 
 const SheetContent = forwardRef<
   ComponentRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
+>(({ side = "right", hideClose = false, className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
@@ -63,10 +66,12 @@ const SheetContent = forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+      {!hideClose && (
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>
+      )}
     </SheetPrimitive.Content>
   </SheetPortal>
 ))

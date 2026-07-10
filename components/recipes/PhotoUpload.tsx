@@ -6,6 +6,7 @@ import { unstable_rethrow } from "next/navigation";
 import { type ChangeEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { uploadRecipePhoto } from "@/lib/actions/uploads";
 import { compressImage } from "@/lib/compress-image";
@@ -22,10 +23,6 @@ function FileInput({ onSelect }: { onSelect: (e: ChangeEvent<HTMLInputElement>) 
   return <Input type="file" accept="image/*" onChange={onSelect} className="hidden" />;
 }
 
-function ErrorText({ message }: { message: string | null }) {
-  if (!message) return null;
-  return <p className="mt-1.5 text-sm font-medium text-destructive">{message}</p>;
-}
 
 export function PhotoUpload({ value, onChange, variant }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -108,7 +105,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
             </Button>
           )}
         </div>
-        <ErrorText message={error} />
+        <FieldError message={error} />
       </>
     );
   }
@@ -126,7 +123,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
           </span>
           <FileInput onSelect={onSelect} />
         </label>
-        <ErrorText message={error} />
+        <FieldError message={error} />
       </>
     );
   }
@@ -138,7 +135,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
         Добавить фото шага
         <FileInput onSelect={onSelect} />
       </label>
-      <ErrorText message={error} />
+      <FieldError message={error} />
     </>
   );
 }

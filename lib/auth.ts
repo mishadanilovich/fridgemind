@@ -31,6 +31,14 @@ export async function requireRole(roles: HouseholdRole[]): Promise<User | null> 
   return hasRole(user, roles) ? user : null;
 }
 
+// Требует просто залогиненного пользователя — для действий, доступных всем ролям household
+// (инвентарь, список покупок). Не залогинен → redirect на /login.
+export async function requireUser(): Promise<User> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return user;
+}
+
 export function unauthorized() {
   return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
 }

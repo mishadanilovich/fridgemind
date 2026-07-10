@@ -60,6 +60,13 @@ const config: Config = {
         },
         "tan-dashed": "hsl(var(--tan-dashed))",
         "nav-inactive": "hsl(var(--nav-inactive))",
+        dot: {
+          dairy: "hsl(var(--dot-dairy))",
+          meat: "hsl(var(--dot-meat))",
+          produce: "hsl(var(--dot-produce))",
+          grocery: "hsl(var(--dot-grocery))",
+          neutral: "hsl(var(--dot-neutral))",
+        },
         badge: {
           DEFAULT: "hsl(var(--badge))",
           border: "hsl(var(--badge-border))",
@@ -71,8 +78,8 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         xs: "calc(var(--radius) - 8px)",
-        // Крупные декоративные радиусы карточек/шитов из макета Claude Design — не влезают
-        // в 3-тиерную шкалу выше без искажения дизайна, поэтому именованы по смыслу, а не по px.
+        // Крупные декоративные радиусы карточек/шитов — не влезают в 3-тиерную шкалу выше
+        // без искажения дизайна, поэтому именованы по смыслу, а не по px.
         toggle: "calc(var(--radius) + 2px)",
         card: "calc(var(--radius) + 4px)",
         hero: "calc(var(--radius) + 6px)",

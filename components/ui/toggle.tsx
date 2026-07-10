@@ -13,7 +13,7 @@ const toggleVariants = cva(
       variant: {
         default: "bg-transparent",
         outline: "border border-input bg-transparent",
-        // Чип-переключатель из макета (способы приготовления и т.п.).
+        // Чип-переключатель (способы приготовления и т.п.).
         pill: "rounded-full border border-border bg-card data-[state=on]:border-primary",
       },
       size: {
