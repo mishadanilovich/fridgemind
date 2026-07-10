@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { SheetHandle } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -75,7 +76,7 @@ export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
         side="bottom"
         className="gap-0 rounded-t-sheet border-0 bg-background px-5 pb-7 pt-3.5 [&>button]:hidden"
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-nav-inactive" />
+        <SheetHandle />
         <div className="mb-2 flex items-center gap-2.5">
           <span className="flex size-[38px] items-center justify-center rounded-sm bg-destructive/10 text-destructive">
             <Trash2 className="size-5" />

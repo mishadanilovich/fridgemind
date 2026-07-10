@@ -1,9 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import type { ActionResult, FormState } from "@/lib/form-state";
 import { fieldIssues } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
@@ -19,8 +18,7 @@ export async function addPantryItem(
   _prev: FormState<Record<string, never>, PantrySaved>,
   formData: FormData,
 ): Promise<FormState<Record<string, never>, PantrySaved>> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const parsed = pantryItemAddSchema.safeParse({
     ingredientId: String(formData.get("ingredientId") ?? ""),
@@ -63,8 +61,7 @@ export async function updatePantryItem(
   _prev: FormState<Record<string, never>, PantrySaved>,
   formData: FormData,
 ): Promise<FormState<Record<string, never>, PantrySaved>> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const parsed = pantryItemUpdateSchema.safeParse({
     pantryItemId: String(formData.get("pantryItemId") ?? ""),
@@ -86,8 +83,7 @@ export async function updatePantryItem(
 }
 
 export async function deletePantryItem(pantryItemId: string): Promise<ActionResult> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const deleted = await prisma.pantryItem.deleteMany({
     where: { id: pantryItemId, householdId: user.householdId },
