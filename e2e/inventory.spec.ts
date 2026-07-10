@@ -62,6 +62,9 @@ test("inventory smoke: login, add manually, edit quantity, delete", async ({ pag
   await test.step("удалить позицию", async () => {
     await listRow.click();
     await page.getByRole("button", { name: "Удалить" }).click();
+    // Шаг подтверждения: шит переключается на "Удалить из запасов?" с повторной кнопкой.
+    await expect(page.getByText("Удалить из запасов?")).toBeVisible();
+    await page.getByRole("button", { name: "Удалить" }).click();
     await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
     await expect(listRow).toHaveCount(0);
   });
