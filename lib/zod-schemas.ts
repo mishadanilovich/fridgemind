@@ -44,8 +44,9 @@ export type HouseholdRoleValue = z.infer<typeof householdRoleSchema>;
 // модель должна схлопнуть сама (см. раздел 6, "Поток фото холодильника").
 
 export const recognizedProductSchema = z.object({
-  // Название продукта, как его назвала модель (для нового) или как в справочнике (для существующего).
-  name: z.string().min(1),
+  // Название продукта, как его назвала модель (для нового) или как в справочнике (для
+  // существующего). Лимит длины — как у ручного ввода (ingredientInputSchema).
+  name: z.string().min(1).max(60),
   // Существующий Ingredient.id, если модель сопоставила с справочником; иначе null — новый продукт.
   matchedIngredientId: z.string().nullable(),
   quantity: z.number().positive(),

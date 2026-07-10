@@ -2,7 +2,7 @@
 
 import { Camera, Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
-import { type ChangeEvent, useRef, useState, useTransition } from "react";
+import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -38,6 +38,17 @@ export function ScanSheet({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [isSaving, startSave] = useTransition();
+
+  // Ревок object URL при размонтировании (уход со страницы без закрытия шита) — иначе
+  // созданные для превью URL живут до конца сессии вкладки.
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
+  useEffect(
+    () => () => {
+      photosRef.current.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    },
+    [],
+  );
 
   function reset() {
     photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));

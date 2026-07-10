@@ -79,28 +79,43 @@ export function parseVisionResponse(
     throw new VisionParseError("Ответ модели не соответствует ожидаемой схеме");
   }
 
-  return {
-    products: parsed.data.products
-      .filter((p) => p.name.trim() !== "")
-      .map((p) => {
-        const matchedIngredientId =
-          p.matchedIngredientId !== null && catalog.has(p.matchedIngredientId)
-            ? p.matchedIngredientId
-            : null;
-        const unitType =
-          matchedIngredientId !== null ? catalog.get(matchedIngredientId)! : p.unitType;
-        const unit = UNIT_TYPE_TO_UNIT[unitType];
-        const quantity = unitType === p.unitType ? p.quantity : FALLBACK_QUANTITY_BY_TYPE[unitType];
-        return {
-          ...p,
-          name: p.name.trim(),
-          matchedIngredientId,
-          unitType,
-          unit,
-          quantity: unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity,
-        };
-      }),
-  };
+  const normalized = parsed.data.products
+    .filter((p) => p.name.trim() !== "")
+    .map((p) => {
+      const matchedIngredientId =
+        p.matchedIngredientId !== null && catalog.has(p.matchedIngredientId)
+          ? p.matchedIngredientId
+          : null;
+      const unitType =
+        matchedIngredientId !== null ? catalog.get(matchedIngredientId)! : p.unitType;
+      const unit = UNIT_TYPE_TO_UNIT[unitType];
+      const quantity = unitType === p.unitType ? p.quantity : FALLBACK_QUANTITY_BY_TYPE[unitType];
+      return {
+        ...p,
+        name: p.name.trim(),
+        matchedIngredientId,
+        unitType,
+        unit,
+        quantity: unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity,
+      };
+    });
+
+  // Промпт просит не дублировать продукт, видимый на нескольких фото, но модель может
+  // ослушаться: записи с одним matchedIngredientId схлопываются с суммированием количества
+  // (после нормализации выше их единицы гарантированно совпадают).
+  const products: typeof normalized = [];
+  const byMatchedId = new Map<string, (typeof normalized)[number]>();
+  for (const p of normalized) {
+    const seen = p.matchedIngredientId !== null ? byMatchedId.get(p.matchedIngredientId) : undefined;
+    if (seen) {
+      seen.quantity += p.quantity;
+      continue;
+    }
+    if (p.matchedIngredientId !== null) byMatchedId.set(p.matchedIngredientId, p);
+    products.push(p);
+  }
+
+  return { products };
 }
 
 export async function recognizeProducts(

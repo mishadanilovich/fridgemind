@@ -78,6 +78,24 @@ describe("parseVisionResponse", () => {
     expect(result.products.map((p) => p.quantity)).toEqual([10, 1]);
   });
 
+  it("merges duplicates of the same matched ingredient, summing quantities", () => {
+    const result = parseVisionResponse(
+      raw([
+        product({ quantity: 500 }),
+        product({ quantity: 300 }),
+        product({ name: "Морковь", matchedIngredientId: null, unitType: "WEIGHT", unit: "G" }),
+      ]),
+      CATALOG,
+    );
+    expect(result.products).toHaveLength(2);
+    expect(result.products[0]).toMatchObject({ matchedIngredientId: "ing-milk", quantity: 800 });
+  });
+
+  it("rejects names longer than 60 characters", () => {
+    const longName = raw([product({ name: "М".repeat(61), matchedIngredientId: null })]);
+    expect(() => parseVisionResponse(longName, CATALOG)).toThrow(VisionParseError);
+  });
+
   it("resets matchedIngredientId unknown to the catalog", () => {
     const result = parseVisionResponse(
       raw([product({ matchedIngredientId: "ing-hallucinated" })]),
