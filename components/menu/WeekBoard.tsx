@@ -148,7 +148,14 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
           className="absolute right-[5px] top-[5px] z-10"
         />
       )}
-      <button type="button" onClick={onPick} disabled={!canEdit} className="block size-full text-left">
+      {/* flex-колонка, а не block: содержимое <button> браузер иначе центрирует по вертикали,
+          и фото отходило от верхнего края карточки на несколько пикселей. */}
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={!canEdit}
+        className="flex size-full flex-col items-stretch p-0 text-left"
+      >
         <RecipePhoto
           photoUrl={meal.photoUrl}
           width={120}

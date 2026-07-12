@@ -48,13 +48,15 @@ export function RecipePhoto({
     );
   }
 
+  // block обязателен: инлайновый <img> внутри кнопки/ссылки садится на базовую линию строки
+  // и оставляет зазор сверху — фото переставало доходить до скруглённых углов карточки.
   return (
     <Image
       src={photoUrl}
       alt={alt}
       width={width}
       height={height}
-      className={cn("shrink-0 object-cover", className)}
+      className={cn("block shrink-0 object-cover", className)}
     />
   );
 }
