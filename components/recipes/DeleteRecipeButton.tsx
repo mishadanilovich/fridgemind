@@ -2,18 +2,10 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { SheetHandle } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { deleteRecipe, getRecipeUsage } from "@/lib/actions/recipes";
 
 type Props = {
@@ -28,86 +20,39 @@ type UsageState = { status: "loading" } | { status: "ready"; count: number } | {
 
 export function DeleteRecipeButton({ recipeId, name, redirectToList }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [usage, setUsage] = useState<UsageState>({ status: "loading" });
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  function onOpenChange(next: boolean) {
-    setOpen(next);
-    setError(null);
-    if (next) {
-      setUsage({ status: "loading" });
-      getRecipeUsage(recipeId)
-        .then((count) => setUsage({ status: "ready", count }))
-        .catch(() => setUsage({ status: "error" }));
-    }
-  }
 
   // Пока не подтверждено, что рецепт нигде не используется, — предполагаем худшее и показываем
   // более строгий текст предупреждения (safe default), а не "если был там запланирован".
   const definitelyUnused = usage.status === "ready" && usage.count === 0;
 
-  function onConfirm() {
-    setError(null);
-    startTransition(async () => {
-      const result = await deleteRecipe(recipeId);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      setOpen(false);
-      if (redirectToList) router.push("/recipes");
-    });
-  }
-
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button
-          variant="destructiveMuted"
-          size="iconSm"
-          aria-label={`Удалить «${name}»`}
-        >
-          <Trash2 />
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="bottom"
-        className="gap-0 rounded-t-sheet border-0 bg-background px-5 pb-7 pt-3.5 [&>button]:hidden"
-      >
-        <SheetHandle />
-        <div className="mb-2 flex items-center gap-2.5">
-          <span className="flex size-[38px] items-center justify-center rounded-sm bg-destructive/10 text-destructive">
-            <Trash2 className="size-5" />
-          </span>
-          <SheetTitle className="font-heading text-[19px] font-bold text-foreground">
-            Удалить рецепт?
-          </SheetTitle>
-        </div>
-        <SheetDescription className="mb-[18px] mt-0.5 text-sm font-medium text-foreground/70">
+    <ConfirmSheet
+      icon={Trash2}
+      title="Удалить рецепт?"
+      confirmLabel="Удалить"
+      onOpen={() => {
+        setUsage({ status: "loading" });
+        getRecipeUsage(recipeId)
+          .then((count) => setUsage({ status: "ready", count }))
+          .catch(() => setUsage({ status: "error" }));
+      }}
+      onConfirm={() => deleteRecipe(recipeId)}
+      onConfirmed={() => {
+        if (redirectToList) router.push("/recipes");
+      }}
+      description={
+        <>
           «<b className="text-foreground">{name}</b>» пропадёт из списка рецептов
           {!definitelyUnused && " и будет убран из запланированных приёмов пищи в меню"}. Уже
           отмеченные «скушано» приёмы пищи останутся в истории.
-        </SheetDescription>
-        {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
-        <div className="flex gap-3">
-          <SheetClose asChild>
-            <Button variant="outline" size="block" className="flex-1">
-              Отмена
-            </Button>
-          </SheetClose>
-          <Button
-            variant="destructive"
-            size="block"
-            className="flex-1"
-            loading={isPending}
-            onClick={onConfirm}
-          >
-            Удалить
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </>
+      }
+      trigger={
+        <Button variant="destructiveMuted" size="iconSm" aria-label={`Удалить «${name}»`}>
+          <Trash2 />
+        </Button>
+      }
+    />
   );
 }

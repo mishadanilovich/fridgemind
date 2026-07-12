@@ -30,8 +30,10 @@ export async function assignMeal(input: unknown): Promise<ActionResult> {
 
   const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
     // Слот и рецепт — обязательно свои и не удалённые: id приходит с клиента, доверять ему
-    // нельзя. Проверка внутри той же транзакции, что и запись: иначе параллельный soft-delete
-    // между проверкой и upsert'ом оставил бы MenuDayMeal со ссылкой на неактивную сущность.
+    // нельзя. Проверка идёт в той же транзакции, что и запись, чтобы между ними не попало
+    // чужое чтение-запись, но от soft-delete, закоммиченного параллельно, она не защищает:
+    // под READ COMMITTED без FOR UPDATE строку никто не держит. Такой приём пищи просто
+    // окажется в удалённом слоте — buildDaySlots его показывает, а не теряет (см. lib/menu.ts).
     const [slot, recipe] = await Promise.all([
       tx.mealSlot.findFirst({
         where: { id: mealSlotId, householdId: user.householdId, deletedAt: null },
@@ -84,13 +86,20 @@ export async function removeMeal(mealId: string): Promise<ActionResult> {
   const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };
 
+  // Дата нужна только для revalidatePath; само удаление — deleteMany со scope по household,
+  // а не delete по id: тот бросил бы P2025, если запись уже убрал другой участник household
+  // (или второй клик по той же кнопке), а необработанное исключение вместо { error } уронило бы
+  // экран. deleteMany просто вернёт count = 0.
   const meal = await prisma.menuDayMeal.findFirst({
     where: { id: mealId, menuDay: { menuWeek: { householdId: user.householdId } } },
-    select: { id: true, menuDay: { select: { date: true } } },
+    select: { menuDay: { select: { date: true } } },
   });
   if (!meal) return { error: "Приём пищи не найден" };
 
-  await prisma.menuDayMeal.delete({ where: { id: meal.id } });
+  const deleted = await prisma.menuDayMeal.deleteMany({
+    where: { id: mealId, menuDay: { menuWeek: { householdId: user.householdId } } },
+  });
+  if (deleted.count === 0) return { error: "Приём пищи не найден" };
 
   revalidateMenu(dateToIso(meal.menuDay.date));
   return { error: null };

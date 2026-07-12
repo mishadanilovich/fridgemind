@@ -1,10 +1,10 @@
 "use client";
 
-import { ChevronRight, CookingPot, Plus } from "lucide-react";
-import Image from "next/image";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { RecipePhoto } from "@/components/recipes/RecipePhoto";
 import { todayIso, weekdayName, weekdayShort } from "@/lib/dates";
 import type { MenuDayView, MenuSlotView, PickerRecipeView } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -115,8 +115,10 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
   const { meal, slotName } = slot;
   const size = cn("h-[120px] shrink-0 snap-start", wide ? "flex-1 basis-0 min-w-0" : "w-[108px]");
 
+  // Пустой слот сюда доходит только у Редактора/Организатора: кому его не видно, решает
+  // buildDaySlots (lib/menu.ts) — второй проверки роли здесь быть не должно.
   if (!meal) {
-    return canEdit ? (
+    return (
       <button
         type="button"
         onClick={onPick}
@@ -132,7 +134,7 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
           {slotName}
         </span>
       </button>
-    ) : null;
+    );
   }
 
   return (
@@ -147,19 +149,13 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
         />
       )}
       <button type="button" onClick={onPick} disabled={!canEdit} className="block size-full text-left">
-        {meal.photoUrl ? (
-          <Image
-            src={meal.photoUrl}
-            alt=""
-            width={120}
-            height={48}
-            className="h-12 w-full object-cover"
-          />
-        ) : (
-          <span className="flex h-12 w-full items-center justify-center bg-secondary text-muted-foreground">
-            <CookingPot className="size-5" />
-          </span>
-        )}
+        <RecipePhoto
+          photoUrl={meal.photoUrl}
+          width={120}
+          height={48}
+          className="h-12 w-full"
+          iconClassName="size-5"
+        />
         <span className="block px-[7px] pb-[7px] pt-[5px]">
           <span className="block truncate text-[9px] font-bold uppercase tracking-[0.04em] text-muted-foreground">
             {slotName}

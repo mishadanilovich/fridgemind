@@ -248,8 +248,9 @@ model MenuWeek {
   days              MenuDay[]
   shoppingListItems ShoppingListItem[]
 
-  @@unique([householdId, weekStartDate]) // неделя создаётся лениво при первом назначении рецепта — upsert по этому ключу
-  @@index([householdId])
+  // Неделя создаётся лениво при первом назначении рецепта — upsert по этому ключу.
+  // Отдельный @@index([householdId]) не нужен: он leftmost-префикс этого составного индекса.
+  @@unique([householdId, weekStartDate])
   @@map("menu_weeks")
 }
 
@@ -262,7 +263,6 @@ model MenuDay {
   meals    MenuDayMeal[]
 
   @@unique([menuWeekId, date])
-  @@index([menuWeekId])
   @@map("menu_days")
 }
 

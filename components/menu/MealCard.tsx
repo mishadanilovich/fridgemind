@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, Clock, CookingPot, Plus } from "lucide-react";
-import Image from "next/image";
+import { Check, Clock, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
+import { RecipePhoto } from "@/components/recipes/RecipePhoto";
 import type { MenuMealView } from "@/lib/types";
 
 import { RemoveMealButton } from "./RemoveMealButton";
@@ -19,13 +19,7 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
   return (
     <div className="mb-4 overflow-hidden rounded-hero border border-border bg-card shadow-card">
       <Link href={`/recipes/${meal.recipeId}`} className="relative block h-[150px]">
-        {meal.photoUrl ? (
-          <Image src={meal.photoUrl} alt="" fill sizes="420px" className="object-cover" />
-        ) : (
-          <span className="flex size-full items-center justify-center bg-secondary text-muted-foreground">
-            <CookingPot className="size-10" />
-          </span>
-        )}
+        <RecipePhoto photoUrl={meal.photoUrl} fill sizes="420px" iconClassName="size-10" />
         <span className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/70" />
 
         <span className="absolute left-3 top-3 rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.05em] text-primary backdrop-blur-sm">

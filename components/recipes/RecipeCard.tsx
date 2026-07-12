@@ -1,5 +1,4 @@
-import { CookingPot, Pencil } from "lucide-react";
-import Image from "next/image";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { CookingMethodBadges } from "./CookingMethodBadges";
 import { DeleteRecipeButton } from "./DeleteRecipeButton";
+import { RecipePhoto } from "./RecipePhoto";
 
 type Props = {
   recipe: RecipeCardView;
@@ -24,19 +24,14 @@ export function RecipeCard({ recipe, canEdit }: Props) {
   return (
     <div className="mb-3 flex gap-3 rounded-card border border-border bg-card p-[11px] shadow-card">
       <Link href={`/recipes/${id}`} className="flex min-w-0 flex-1 gap-3">
-        {photoUrl ? (
-          <Image
-            src={photoUrl}
-            alt={title}
-            width={82}
-            height={82}
-            className="size-[82px] shrink-0 rounded-lg object-cover"
-          />
-        ) : (
-          <div className="flex size-[82px] shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
-            <CookingPot className="size-8" />
-          </div>
-        )}
+        <RecipePhoto
+          photoUrl={photoUrl}
+          alt={title}
+          width={82}
+          height={82}
+          className="size-[82px] rounded-lg"
+          iconClassName="size-8"
+        />
         <div className="flex min-w-0 flex-col justify-center">
           <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
             {meta}

@@ -22,6 +22,13 @@ describe("isIsoDate", () => {
     expect(isIsoDate("2026-13-01")).toBe(false);
     expect(isIsoDate("вчера")).toBe(false);
   });
+
+  it("отвергает несуществующие числа, которые Date молча перекатывает вперёд", () => {
+    expect(isIsoDate("2026-02-30")).toBe(false); // Date дал бы 2 марта
+    expect(isIsoDate("2026-04-31")).toBe(false);
+    expect(isIsoDate("2026-02-29")).toBe(false); // 2026 — не високосный
+    expect(isIsoDate("2028-02-29")).toBe(true);
+  });
 });
 
 describe("startOfWeekIso", () => {

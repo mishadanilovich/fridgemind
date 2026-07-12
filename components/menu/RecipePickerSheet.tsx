@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronRight, CookingPot } from "lucide-react";
-import Image from "next/image";
 import { useState, useTransition } from "react";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
+import { RecipePhoto } from "@/components/recipes/RecipePhoto";
 import { ServingsStepper } from "@/components/recipes/ServingsStepper";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -85,7 +85,12 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
             onClick={() => choose(recipe)}
             className="pressable mb-2.5 flex w-full items-center gap-3 rounded-card border border-border bg-card p-[9px] text-left"
           >
-            <RecipeThumb recipe={recipe} size={56} />
+            <RecipePhoto
+              photoUrl={recipe.photoUrl}
+              width={56}
+              height={56}
+              className="size-14 rounded-lg"
+            />
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold leading-[1.1] text-foreground">
                 {recipe.title}
@@ -123,7 +128,12 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
   return (
     <>
       <div className="mb-3.5 flex items-center gap-3 rounded-card border border-border bg-card p-3">
-        <RecipeThumb recipe={chosen} size={64} />
+        <RecipePhoto
+          photoUrl={chosen.photoUrl}
+          width={64}
+          height={64}
+          className="size-16 rounded-lg"
+        />
         <div className="min-w-0">
           <div className="truncate font-heading text-[17px] font-bold leading-[1.1] text-foreground">
             {chosen.title}
@@ -157,28 +167,5 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
         </Button>
       </div>
     </>
-  );
-}
-
-function RecipeThumb({ recipe, size }: { recipe: PickerRecipeView; size: number }) {
-  if (!recipe.photoUrl) {
-    return (
-      <span
-        style={{ width: size, height: size }}
-        className="flex shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground"
-      >
-        <CookingPot className="size-6" />
-      </span>
-    );
-  }
-  return (
-    <Image
-      src={recipe.photoUrl}
-      alt=""
-      width={size}
-      height={size}
-      style={{ width: size, height: size }}
-      className="shrink-0 rounded-lg object-cover"
-    />
   );
 }

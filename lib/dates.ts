@@ -16,8 +16,12 @@ const isoInAppZone = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
+// Формата мало: Date молча перекатывает несуществующие даты ("2026-02-30" → 2 марта), поэтому
+// дата считается валидной, только если переживает round-trip без сдвига.
 export function isIsoDate(value: string): boolean {
-  return ISO_DATE_RE.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  if (!ISO_DATE_RE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 export function todayIso(now: Date = new Date()): string {
