@@ -337,7 +337,10 @@ model ShoppingListItemMeal {
   shoppingListItem ShoppingListItem @relation(fields: [shoppingListItemId], references: [id], onDelete: Cascade)
   menuDayMeal      MenuDayMeal      @relation(fields: [menuDayMealId], references: [id], onDelete: Cascade)
 
-  @@index([shoppingListItemId])
+  // Один вклад на пару (позиция, приём пищи) — вторая линия защиты от гонки в syncWeekItems
+  // (см. lib/actions/shopping-list.ts): даже если pg_advisory_xact_lock почему-то не сработал,
+  // дублирующий createMany упадёт на этом ограничении, а не тихо задвоит perDay.
+  @@unique([shoppingListItemId, menuDayMealId])
   @@index([menuDayMealId])
   @@map("shopping_list_item_meals")
 }

@@ -1,3 +1,4 @@
+import type { Prisma } from "./generated/prisma/client";
 import { PRODUCT_CATEGORIES } from "./product-categories";
 import { scaleIngredient } from "./recipes";
 import type { ProductCategory, ShoppingItemView, Unit } from "./types";
@@ -18,6 +19,61 @@ export type MealNeedsSource = {
   };
 };
 
+// Общий select потребности недели/дня — переиспользуется синхронизацией списка покупок
+// (lib/actions/shopping-list.ts) и просмотром дня (getDayIngredients).
+export const mealNeedsSelect = {
+  id: true,
+  servings: true,
+  recipe: {
+    select: {
+      baseServings: true,
+      ingredients: {
+        select: {
+          ingredientId: true,
+          quantity: true,
+          unit: true,
+          ingredient: { select: { name: true } },
+        },
+      },
+    },
+  },
+} satisfies Prisma.MenuDayMealSelect;
+
+export type MealNeedsRow = Prisma.MenuDayMealGetPayload<{ select: typeof mealNeedsSelect }>;
+
+export function toMealNeedsSource(row: MealNeedsRow): MealNeedsSource {
+  return {
+    id: row.id,
+    servings: row.servings,
+    recipe: {
+      baseServings: row.recipe.baseServings,
+      ingredients: row.recipe.ingredients.map((ri) => ({
+        ingredientId: ri.ingredientId,
+        name: ri.ingredient.name,
+        quantity: ri.quantity,
+        unit: ri.unit,
+      })),
+    },
+  };
+}
+
+// Общий select текущих (не ручных) позиций недели — вход diff'а в syncWeekItems.
+export const existingShoppingItemSelect = {
+  id: true,
+  ingredientId: true,
+  name: true,
+  quantity: true,
+  unit: true,
+  isBought: true,
+  addedToPantry: true,
+  ingredient: { select: { category: true } },
+  meals: { select: { menuDayMealId: true, quantity: true } },
+} satisfies Prisma.ShoppingListItemSelect;
+
+export type ExistingShoppingItem = Prisma.ShoppingListItemGetPayload<{
+  select: typeof existingShoppingItemSelect;
+}>;
+
 /** Суммарная потребность в продукте + вклад каждого приёма пищи (→ ShoppingListItemMeal). */
 export type IngredientNeed = {
   ingredientId: string;
@@ -26,6 +82,12 @@ export type IngredientNeed = {
   total: number;
   contributions: { menuDayMealId: string; quantity: number }[];
 };
+
+export function sameContributions(existing: ExistingShoppingItem, need: IngredientNeed): boolean {
+  if (existing.meals.length !== need.contributions.length) return false;
+  const byMeal = new Map(existing.meals.map((m) => [m.menuDayMealId, m.quantity]));
+  return need.contributions.every((c) => byMeal.get(c.menuDayMealId) === c.quantity);
+}
 
 // Количества каждого приёма пищи пересчитываются под его servings (см. CLAUDE.md §5 "Порции")
 // и суммируются по ingredientId. Округлённый до нуля вклад (COUNT на малые порции) не пишется.

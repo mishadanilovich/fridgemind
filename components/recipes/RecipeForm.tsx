@@ -7,6 +7,7 @@ import { useActionState, useState } from "react";
 import { IngredientPicker } from "@/components/ingredients/IngredientPicker";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -130,11 +131,7 @@ export function RecipeForm({ recipe }: Props) {
       </div>
 
       <div className="space-y-6 px-5 pb-11 pt-5">
-        {state.error && (
-          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-            {state.error}
-          </div>
-        )}
+        <FormErrorBanner message={state.error} className="mb-0" />
 
         <div>
           <FieldLabel>Фото рецепта</FieldLabel>

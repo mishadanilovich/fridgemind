@@ -6,9 +6,11 @@ import { IngredientPicker } from "@/components/ingredients/IngredientPicker";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { addPantryItem } from "@/lib/actions/pantry";
 import { initialFormState } from "@/lib/form-state";
+import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import type { Ingredient, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
@@ -20,12 +22,7 @@ type Props = {
 type PickedProduct = { id: string; name: string; unit: Unit };
 
 export function AddPantrySheet({ open, onOpenChange }: Props) {
-  // Ремоунт формы на каждое открытие: состояние useActionState переживает закрытие шита,
-  // и без сброса ошибки прошлой попытки мелькали бы в следующей, несвязанной.
-  const [formEpoch, setFormEpoch] = useState(0);
-  useEffect(() => {
-    if (open) setFormEpoch((n) => n + 1);
-  }, [open]);
+  const formEpoch = useRemountKey(open);
 
   return (
     <BottomSheet
@@ -60,11 +57,7 @@ function AddPantryForm({ onSaved }: { onSaved: () => void }) {
     <form action={formAction}>
       <input type="hidden" name="ingredientId" value={product?.id ?? ""} />
 
-      {state.error && (
-        <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-          {state.error}
-        </div>
-      )}
+      <FormErrorBanner message={state.error} />
 
       <IngredientPicker value={product} onSelect={onSelect} />
       <FieldError message={state.fieldErrors?.ingredientId} />

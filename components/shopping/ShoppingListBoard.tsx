@@ -1,16 +1,16 @@
 "use client";
 
 import { Plus, ShoppingBasket } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
+import { CategorySection } from "@/components/ui/category-section";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { addDaysIso, weekDatesIso } from "@/lib/dates";
-import { PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import { buildShoppingGroups } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
 import { formatQuantity } from "@/lib/units";
-import { cn } from "@/lib/utils";
 
 import { AddShoppingItemSheet } from "./AddShoppingItemSheet";
 import { DayPickerSheet } from "./DayPickerSheet";
@@ -41,6 +41,8 @@ function selectedDays(filter: DayFilter, today: string): string[] | null {
   }
 }
 
+const CHIP_CLASS = "shrink-0 whitespace-nowrap px-[15px] py-[9px] font-bold";
+
 export function ShoppingListBoard({ items, today, weekStart }: Props) {
   const [filter, setFilter] = useState<DayFilter>({ kind: "week" });
   const [pickingDays, setPickingDays] = useState(false);
@@ -53,27 +55,42 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
   const days = selectedDays(filter, today);
   const groups = buildShoppingGroups(items, days);
 
+  // "Выбрать дни" не переключает фильтр напрямую — открывает шит, а к "custom" фильтр
+  // переходит только после подтверждения в DayPickerSheet (см. onApply ниже).
+  function onFilterChange(value: string) {
+    if (!value) return;
+    if (value === "custom") {
+      setPickingDays(true);
+      return;
+    }
+    setFilter({ kind: value as "today" | "tomorrow" | "week" });
+  }
+
   return (
     <>
-      <div className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <Chip active={filter.kind === "today"} onClick={() => setFilter({ kind: "today" })}>
+      <ToggleGroup
+        type="single"
+        variant="pill"
+        size="pill"
+        value={filter.kind}
+        onValueChange={onFilterChange}
+        className="-mx-5 mb-4 justify-start overflow-x-auto px-5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <ToggleGroupItem value="today" className={CHIP_CLASS}>
           Сегодня
-        </Chip>
+        </ToggleGroupItem>
         {hasTomorrow && (
-          <Chip
-            active={filter.kind === "tomorrow"}
-            onClick={() => setFilter({ kind: "tomorrow" })}
-          >
+          <ToggleGroupItem value="tomorrow" className={CHIP_CLASS}>
             Завтра
-          </Chip>
+          </ToggleGroupItem>
         )}
-        <Chip active={filter.kind === "week"} onClick={() => setFilter({ kind: "week" })}>
+        <ToggleGroupItem value="week" className={CHIP_CLASS}>
           Вся неделя
-        </Chip>
-        <Chip active={filter.kind === "custom"} onClick={() => setPickingDays(true)}>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="custom" className={CHIP_CLASS}>
           {filter.kind === "custom" ? `Выбраны дни · ${filter.days.length}` : "Выбрать дни"}
-        </Chip>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       <button
         type="button"
@@ -96,34 +113,24 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
         />
       ) : (
         groups.map((group) => (
-          <section key={group.category} className="mb-[18px]">
-            <div className="mb-2 flex items-center justify-between px-1">
-              <span className="text-[13px] font-bold text-foreground">
-                {PRODUCT_CATEGORY_LABELS[group.category]}
-              </span>
-              <span className="text-[11px] font-semibold text-muted-foreground">
-                {group.items.length}
-              </span>
-            </div>
-            <div className="overflow-hidden rounded-card border border-border bg-card">
-              {group.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-2.5 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
-                >
-                  <span className="flex min-w-0 items-center gap-[11px]">
-                    <CategoryDot category={item.category} />
-                    <span className="truncate text-[14.5px] font-semibold text-foreground">
-                      {item.name}
-                    </span>
+          <CategorySection key={group.category} category={group.category} count={group.items.length}>
+            {group.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-2.5 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
+              >
+                <span className="flex min-w-0 items-center gap-[11px]">
+                  <CategoryDot category={item.category} />
+                  <span className="truncate text-[14.5px] font-semibold text-foreground">
+                    {item.name}
                   </span>
-                  <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
-                    {formatQuantity(item.needed, item.unit)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+                </span>
+                <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
+                  {formatQuantity(item.needed, item.unit)}
+                </span>
+              </div>
+            ))}
+          </CategorySection>
         ))
       )}
 
@@ -136,29 +143,5 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
       />
       <AddShoppingItemSheet open={adding} onOpenChange={setAdding} />
     </>
-  );
-}
-
-type ChipProps = {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-};
-
-function Chip({ active, onClick, children }: ChipProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "pressable shrink-0 whitespace-nowrap rounded-full border px-[15px] py-[9px] text-[13px] font-bold",
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-foreground",
-      )}
-    >
-      {children}
-    </button>
   );
 }

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { addManualShoppingItem } from "@/lib/actions/shopping-list";
 import { initialFormState } from "@/lib/form-state";
+import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { ProductCategory, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
@@ -27,12 +29,7 @@ type Props = {
 const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
 
 export function AddShoppingItemSheet({ open, onOpenChange }: Props) {
-  // Ремоунт формы на каждое открытие — как в AddPantrySheet: состояние useActionState
-  // переживает закрытие шита, и без сброса ошибки прошлой попытки мелькали бы в новой.
-  const [formEpoch, setFormEpoch] = useState(0);
-  useEffect(() => {
-    if (open) setFormEpoch((n) => n + 1);
-  }, [open]);
+  const formEpoch = useRemountKey(open);
 
   return (
     <BottomSheet
@@ -61,11 +58,7 @@ function AddItemForm({ onSaved }: { onSaved: () => void }) {
       <input type="hidden" name="unit" value={unit} />
       <input type="hidden" name="manualCategory" value={category} />
 
-      {state.error && (
-        <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-          {state.error}
-        </div>
-      )}
+      <FormErrorBanner message={state.error} />
 
       <div className="space-y-3">
         <div className="space-y-1.5">

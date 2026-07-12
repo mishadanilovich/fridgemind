@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { dateToIso, isoToDate, startOfWeekIso } from "@/lib/dates";
 import { type ActionResult, firstIssue } from "@/lib/form-state";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { menuAssignSchema } from "@/lib/zod-schemas";
 
@@ -15,6 +16,22 @@ function revalidateMenu(dateIso: string) {
   revalidatePath("/");
   revalidatePath("/menu");
   revalidatePath(`/menu/${dateIso}`);
+}
+
+// Неделя создаётся лениво — до первого назначения рецепта или первой ручной позиции списка
+// покупок её в БД нет. Общий помощник для assignMeal и createManualShoppingItem, чтобы этот
+// upsert не дублировался в двух местах.
+export async function ensureMenuWeek(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  weekStartDate: Date,
+): Promise<{ id: string }> {
+  return tx.menuWeek.upsert({
+    where: { householdId_weekStartDate: { householdId, weekStartDate } },
+    create: { householdId, weekStartDate },
+    update: {},
+    select: { id: true },
+  });
 }
 
 export async function assignMeal(input: unknown): Promise<ActionResult> {
@@ -47,14 +64,7 @@ export async function assignMeal(input: unknown): Promise<ActionResult> {
     if (!slot) return { error: "Приём пищи не найден" };
     if (!recipe) return { error: "Рецепт не найден" };
 
-    const week = await tx.menuWeek.upsert({
-      where: {
-        householdId_weekStartDate: { householdId: user.householdId, weekStartDate },
-      },
-      create: { householdId: user.householdId, weekStartDate },
-      update: {},
-      select: { id: true },
-    });
+    const week = await ensureMenuWeek(tx, user.householdId, weekStartDate);
 
     const day = await tx.menuDay.upsert({
       where: { menuWeekId_date: { menuWeekId: week.id, date: isoToDate(date) } },
