@@ -248,6 +248,7 @@ model MenuWeek {
   days              MenuDay[]
   shoppingListItems ShoppingListItem[]
 
+  @@unique([householdId, weekStartDate]) // неделя создаётся лениво при первом назначении рецепта — upsert по этому ключу
   @@index([householdId])
   @@map("menu_weeks")
 }
@@ -260,6 +261,7 @@ model MenuDay {
   menuWeek MenuWeek      @relation(fields: [menuWeekId], references: [id], onDelete: Cascade)
   meals    MenuDayMeal[]
 
+  @@unique([menuWeekId, date])
   @@index([menuWeekId])
   @@map("menu_days")
 }
