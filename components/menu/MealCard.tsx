@@ -26,12 +26,20 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
           {slotName}
         </span>
 
-        {meal.isEaten && (
-          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-primary py-[5px] pl-2 pr-[11px] text-[11px] font-bold text-primary-foreground">
-            <Check className="size-3.5" strokeWidth={3} />
-            Съедено
-          </span>
-        )}
+        <span className="absolute right-3 top-3 flex items-center gap-1.5">
+          {meal.cookTimeMinutes !== null && (
+            <span className="flex items-center gap-1 rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold text-foreground backdrop-blur-sm">
+              <Clock className="size-3.5" strokeWidth={2.5} />
+              ~{meal.cookTimeMinutes} мин
+            </span>
+          )}
+          {meal.isEaten && (
+            <span className="flex items-center gap-1 rounded-full bg-primary py-[5px] pl-2 pr-[11px] text-[11px] font-bold text-primary-foreground">
+              <Check className="size-3.5" strokeWidth={3} />
+              Съедено
+            </span>
+          )}
+        </span>
 
         <span className="absolute inset-x-3.5 bottom-3 line-clamp-2 font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
           {meal.title}
@@ -40,10 +48,6 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
 
       <div className="flex items-center justify-between gap-3 px-[15px] py-[13px]">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-[5px] text-[12.5px] font-semibold text-muted-foreground">
-            <Clock className="size-3.5" />
-            {meal.cookTimeMinutes ? `~${meal.cookTimeMinutes} мин` : "Без таймера"}
-          </span>
           <CookingMethodBadges methods={meal.cookingMethods} max={3} />
           <span className="text-[12.5px] font-semibold text-muted-foreground">
             {meal.servings} порц.
