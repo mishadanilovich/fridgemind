@@ -131,7 +131,7 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
         <span className="flex size-[26px] items-center justify-center rounded-full bg-secondary">
           <Plus className="size-[15px] text-nav-inactive" strokeWidth={2.4} />
         </span>
-        <span className="line-clamp-1 text-[9px] font-bold uppercase tracking-[0.04em] text-nav-inactive">
+        <span className="max-w-full truncate text-[9px] font-bold uppercase tracking-[0.04em] text-nav-inactive">
           {slotName}
         </span>
       </button>
