@@ -41,7 +41,7 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
           )}
         </span>
 
-        <span className="absolute inset-x-3.5 bottom-3 line-clamp-2 font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
+        <span className="absolute inset-x-3.5 bottom-3 line-clamp-2 break-words font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
           {meal.title}
         </span>
       </Link>

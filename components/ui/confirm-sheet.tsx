@@ -83,11 +83,11 @@ export function ConfirmSheet({
               <Icon className="size-5" />
             </span>
           )}
-          <SheetTitle className="font-heading text-[19px] font-bold text-foreground">
+          <SheetTitle className="min-w-0 break-words font-heading text-[19px] font-bold text-foreground">
             {title}
           </SheetTitle>
         </div>
-        <SheetDescription className="mb-[18px] mt-0.5 text-sm font-medium text-foreground/70">
+        <SheetDescription className="mb-[18px] mt-0.5 break-words text-sm font-medium text-foreground/70">
           {description}
         </SheetDescription>
         {error && <p className="mb-3 text-sm font-medium text-destructive">{error}</p>}

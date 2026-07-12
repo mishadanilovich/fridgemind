@@ -168,7 +168,7 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
           <span className="block truncate text-[9px] font-bold uppercase tracking-[0.04em] text-muted-foreground">
             {slotName}
           </span>
-          <span className="mt-px line-clamp-2 block text-[11px] font-semibold leading-[1.15] text-foreground">
+          <span className="mt-px line-clamp-2 block break-words text-[11px] font-semibold leading-[1.15] text-foreground">
             {meal.title}
           </span>
           <span className="mt-0.5 block text-[9px] font-bold text-muted-foreground">

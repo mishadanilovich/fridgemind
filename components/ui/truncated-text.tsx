@@ -49,7 +49,7 @@ export function TruncatedText({ text, className }: Props) {
       {open && (
         <span
           role="tooltip"
-          className="absolute left-0 top-full z-20 mt-1.5 block w-max max-w-[240px] whitespace-normal rounded-md bg-foreground px-3 py-2 text-[12.5px] font-semibold leading-snug text-background shadow-card"
+          className="absolute left-0 top-full z-20 mt-1.5 block w-max max-w-[240px] whitespace-normal break-words rounded-md bg-foreground px-3 py-2 text-[12.5px] font-semibold leading-snug text-background shadow-card"
         >
           {text}
         </span>
