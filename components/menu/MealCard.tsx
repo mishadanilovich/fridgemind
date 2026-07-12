@@ -22,7 +22,7 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
         <RecipePhoto photoUrl={meal.photoUrl} fill sizes="420px" iconClassName="size-10" />
         <span className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/70" />
 
-        <span className="absolute left-3 top-3 rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.05em] text-primary backdrop-blur-sm">
+        <span className="absolute left-3 top-3 max-w-[55%] truncate rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.05em] text-primary backdrop-blur-sm">
           {slotName}
         </span>
 
@@ -83,8 +83,8 @@ export function EmptySlotCard({ slotName, onPick }: EmptyProps) {
       <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-secondary text-nav-inactive">
         <Plus className="size-6" strokeWidth={2.4} />
       </span>
-      <span>
-        <span className="block text-[11px] font-bold uppercase tracking-[0.05em] text-nav-inactive">
+      <span className="min-w-0">
+        <span className="block truncate text-[11px] font-bold uppercase tracking-[0.05em] text-nav-inactive">
           {slotName}
         </span>
         <span className="mt-0.5 block font-heading text-[17px] font-bold leading-[1.1] text-foreground">

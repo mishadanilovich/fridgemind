@@ -111,7 +111,7 @@ export function MealSlotsManager({ slots }: Props) {
       </DndContext>
 
       <form ref={formRef} action={addAction} className="flex gap-2">
-        <Input name="name" placeholder="Новый приём пищи" maxLength={40} required />
+        <Input name="name" placeholder="Новый приём пищи" maxLength={15} required />
         <Button type="submit" variant="outline" loading={isAdding} icon={<Plus />}>
           Добавить
         </Button>
@@ -187,7 +187,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        maxLength={40}
+        maxLength={15}
         disabled={isPending}
         className="h-9"
         aria-label={`Название приёма пищи «${slot.name}»`}
