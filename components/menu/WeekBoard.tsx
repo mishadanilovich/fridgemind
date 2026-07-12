@@ -87,7 +87,8 @@ function WeekDayCard({ day, isToday, canEdit, onPick }: DayProps) {
         </p>
       ) : (
         // До трёх карточек видно сразу, остальные — свайпом внутри дня (см. CLAUDE.md §6).
-        <div className="-mx-[15px] flex snap-x snap-mandatory gap-2 overflow-x-auto px-[15px] pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        // Скролл идёт внутри паддингов карточки дня, а не встык с её краями.
+        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {day.slots.map((slot) => (
             <SlotMiniCard
               key={slot.slotId}
