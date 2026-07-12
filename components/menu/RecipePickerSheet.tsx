@@ -2,7 +2,7 @@
 
 import { ChevronRight, CookingPot } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
 import { ServingsStepper } from "@/components/recipes/ServingsStepper";
@@ -57,9 +57,13 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (chosen) setServings(slot.meal?.recipeId === chosen.id ? slot.meal.servings : chosen.baseServings);
-  }, [chosen, slot]);
+  // Тот же рецепт, что уже стоит в слоте, открывается со своим числом порций; другой — с базовым.
+  function choose(recipe: PickerRecipeView) {
+    setChosen(recipe);
+    setServings(
+      slot.meal?.recipeId === recipe.id ? slot.meal.servings : recipe.baseServings,
+    );
+  }
 
   if (recipes.length === 0) {
     return (
@@ -78,7 +82,7 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
           <button
             key={recipe.id}
             type="button"
-            onClick={() => setChosen(recipe)}
+            onClick={() => choose(recipe)}
             className="pressable mb-2.5 flex w-full items-center gap-3 rounded-card border border-border bg-card p-[9px] text-left"
           >
             <RecipeThumb recipe={recipe} size={56} />

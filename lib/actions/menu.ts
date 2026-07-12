@@ -25,23 +25,26 @@ export async function assignMeal(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
   const { date, mealSlotId, recipeId, servings } = parsed.data;
 
-  // Слот и рецепт — обязательно свои и не удалённые: id приходит с клиента, доверять ему нельзя.
-  const [slot, recipe] = await Promise.all([
-    prisma.mealSlot.findFirst({
-      where: { id: mealSlotId, householdId: user.householdId, deletedAt: null },
-      select: { id: true },
-    }),
-    prisma.recipe.findFirst({
-      where: { id: recipeId, householdId: user.householdId, deletedAt: null },
-      select: { id: true },
-    }),
-  ]);
-  if (!slot) return { error: "Приём пищи не найден" };
-  if (!recipe) return { error: "Рецепт не найден" };
-
   // Неделя и день создаются лениво — до первого назначения рецепта их в БД нет.
   const weekStartDate = isoToDate(startOfWeekIso(date));
-  await prisma.$transaction(async (tx) => {
+
+  const result = await prisma.$transaction(async (tx): Promise<ActionResult> => {
+    // Слот и рецепт — обязательно свои и не удалённые: id приходит с клиента, доверять ему
+    // нельзя. Проверка внутри той же транзакции, что и запись: иначе параллельный soft-delete
+    // между проверкой и upsert'ом оставил бы MenuDayMeal со ссылкой на неактивную сущность.
+    const [slot, recipe] = await Promise.all([
+      tx.mealSlot.findFirst({
+        where: { id: mealSlotId, householdId: user.householdId, deletedAt: null },
+        select: { id: true },
+      }),
+      tx.recipe.findFirst({
+        where: { id: recipeId, householdId: user.householdId, deletedAt: null },
+        select: { id: true },
+      }),
+    ]);
+    if (!slot) return { error: "Приём пищи не найден" };
+    if (!recipe) return { error: "Рецепт не найден" };
+
     const week = await tx.menuWeek.upsert({
       where: {
         householdId_weekStartDate: { householdId: user.householdId, weekStartDate },
@@ -64,7 +67,11 @@ export async function assignMeal(input: unknown): Promise<ActionResult> {
       create: { menuDayId: day.id, mealSlotId, recipeId, servings },
       update: { recipeId, servings },
     });
+
+    return { error: null };
   });
+
+  if (result.error) return result;
 
   revalidateMenu(date);
   return { error: null };
