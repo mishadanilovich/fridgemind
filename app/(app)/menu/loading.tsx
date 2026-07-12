@@ -1,16 +1,20 @@
-import { MealSlotSkeletonList } from "@/components/skeletons/MealSlotSkeleton";
+import { WeekDaySkeletonList } from "@/components/skeletons/MealSlotSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MenuLoading() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Меню на неделю</h1>
-      <div className="flex gap-2 overflow-hidden">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-10 shrink-0" />
-        ))}
+    <div className="pb-8">
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <Skeleton className="h-4 w-24" />
+          <h1 className="mt-1 font-heading text-[34px] font-bold leading-[1.05] text-foreground">
+            Меню на неделю
+          </h1>
+        </div>
+        <Skeleton className="size-11 rounded-full" />
       </div>
-      <MealSlotSkeletonList count={3} />
+
+      <WeekDaySkeletonList count={4} />
     </div>
   );
 }

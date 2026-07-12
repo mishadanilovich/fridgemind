@@ -248,7 +248,9 @@ model MenuWeek {
   days              MenuDay[]
   shoppingListItems ShoppingListItem[]
 
-  @@index([householdId])
+  // Неделя создаётся лениво при первом назначении рецепта — upsert по этому ключу.
+  // Отдельный @@index([householdId]) не нужен: он leftmost-префикс этого составного индекса.
+  @@unique([householdId, weekStartDate])
   @@map("menu_weeks")
 }
 
@@ -260,7 +262,7 @@ model MenuDay {
   menuWeek MenuWeek      @relation(fields: [menuWeekId], references: [id], onDelete: Cascade)
   meals    MenuDayMeal[]
 
-  @@index([menuWeekId])
+  @@unique([menuWeekId, date])
   @@map("menu_days")
 }
 
@@ -277,8 +279,11 @@ model MenuDayMeal {
   eatenByUserId String?  @map("eaten_by_user_id")
 
   menuDay   MenuDay  @relation(fields: [menuDayId], references: [id], onDelete: Cascade)
-  mealSlot  MealSlot @relation(fields: [mealSlotId], references: [id])
-  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  // Cascade, а не Restrict по умолчанию: слот и рецепт в приложении только soft-delete'ятся, и
+  // физически строка исчезает лишь вместе с household. С Restrict удаление household падало на
+  // FK, если в меню было запланировано хоть одно блюдо.
+  mealSlot  MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   eatenBy   User?    @relation("EatenBy", fields: [eatenByUserId], references: [id], onDelete: SetNull)
 
   shoppingListItemMeals ShoppingListItemMeal[]

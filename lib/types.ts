@@ -4,8 +4,6 @@
 import type {
   CookingMethod,
   Ingredient,
-  MealSlot,
-  MenuDayMeal,
   PantryItem,
   Recipe,
   RecipeIngredient,
@@ -68,10 +66,39 @@ export type RecipeCardView = {
   matchTotal: number;
 };
 
+/** Приём пищи, назначенный в слот дня — карточка на "Сегодня"/"Меню на неделю"/просмотре дня. */
+export type MenuMealView = {
+  id: string;
+  recipeId: string;
+  title: string;
+  photoUrl: string | null;
+  cookTimeMinutes: number | null;
+  cookingMethods: CookingMethod[];
+  servings: number;
+  isEaten: boolean;
+};
+
 /** Слот дня меню с назначенным рецептом (если есть) — форма для "Сегодня"/"Меню на неделю". */
 export type MenuSlotView = {
-  mealSlot: MealSlot;
-  meal: (MenuDayMeal & { recipe: Recipe }) | null;
+  slotId: string;
+  slotName: string;
+  meal: MenuMealView | null;
+};
+
+/** День меню: дата в формате "YYYY-MM-DD" (см. lib/dates.ts) и его слоты в порядке household'а. */
+export type MenuDayView = {
+  date: string;
+  slots: MenuSlotView[];
+};
+
+/** Рецепт в шторке выбора рецепта на слот — baseServings задаёт начальное значение степпера. */
+export type PickerRecipeView = {
+  id: string;
+  title: string;
+  photoUrl: string | null;
+  cookTimeMinutes: number | null;
+  cookingMethods: CookingMethod[];
+  baseServings: number;
 };
 
 /** Позиция инвентаря с продуктом из справочника — форма для экрана "Запасы". */

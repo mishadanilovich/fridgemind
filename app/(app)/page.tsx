@@ -1,21 +1,40 @@
+import { DayBoard } from "@/components/menu/DayBoard";
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { getCurrentUser, hasRole } from "@/lib/auth";
+import { todayIso, weekdayName } from "@/lib/dates";
+import { countMeals } from "@/lib/menu";
+import { getDayBoard, getPickerRecipes } from "@/lib/queries/menu";
 
-// Экран "Сегодня" — главный экран/точка входа.
-// TODO (см. CLAUDE.md, раздел 6 "Основные экраны" + поток "отметил, что скушал"):
-// - слоты приёма пищи текущего дня в порядке, заданном household в Профиле
-// - на каждом: фото/название рецепта, cookTimeMinutes + бейджи CookingMethod, кнопка "скушано"
-// - "скушано" -> мгновенно MenuDayMeal.isEaten = true, затем необязательный bottom sheet
-//   "Списать использованные продукты?" со степпером порций
-// - пустые слоты не показываются для роли MEMBER (раздел 5 "Роли в household")
-export default function TodayPage() {
-  const dayOfWeek = new Date().toLocaleDateString("ru-RU", { weekday: "long" }).toUpperCase();
+export default async function TodayPage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const canEdit = hasRole(user, ["ORGANIZER", "EDITOR"]);
+  const today = todayIso();
+  const [day, recipes] = await Promise.all([
+    getDayBoard(user.householdId, today, canEdit),
+    canEdit ? getPickerRecipes(user.householdId) : [],
+  ]);
+  const { planned, eaten } = countMeals(day.slots);
 
   return (
-    <div className="space-y-4">
-      <ScreenHeader eyebrow={dayOfWeek} title="Сегодня" />
-      <p className="text-sm text-muted-foreground">
-        Здесь появятся приёмы пищи на сегодня. Экран ещё не реализован — см. CLAUDE.md, раздел 6.
-      </p>
+    <div className="pb-8">
+      <ScreenHeader
+        eyebrow={weekdayName(today)}
+        title="Сегодня"
+        aside={
+          planned > 0 ? (
+            <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border bg-card px-3 py-2">
+              <span className="font-heading text-xl font-extrabold text-primary">
+                {eaten}/{planned}
+              </span>
+              <span className="text-[10px] font-semibold text-muted-foreground">приёмов</span>
+            </div>
+          ) : null
+        }
+      />
+
+      <DayBoard day={day} recipes={recipes} canEdit={canEdit} />
     </div>
   );
 }

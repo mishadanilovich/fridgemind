@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { forbidden, getCurrentUser, hasRole, unauthorized } from "@/lib/auth";
+import { getCurrentUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Запись/изменение MenuDayMeal — роль ORGANIZER или EDITOR (см. CLAUDE.md, раздел 5).
+// Только чтение — для офлайн-кэша меню (см. CLAUDE.md §6, "Офлайн").
+// Назначение и удаление рецепта в слоте идут через server actions (lib/actions/menu.ts).
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -18,22 +19,4 @@ export async function GET() {
   });
 
   return NextResponse.json({ week });
-}
-
-export async function POST() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorized();
-  if (!hasRole(user, ["ORGANIZER", "EDITOR"])) return forbidden();
-
-  // TODO (этап 6): создать/обновить MenuDayMeal (назначить рецепт в слот), servings по умолчанию = Recipe.baseServings
-  return NextResponse.json({ ok: true }, { status: 201 });
-}
-
-export async function DELETE() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorized();
-  if (!hasRole(user, ["ORGANIZER", "EDITOR"])) return forbidden();
-
-  // TODO (этап 6): удалить MenuDayMeal (убрать рецепт из слота)
-  return NextResponse.json({ ok: true });
 }

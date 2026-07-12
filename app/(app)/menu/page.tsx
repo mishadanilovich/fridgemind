@@ -1,19 +1,24 @@
+import { WeekBoard } from "@/components/menu/WeekBoard";
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { getCurrentUser, hasRole } from "@/lib/auth";
+import { formatWeekRange, startOfWeekIso, todayIso } from "@/lib/dates";
+import { getPickerRecipes, getWeekBoard } from "@/lib/queries/menu";
 
-// Экран "Меню на неделю".
-// TODO (см. CLAUDE.md, раздел 6):
-// - 7 дней, в каждом дне — слоты MealSlot household'а в заданном порядке
-// - назначенный рецепт можно "убрать" (действие отдельное от "заменить")
-// - максимум 3 карточки видно одновременно в дне (заполненные + "+ добавить рецепт" для EDITOR/ORGANIZER),
-//   остальное — горизонтальная карусель/свайп внутри блока дня
-// - для роли MEMBER пустые слоты не показываются вовсе, редактирование недоступно
-export default function MenuPage() {
+export default async function MenuPage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const canEdit = hasRole(user, ["ORGANIZER", "EDITOR"]);
+  const weekStart = startOfWeekIso(todayIso());
+  const [days, recipes] = await Promise.all([
+    getWeekBoard(user.householdId, weekStart, canEdit),
+    canEdit ? getPickerRecipes(user.householdId) : [],
+  ]);
+
   return (
-    <div className="space-y-4">
-      <ScreenHeader eyebrow="Планирование" title="Меню на неделю" />
-      <p className="text-sm text-muted-foreground">
-        Конструктор недели ещё не реализован — см. CLAUDE.md, раздел 6.
-      </p>
+    <div className="pb-8">
+      <ScreenHeader eyebrow={formatWeekRange(weekStart)} title="Меню на неделю" />
+      <WeekBoard days={days} recipes={recipes} canEdit={canEdit} />
     </div>
   );
 }

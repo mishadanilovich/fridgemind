@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isIsoDate } from "./dates";
+
 // Единый источник правды для enum'ов, используемых и в Prisma, и в рантайм-валидации
 // (см. CLAUDE.md, раздел 5 и раздел 10 — "Типизация").
 
@@ -155,6 +157,24 @@ export const mealSlotOrderSchema = z
   .array(z.string().min(1))
   .min(1)
   .refine((ids) => new Set(ids).size === ids.length, "Дублирующиеся id слотов");
+
+// ---------- Меню на неделю (этап 6) ----------
+
+// Дата дня меню — календарная "YYYY-MM-DD" (см. lib/dates.ts), а не Date: часовой пояс клиента
+// не должен влиять на то, в какой день попадёт рецепт.
+export const isoDateSchema = z
+  .string()
+  .refine((value) => isIsoDate(value), "Некорректная дата");
+
+// Назначение рецепта в слот дня. servings — сколько порций готовим в этот раз (по умолчанию
+// на клиенте подставляется Recipe.baseServings, см. CLAUDE.md §5 "Порции").
+export const menuAssignSchema = z.object({
+  date: isoDateSchema,
+  mealSlotId: z.string().min(1, "Выберите приём пищи"),
+  recipeId: z.string().min(1, "Выберите рецепт"),
+  servings: z.number().int().positive("Укажите число порций").max(99, "Слишком много порций"),
+});
+export type MenuAssignInput = z.infer<typeof menuAssignSchema>;
 
 // ---------- Auth-формы (server actions + useActionState) ----------
 
