@@ -33,7 +33,7 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
           </span>
         )}
 
-        <span className="absolute inset-x-3.5 bottom-3 block font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
+        <span className="absolute inset-x-3.5 bottom-3 line-clamp-2 font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
           {meal.title}
         </span>
       </Link>
@@ -44,7 +44,7 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
             <Clock className="size-3.5" />
             {meal.cookTimeMinutes ? `~${meal.cookTimeMinutes} мин` : "Без таймера"}
           </span>
-          <CookingMethodBadges methods={meal.cookingMethods} />
+          <CookingMethodBadges methods={meal.cookingMethods} max={3} />
           <span className="text-[12.5px] font-semibold text-muted-foreground">
             {meal.servings} порц.
           </span>
