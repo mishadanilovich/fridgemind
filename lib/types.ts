@@ -5,9 +5,11 @@ import type {
   CookingMethod,
   Ingredient,
   PantryItem,
+  ProductCategory,
   Recipe,
   RecipeIngredient,
   RecipeStep,
+  Unit,
 } from "./generated/prisma/client";
 
 export type {
@@ -103,3 +105,20 @@ export type PickerRecipeView = {
 
 /** Позиция инвентаря с продуктом из справочника — форма для экрана "Запасы". */
 export type PantryItemView = PantryItem & { ingredient: Ingredient };
+
+/**
+ * Позиция списка покупок для экрана. quantity: у ручных — введённое количество, у позиций
+ * из меню — потребность всей недели без вычета запасов; сколько реально купить, считается
+ * на лету из perDay (ISO-дата → вклад дня) и pantryQuantity (см. lib/shopping-list.ts).
+ */
+export type ShoppingItemView = {
+  id: string;
+  name: string;
+  unit: Unit;
+  category: ProductCategory;
+  isManual: boolean;
+  isBought: boolean;
+  quantity: number;
+  pantryQuantity: number;
+  perDay: Record<string, number>;
+};

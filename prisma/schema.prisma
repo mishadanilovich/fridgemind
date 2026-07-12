@@ -319,8 +319,10 @@ model ShoppingListItem {
 
   meals ShoppingListItemMeal[]
 
+  // Одна позиция на продукт в неделе — синхронизация из меню идёт upsert'ом по этому ключу.
+  // Ручным позициям (ingredientId = null) индекс не мешает: NULL в unique не конфликтуют.
+  @@unique([weekId, ingredientId])
   @@index([householdId])
-  @@index([weekId])
   @@map("shopping_list_items")
 }
 

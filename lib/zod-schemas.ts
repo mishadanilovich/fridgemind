@@ -131,9 +131,11 @@ export const pantryItemUpdateSchema = z.object({
 });
 export type PantryItemUpdateInput = z.infer<typeof pantryItemUpdateSchema>;
 
+// Ручная позиция списка покупок — не привязана к справочнику и дням недели
+// (см. CLAUDE.md §5, "Ручные позиции в списке покупок").
 export const manualShoppingItemInputSchema = z.object({
-  name: z.string().min(1),
-  quantity: z.number().positive(),
+  name: z.string().trim().min(1, "Введите название").max(60, "Слишком длинное название"),
+  quantity: z.number().positive("Укажите количество"),
   unit: unitSchema,
   manualCategory: productCategorySchema.default("OTHER"),
 });

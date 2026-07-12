@@ -1,20 +1,24 @@
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { ShoppingListBoard } from "@/components/shopping/ShoppingListBoard";
+import { getCurrentUser } from "@/lib/auth";
+import { formatWeekRange, startOfWeekIso, todayIso } from "@/lib/dates";
+import { getShoppingListView } from "@/lib/queries/shopping-list";
 
-// Экран "Список покупок".
-// TODO (см. CLAUDE.md, раздел 6, потоки "фильтр по дням", "отметил что купил",
-// "массовое обновление инвентаря", "общий список покупок в реальном времени"):
-// - чипы-фильтр по дням: Сегодня/Завтра/Вся неделя (по умолчанию)/Выбрать дни
-// - группировка по ProductCategory, отметка "куплено" мгновенная (без модалки)
-// - ручное добавление позиции с обязательным выбором ProductCategory (по умолчанию OTHER)
-// - кнопка "Добавить в запасы" — видна, если есть isBought && !addedToPantry
-// - подписка на Supabase Realtime по household — изменения других участников видны сразу
-export default function ShoppingListPage() {
+export default async function ShoppingListPage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const today = todayIso();
+  const weekStart = startOfWeekIso(today);
+  const items = await getShoppingListView(user.householdId, weekStart);
+
   return (
-    <div className="space-y-4">
-      <ScreenHeader eyebrow="На неделю" title="Список покупок" />
-      <p className="text-sm text-muted-foreground">
-        Список покупок ещё не реализован — см. CLAUDE.md, раздел 6.
-      </p>
+    <div className="pb-8">
+      <ScreenHeader
+        eyebrow={`На неделю · ${formatWeekRange(weekStart)}`}
+        title="Список покупок"
+      />
+      <ShoppingListBoard items={items} today={today} weekStart={weekStart} />
     </div>
   );
 }
