@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { deletePantryItem, updatePantryItem } from "@/lib/actions/pantry";
 import { initialFormState } from "@/lib/form-state";
@@ -51,11 +52,7 @@ export function EditPantrySheet({ item, onClose }: Props) {
           : undefined
       }
     >
-      {error && (
-        <div className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-          {error}
-        </div>
-      )}
+      <FormErrorBanner message={error} />
 
       {confirmingDelete ? (
         <div className="flex gap-2.5">
