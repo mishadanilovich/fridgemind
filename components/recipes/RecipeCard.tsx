@@ -32,11 +32,11 @@ export function RecipeCard({ recipe, canEdit }: Props) {
           className="size-[82px] rounded-lg"
           iconClassName="size-8"
         />
-        <div className="flex min-w-0 flex-col justify-center">
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
           <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
             {meta}
           </div>
-          <div className="mb-2 mt-[3px] line-clamp-2 font-heading text-[18px] font-semibold leading-[1.12] text-foreground">
+          <div className="mb-2 mt-[3px] line-clamp-2 break-words font-heading text-[18px] font-semibold leading-[1.12] text-foreground">
             {title}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -55,7 +55,7 @@ export function RecipeCard({ recipe, canEdit }: Props) {
                 {allInStock ? "Всё есть дома" : `${matchPct}% есть дома`}
               </Badge>
             )}
-            <CookingMethodBadges methods={cookingMethods} />
+            <CookingMethodBadges methods={cookingMethods} max={3} />
           </div>
         </div>
       </Link>

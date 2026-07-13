@@ -138,13 +138,13 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
           <div className="truncate font-heading text-[17px] font-bold leading-[1.1] text-foreground">
             {chosen.title}
           </div>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             {chosen.cookTimeMinutes && (
               <span className="text-xs font-semibold text-muted-foreground">
                 ~{chosen.cookTimeMinutes} мин
               </span>
             )}
-            <CookingMethodBadges methods={chosen.cookingMethods} />
+            <CookingMethodBadges methods={chosen.cookingMethods} max={3} />
           </div>
         </div>
       </div>

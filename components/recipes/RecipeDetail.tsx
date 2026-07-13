@@ -58,7 +58,7 @@ export function RecipeDetail({ recipe }: Props) {
         <Badge variant="accent" className="font-bold uppercase tracking-[0.06em]">
           {meta}
         </Badge>
-        <h1 className="mb-3 mt-[5px] font-heading text-[29px] font-bold leading-[1.08] text-foreground">
+        <h1 className="mb-3 mt-[5px] break-words font-heading text-[29px] font-bold leading-[1.08] text-foreground">
           {recipe.title}
         </h1>
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { RecipeInput } from "./zod-schemas";
-import { recipeInputSchema } from "./zod-schemas";
+import { mealSlotNameSchema, recipeInputSchema } from "./zod-schemas";
 
 const validInput: RecipeInput = {
   title: "Тыквенный крем-суп",
@@ -44,5 +44,23 @@ describe("recipeInputSchema", () => {
     if (!result.success) {
       expect(result.error.issues[0]?.path).toEqual(["steps", 0, "instruction"]);
     }
+  });
+});
+
+describe("mealSlotNameSchema", () => {
+  it("принимает имя до 15 символов включительно", () => {
+    expect(mealSlotNameSchema.safeParse("Перекус в школе").success).toBe(true);
+  });
+
+  it("отклоняет имя длиннее 15 символов", () => {
+    const result = mealSlotNameSchema.safeParse("Перекус на работе");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe("Максимум 15 символов");
+    }
+  });
+
+  it("считает длину после trim", () => {
+    expect(mealSlotNameSchema.safeParse("   Второй завтрак   ").success).toBe(true);
   });
 });
