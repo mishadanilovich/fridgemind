@@ -87,6 +87,8 @@ const config: Config = {
       },
       boxShadow: {
         card: "var(--shadow-card)",
+        "accent-glow": "var(--shadow-accent-glow)",
+        "primary-glow": "var(--shadow-primary-glow)",
       },
     },
   },

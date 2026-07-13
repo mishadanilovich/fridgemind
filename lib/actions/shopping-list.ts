@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth";
 import { isoToDate, startOfWeekIso, todayIso } from "@/lib/dates";
-import type { FormState } from "@/lib/form-state";
-import { fieldIssues } from "@/lib/form-state";
+import type { ActionResult, FormState } from "@/lib/form-state";
+import { fieldIssues, firstIssue } from "@/lib/form-state";
+import { upsertPantryItemQuantity } from "@/lib/pantry-quantity";
 import { prisma } from "@/lib/prisma";
 import {
   aggregateWeekNeeds,
@@ -15,7 +16,13 @@ import {
   toMealNeedsSource,
 } from "@/lib/shopping-list";
 import type { ManualShoppingItemInput } from "@/lib/types";
-import { manualShoppingItemInputSchema } from "@/lib/zod-schemas";
+import { normalizePcsQuantity, UNIT_TO_TYPE } from "@/lib/units";
+import {
+  addBoughtToPantrySchema,
+  manualShoppingItemInputSchema,
+  shoppingItemBoughtSchema,
+  shoppingItemUpdateSchema,
+} from "@/lib/zod-schemas";
 
 import { ensureMenuWeek } from "./menu";
 
@@ -63,8 +70,7 @@ export async function createManualShoppingItem(
   householdId: string,
   input: ManualShoppingItemInput,
 ): Promise<{ id: string }> {
-  const quantity =
-    input.unit === "PCS" ? Math.max(1, Math.round(input.quantity)) : input.quantity;
+  const quantity = normalizePcsQuantity(input.quantity, input.unit);
   const weekStartDate = isoToDate(startOfWeekIso(todayIso()));
 
   return prisma.$transaction(async (tx) => {
@@ -82,6 +88,157 @@ export async function createManualShoppingItem(
       select: { id: true },
     });
   });
+}
+
+/**
+ * Мгновенная отметка "куплено" — без подтверждений (см. CLAUDE.md §6, поток "отметил, что
+ * купил"): галочка и boughtByUserId, инвентарь не трогается. addedToPantry при снятии
+ * галочки намеренно не сбрасывается: перенос в запасы уже состоялся, и сброс сделал бы
+ * позицию кандидатом на повторный перенос — двойное пополнение инвентаря (легче всего
+ * ловится в гонке с чужим массовым переносом). Флаг снимается только там, где потребность
+ * реально выросла (syncWeekItems, updateShoppingItem).
+ */
+export async function toggleShoppingItemBought(input: unknown): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const parsed = shoppingItemBoughtSchema.safeParse(input);
+  if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
+  const { itemId, isBought } = parsed.data;
+
+  const updated = await prisma.shoppingListItem.updateMany({
+    where: { id: itemId, householdId: user.householdId },
+    data: isBought
+      ? { isBought: true, boughtByUserId: user.id }
+      : { isBought: false, boughtByUserId: null },
+  });
+  if (updated.count === 0) return { error: "Позиция не найдена" };
+
+  revalidatePath("/shopping-list");
+  return { error: null };
+}
+
+export type ShoppingItemEditValues = { name: string; quantity: string };
+
+type ShoppingItemEditState = FormState<ShoppingItemEditValues, { savedId: string }>;
+
+/**
+ * Редактирование позиции прямо в списке (см. CLAUDE.md §6): название и единица меняются
+ * только у ручных позиций (у позиций из меню они идут из справочника), количество — у любых.
+ * Правка количества не пересчитывает недельный план и переживает syncWeekItems — см. диф
+ * там же. Рост количества снимает isBought/addedToPantry (то же правило, что в syncWeekItems):
+ * прежняя покупка и перенос не покрывают разницу — иначе излишек молча терялся бы, не попадая
+ * ни в список к покупке, ни в инвентарь.
+ */
+export async function updateShoppingItem(
+  _prev: ShoppingItemEditState,
+  formData: FormData,
+): Promise<ShoppingItemEditState> {
+  const user = await requireUser();
+
+  const itemId = String(formData.get("itemId") ?? "");
+  const item = await prisma.shoppingListItem.findFirst({
+    where: { id: itemId, householdId: user.householdId },
+    select: { id: true, isManual: true, name: true, unit: true, quantity: true },
+  });
+  if (!item) return { error: "Позиция не найдена" };
+
+  const raw = {
+    name: item.isManual ? String(formData.get("name") ?? "") : item.name,
+    quantity: String(formData.get("quantity") ?? ""),
+  };
+  const parsed = shoppingItemUpdateSchema.safeParse({
+    itemId,
+    name: raw.name,
+    quantity: Number(raw.quantity) || 0,
+    unit: item.isManual ? String(formData.get("unit") ?? "") : item.unit,
+  });
+  if (!parsed.success) {
+    return { error: null, fieldErrors: fieldIssues(parsed.error.issues), values: raw };
+  }
+
+  const quantity = normalizePcsQuantity(parsed.data.quantity, parsed.data.unit);
+  const grewReset =
+    quantity > item.quantity ? { isBought: false, boughtByUserId: null, addedToPantry: false } : {};
+  await prisma.shoppingListItem.updateMany({
+    where: { id: item.id, householdId: user.householdId },
+    data: item.isManual
+      ? { name: parsed.data.name, quantity, unit: parsed.data.unit, ...grewReset }
+      : { quantity, ...grewReset },
+  });
+
+  revalidatePath("/shopping-list");
+  return { error: null, data: { savedId: item.id } };
+}
+
+/**
+ * Удаление позиции — только для ручных: позицию из меню syncWeekItems пересоздал бы при
+ * следующем чтении, пока рецепт стоит в плане (убирается она правкой меню или галочкой
+ * "куплено"). UI кнопку для них не показывает, серверный фильтр — вторая линия.
+ */
+export async function deleteShoppingItem(itemId: string): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const deleted = await prisma.shoppingListItem.deleteMany({
+    where: { id: itemId, householdId: user.householdId, isManual: true },
+  });
+  if (deleted.count === 0) return { error: "Позиция не найдена" };
+
+  revalidatePath("/shopping-list");
+  return { error: null };
+}
+
+/**
+ * Массовый перенос купленного в инвентарь (см. CLAUDE.md §6, поток "массовое обновление
+ * инвентаря"): каждая подтверждённая позиция пополняет свой PantryItem и помечается
+ * addedToPantry. Количество 0 — позиция пропущена и появится в шите переноса снова.
+ * Ручные позиции не участвуют — им нечего добавлять в инвентарь.
+ *
+ * Претензия на позицию идёт updateMany с фильтром addedToPantry: false до пополнения запасов:
+ * два участника, подтвердившие перенос одновременно, конкурируют за row lock, и проигравший
+ * увидит уже addedToPantry = true (count 0) — двойного пополнения не будет.
+ */
+export async function addBoughtToPantry(input: unknown): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const parsed = addBoughtToPantrySchema.safeParse(input);
+  if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
+
+  const toTransfer = parsed.data.items.filter((item) => item.quantity > 0);
+  if (toTransfer.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      const rows = await tx.shoppingListItem.findMany({
+        where: {
+          id: { in: toTransfer.map((item) => item.itemId) },
+          householdId: user.householdId,
+          isBought: true,
+          isManual: false,
+          ingredientId: { not: null },
+        },
+        select: { id: true, unit: true, ingredient: true },
+      });
+      const quantityById = new Map(toTransfer.map((item) => [item.itemId, item.quantity]));
+
+      for (const row of rows) {
+        const claimed = await tx.shoppingListItem.updateMany({
+          where: { id: row.id, addedToPantry: false },
+          data: { addedToPantry: true },
+        });
+        if (claimed.count === 0 || !row.ingredient) continue;
+
+        await upsertPantryItemQuantity(tx, {
+          householdId: user.householdId,
+          ingredient: row.ingredient,
+          quantity: quantityById.get(row.id) ?? 0,
+          claimedUnitType: UNIT_TO_TYPE[row.unit],
+          addedVia: "MANUAL",
+        });
+      }
+    });
+  }
+
+  revalidatePath("/shopping-list");
+  revalidatePath("/inventory");
+  return { error: null };
 }
 
 /**
@@ -132,11 +289,14 @@ export async function syncWeekItems(householdId: string, weekId: string): Promis
     const byIngredient = new Map(
       existing.flatMap((item) => (item.ingredientId ? [[item.ingredientId, item] as const] : [])),
     );
+    // quantity намеренно не сравнивается: total — это всегда сумма вкладов, поэтому расхождение
+    // при совпадающих вкладах может значить только ручную правку количества в списке
+    // (см. CLAUDE.md §6, поток "редактирование позиции") — её не затираем. Любое реальное
+    // изменение плана меняет вклады, попадает в changed и переписывает quantity на need.total.
     const changed = [...needs.values()].filter((need) => {
       const current = byIngredient.get(need.ingredientId);
       return (
         !current ||
-        current.quantity !== need.total ||
         current.unit !== need.unit ||
         current.name !== need.name ||
         !sameContributions(current, need)

@@ -5,7 +5,6 @@ import { useActionState, useEffect, useState } from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,14 +18,13 @@ import { initialFormState } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { ProductCategory, Unit } from "@/lib/types";
-import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
+
+import { ManualItemFields } from "./ManualItemFields";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
-
-const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
 
 export function AddShoppingItemSheet({ open, onOpenChange }: Props) {
   const formEpoch = useRemountKey(open);
@@ -55,50 +53,21 @@ function AddItemForm({ onSaved }: { onSaved: () => void }) {
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="unit" value={unit} />
       <input type="hidden" name="manualCategory" value={category} />
 
       <FormErrorBanner message={state.error} />
 
       <div className="space-y-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="manual-name">Название</Label>
-          <Input
-            id="manual-name"
-            name="name"
-            defaultValue={state.values?.name}
-            placeholder="Например, губки для посуды"
-            error={state.fieldErrors?.name}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="manual-quantity">Количество</Label>
-          <div className="flex gap-2.5">
-            <Input
-              id="manual-quantity"
-              name="quantity"
-              value={qty}
-              onChange={(e) => setQty(sanitizeQuantityInput(e.target.value))}
-              inputMode="decimal"
-              placeholder="Кол-во"
-              error={state.fieldErrors?.quantity}
-              className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
-            />
-            <Select value={unit} onValueChange={(v) => setUnit(v as Unit)}>
-              <SelectTrigger className="h-12 w-[88px] rounded-lg" aria-label="Единица">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MANUAL_UNITS.map((u) => (
-                  <SelectItem key={u} value={u}>
-                    {DISPLAY_UNIT_LABEL[u]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <ManualItemFields
+          nameDefault={state.values?.name}
+          namePlaceholder="Например, губки для посуды"
+          nameError={state.fieldErrors?.name}
+          qty={qty}
+          onQtyChange={setQty}
+          qtyError={state.fieldErrors?.quantity}
+          unit={unit}
+          onUnitChange={setUnit}
+        />
 
         <div className="space-y-1.5">
           <Label>Категория</Label>

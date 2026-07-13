@@ -35,10 +35,12 @@ export async function getShoppingListView(
       quantity: true,
       unit: true,
       isBought: true,
+      addedToPantry: true,
       isManual: true,
       manualCategory: true,
       ingredientId: true,
       ingredient: { select: { category: true } },
+      boughtBy: { select: { name: true } },
       meals: {
         select: {
           quantity: true,
@@ -70,6 +72,8 @@ export async function getShoppingListView(
       category: row.ingredient?.category ?? row.manualCategory ?? "OTHER",
       isManual: row.isManual,
       isBought: row.isBought,
+      addedToPantry: row.addedToPantry,
+      boughtByName: row.boughtBy?.name ?? null,
       quantity: row.quantity,
       pantryQuantity: row.ingredientId ? (pantryByIngredient.get(row.ingredientId) ?? 0) : 0,
       perDay,

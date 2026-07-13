@@ -106,6 +106,28 @@ export type PickerRecipeView = {
 /** Позиция инвентаря с продуктом из справочника — форма для экрана "Запасы". */
 export type PantryItemView = PantryItem & { ingredient: Ingredient };
 
+/** Ингредиент в шите списания — количество в базовой единице на Recipe.baseServings. */
+export type EatIngredientView = {
+  ingredientId: string;
+  name: string;
+  unit: Unit;
+  quantity: number;
+};
+
+/**
+ * Payload шита "Списать использованные продукты?" — возвращается markMealEaten
+ * (см. CLAUDE.md §6, поток "отметил, что скушал"). Количества ингредиентов клиент
+ * пересчитывает сам под выбранное в степпере число порций (scaleIngredient).
+ */
+export type EatDeductionView = {
+  mealId: string;
+  recipeTitle: string;
+  photoUrl: string | null;
+  servings: number;
+  baseServings: number;
+  ingredients: EatIngredientView[];
+};
+
 /**
  * Позиция списка покупок для экрана. quantity: у ручных — введённое количество, у позиций
  * из меню — потребность всей недели без вычета запасов; сколько реально купить, считается
@@ -118,6 +140,9 @@ export type ShoppingItemView = {
   category: ProductCategory;
   isManual: boolean;
   isBought: boolean;
+  addedToPantry: boolean;
+  /** Имя участника, отметившего "куплено" — подпись под зачёркнутой позицией. */
+  boughtByName: string | null;
   quantity: number;
   pantryQuantity: number;
   perDay: Record<string, number>;

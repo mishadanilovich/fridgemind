@@ -1,19 +1,24 @@
 "use client";
 
-import { Plus, ShoppingBasket } from "lucide-react";
-import { useState } from "react";
+import { Check, Plus, Refrigerator, ShoppingBasket } from "lucide-react";
+import { useOptimistic, useState, useTransition } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
 import { CategorySection } from "@/components/ui/category-section";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { toggleShoppingItemBought } from "@/lib/actions/shopping-list";
 import { addDaysIso, weekDatesIso } from "@/lib/dates";
 import { buildShoppingGroups } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
 import { formatQuantity } from "@/lib/units";
+import { cn } from "@/lib/utils";
 
 import { AddShoppingItemSheet } from "./AddShoppingItemSheet";
+import { BulkPantrySheet } from "./BulkPantrySheet";
 import { DayPickerSheet } from "./DayPickerSheet";
+import { EditShoppingItemSheet } from "./EditShoppingItemSheet";
 
 type Props = {
   items: ShoppingItemView[];
@@ -47,13 +52,46 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
   const [filter, setFilter] = useState<DayFilter>({ kind: "week" });
   const [pickingDays, setPickingDays] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [editing, setEditing] = useState<ShoppingItemView | null>(null);
+  const [boughtError, setBoughtError] = useState<string | null>(null);
+  const [, startToggle] = useTransition();
+
+  // Optimistic-отметка "куплено": галочка меняется мгновенно (в магазине их ставят одну за
+  // другой), сервер подтверждает следом через revalidatePath; при ошибке состояние само
+  // откатывается к серверному, а причина показывается баннером.
+  const [optimisticItems, applyBought] = useOptimistic(
+    items,
+    (state, next: { id: string; isBought: boolean }) =>
+      state.map((item) =>
+        item.id === next.id ? { ...item, isBought: next.isBought } : item,
+      ),
+  );
+
+  function onToggleBought(item: ShoppingItemView) {
+    setBoughtError(null);
+    startToggle(async () => {
+      applyBought({ id: item.id, isBought: !item.isBought });
+      const result = await toggleShoppingItemBought({
+        itemId: item.id,
+        isBought: !item.isBought,
+      });
+      if (result.error !== null) setBoughtError(result.error);
+    });
+  }
 
   const weekDays = weekDatesIso(weekStart);
   // В воскресенье "завтра" — уже следующая неделя, чип не показывается.
   const hasTomorrow = weekDays.includes(addDaysIso(today, 1));
 
   const days = selectedDays(filter, today);
-  const groups = buildShoppingGroups(items, days);
+  const groups = buildShoppingGroups(optimisticItems, days);
+
+  // Кандидаты на массовый перенос в запасы: куплено, ещё не перенесено, не ручное
+  // (см. CLAUDE.md §6, поток "массовое обновление инвентаря").
+  const pantryCandidates = optimisticItems.filter(
+    (item) => item.isBought && !item.addedToPantry && !item.isManual,
+  );
 
   // "Выбрать дни" не переключает фильтр напрямую — открывает шит, а к "custom" фильтр
   // переходит только после подтверждения в DayPickerSheet (см. onApply ниже).
@@ -92,6 +130,19 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
         </ToggleGroupItem>
       </ToggleGroup>
 
+      <FormErrorBanner message={boughtError} />
+
+      {pantryCandidates.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setTransferring(true)}
+          className="pressable mb-3 flex w-full items-center justify-center gap-2 rounded-card bg-primary px-4 py-[14px] text-sm font-bold text-primary-foreground shadow-primary-glow"
+        >
+          <Refrigerator className="size-[18px]" strokeWidth={2.2} />
+          Добавить в запасы · {pantryCandidates.length}
+        </button>
+      )}
+
       <button
         type="button"
         onClick={() => setAdding(true)}
@@ -104,9 +155,9 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
       {groups.length === 0 ? (
         <EmptyState
           icon={ShoppingBasket}
-          title={items.length === 0 ? "Список пока пуст" : "Всё уже есть дома"}
+          title={optimisticItems.length === 0 ? "Список пока пуст" : "Всё уже есть дома"}
           description={
-            items.length === 0
+            optimisticItems.length === 0
               ? "Назначьте рецепты в меню недели — недостающие продукты появятся здесь сами."
               : "На выбранные дни докупать нечего."
           }
@@ -117,17 +168,52 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
             {group.items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between gap-2.5 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
+                className="flex items-center gap-3 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
               >
-                <span className="flex min-w-0 items-center gap-[11px]">
-                  <CategoryDot category={item.category} />
-                  <span className="truncate text-[14.5px] font-semibold text-foreground">
-                    {item.name}
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={item.isBought}
+                  aria-label={`Куплено: ${item.name}`}
+                  onClick={() => onToggleBought(item)}
+                  className={cn(
+                    "pressable flex size-6 shrink-0 items-center justify-center rounded-xs border-2",
+                    item.isBought ? "border-primary bg-primary" : "border-tan-dashed bg-transparent",
+                  )}
+                >
+                  {item.isBought && (
+                    <Check className="size-3.5 text-primary-foreground" strokeWidth={3.2} />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditing(item)}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-2.5 text-left"
+                  aria-label={`Изменить: ${item.name}`}
+                >
+                  <span className="min-w-0">
+                    <span className="flex min-w-0 items-center gap-[11px]">
+                      <CategoryDot category={item.category} />
+                      <span
+                        className={cn(
+                          "truncate text-[14.5px] font-semibold",
+                          item.isBought ? "text-nav-inactive line-through" : "text-foreground",
+                        )}
+                      >
+                        {item.name}
+                      </span>
+                    </span>
+                    {item.isBought && item.boughtByName && (
+                      <span className="mt-0.5 block pl-[19px] text-[11px] font-semibold text-muted-foreground">
+                        куплено · {item.boughtByName}
+                      </span>
+                    )}
                   </span>
-                </span>
-                <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
-                  {formatQuantity(item.needed, item.unit)}
-                </span>
+                  <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
+                    {formatQuantity(item.needed, item.unit)}
+                  </span>
+                </button>
               </div>
             ))}
           </CategorySection>
@@ -142,6 +228,12 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
         onApply={(picked) => setFilter({ kind: "custom", days: picked })}
       />
       <AddShoppingItemSheet open={adding} onOpenChange={setAdding} />
+      <BulkPantrySheet
+        open={transferring}
+        onOpenChange={setTransferring}
+        candidates={pantryCandidates}
+      />
+      {editing && <EditShoppingItemSheet item={editing} onClose={() => setEditing(null)} />}
     </>
   );
 }

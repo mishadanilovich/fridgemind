@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-import { FALLBACK_QUANTITY_BY_TYPE, UNIT_TYPE_TO_UNIT } from "./units";
+import { FALLBACK_QUANTITY_BY_TYPE, normalizePcsQuantity, UNIT_TYPE_TO_UNIT } from "./units";
 import type { UnitTypeValue, VisionRecognitionResponse } from "./zod-schemas";
 import { visionRecognitionResponseSchema } from "./zod-schemas";
 
@@ -96,7 +96,7 @@ export function parseVisionResponse(
         matchedIngredientId,
         unitType,
         unit,
-        quantity: unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity,
+        quantity: normalizePcsQuantity(quantity, unit),
       };
     });
 

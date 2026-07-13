@@ -28,6 +28,13 @@ export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
   COUNT: "Штучно (шт)",
 };
 
+// Штуки не бывают дробными или нулевыми: любое сохраняемое штучное количество приводится
+// к целому не меньше 1. Единая точка для всех записей количеств (список покупок, инвентарь,
+// распознавание фото).
+export function normalizePcsQuantity(quantity: number, unit: Unit): number {
+  return unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity;
+}
+
 // Обрезает "хвост" плавающей точки до maxDecimals знаков без завершающих нулей.
 function trimNumber(value: number, maxDecimals: number): string {
   const rounded = Number(value.toFixed(maxDecimals));
@@ -57,6 +64,14 @@ export const DISPLAY_UNIT_LABEL: Record<Unit, string> = {
 export function sanitizeQuantityInput(raw: string): string {
   return raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
 }
+
+// Шаг кнопок ± при правке количества (шит списания, перенос купленного в запасы):
+// граммы/миллилитры двигаются по 50 — точность и так примерная, штуки — по одной.
+export const QUANTITY_STEP_BY_UNIT: Record<Unit, number> = {
+  G: 50,
+  ML: 50,
+  PCS: 1,
+};
 
 // Безопасное количество, когда оценка сделана под другой unitType: WEIGHT/VOLUME/COUNT между
 // собой не конвертируются, поэтому чужое число не переносится, а заменяется минимальным
