@@ -5,27 +5,18 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { QuantityInput } from "@/components/ui/quantity-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { deleteShoppingItem, updateShoppingItem } from "@/lib/actions/shopping-list";
 import { initialFormState } from "@/lib/form-state";
 import type { ShoppingItemView, Unit } from "@/lib/types";
-import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
+import { DISPLAY_UNIT_LABEL } from "@/lib/units";
+
+import { ManualItemFields } from "./ManualItemFields";
 
 type Props = {
   item: ShoppingItemView;
   onClose: () => void;
 };
-
-const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
 
 /**
  * Редактирование позиции прямо в списке (см. CLAUDE.md §6): у ручных — название, количество,
@@ -94,46 +85,16 @@ export function EditShoppingItemSheet({ item, onClose }: Props) {
           <input type="hidden" name="itemId" value={item.id} />
 
           <div className="space-y-3">
-            {item.isManual && (
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-item-name">Название</Label>
-                <Input
-                  id="edit-item-name"
-                  name="name"
-                  defaultValue={state.values?.name ?? item.name}
-                  error={state.fieldErrors?.name}
-                />
-              </div>
-            )}
-
             {item.isManual ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-item-quantity">Количество</Label>
-                <div className="flex gap-2.5">
-                  <input type="hidden" name="unit" value={unit} />
-                  <Input
-                    id="edit-item-quantity"
-                    name="quantity"
-                    value={qty}
-                    onChange={(e) => setQty(sanitizeQuantityInput(e.target.value))}
-                    inputMode="decimal"
-                    error={state.fieldErrors?.quantity}
-                    className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
-                  />
-                  <Select value={unit} onValueChange={(v) => setUnit(v as Unit)}>
-                    <SelectTrigger className="h-12 w-[88px] rounded-lg" aria-label="Единица">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MANUAL_UNITS.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {DISPLAY_UNIT_LABEL[u]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <ManualItemFields
+                nameDefault={state.values?.name ?? item.name}
+                nameError={state.fieldErrors?.name}
+                qty={qty}
+                onQtyChange={setQty}
+                qtyError={state.fieldErrors?.quantity}
+                unit={unit}
+                onUnitChange={setUnit}
+              />
             ) : (
               <QuantityInput
                 name="quantity"

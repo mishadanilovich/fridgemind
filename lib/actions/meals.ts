@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { dateToIso } from "@/lib/dates";
 import type { ActionResult } from "@/lib/form-state";
 import { firstIssue } from "@/lib/form-state";
+import { deductPantryItemQuantity } from "@/lib/pantry-quantity";
 import { prisma } from "@/lib/prisma";
 import type { EatDeductionView } from "@/lib/types";
 import { mealDeductSchema } from "@/lib/zod-schemas";
@@ -108,24 +109,13 @@ export async function deductMealIngredients(input: unknown): Promise<ActionResul
 
     await tx.menuDayMeal.updateMany({ where: { id: meal.id }, data: { servings } });
 
-    const deductions = items.filter((item) => item.quantity > 0);
-    if (deductions.length > 0) {
-      const pantry = await tx.pantryItem.findMany({
-        where: {
-          householdId: user.householdId,
-          ingredientId: { in: deductions.map((item) => item.ingredientId) },
-        },
-        select: { id: true, ingredientId: true, quantity: true },
+    for (const item of items) {
+      if (item.quantity <= 0) continue;
+      await deductPantryItemQuantity(tx, {
+        householdId: user.householdId,
+        ingredientId: item.ingredientId,
+        quantity: item.quantity,
       });
-      const byIngredient = new Map(pantry.map((row) => [row.ingredientId, row]));
-      for (const item of deductions) {
-        const row = byIngredient.get(item.ingredientId);
-        if (!row) continue;
-        await tx.pantryItem.update({
-          where: { id: row.id },
-          data: { quantity: Math.max(0, row.quantity - item.quantity) },
-        });
-      }
     }
 
     return dateToIso(meal.menuDay.date);

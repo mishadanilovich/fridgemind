@@ -18,9 +18,11 @@ type Props = {
  * (select по household), поэтому перед подпиской токен сессии явно передаётся в Realtime —
  * иначе канал успевает подключиться с anon-ключом, и RLS молча отсекает все события.
  *
- * DELETE не слушаем: без replica identity full Supabase не кладёт в payload даже id удалённой
- * строки, сопоставить её со своим списком нечем. Удаление позиции другим участником доедет
- * со следующим событием или переходом на экран — для MVP достаточно.
+ * DELETE слушается без фильтра: без replica identity full (которую включать нельзя — RLS
+ * не фильтрует DELETE-события, и полные строки протекали бы между household) payload пуст,
+ * даже без id — сопоставить событие со своим списком нечем, фильтр по household_id не
+ * срабатывает. Поэтому на любой DELETE по таблице просто делаем refresh: наружу ничего не
+ * утекает (payload пустой), а лишние обновления от чужих household редки и дёшевы.
  */
 export function ShoppingListRealtime({ householdId }: Props) {
   const router = useRouter();
@@ -64,6 +66,11 @@ export function ShoppingListRealtime({ householdId }: Props) {
             table: "shopping_list_items",
             filter: `household_id=eq.${householdId}`,
           },
+          refresh,
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "shopping_list_items" },
           refresh,
         )
         .subscribe();

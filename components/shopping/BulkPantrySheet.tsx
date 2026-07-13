@@ -5,12 +5,11 @@ import { useState, useTransition } from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
-import { Stepper } from "@/components/ui/stepper";
+import { QuantityStepperRow } from "@/components/ui/quantity-stepper-row";
 import { addBoughtToPantry } from "@/lib/actions/shopping-list";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { neededQuantity } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
-import { formatQuantity, QUANTITY_STEP_BY_UNIT } from "@/lib/units";
 
 type Props = {
   open: boolean;
@@ -73,36 +72,15 @@ function BulkBody({ candidates, onDone }: { candidates: ShoppingItemView[]; onDo
       <div className="-mx-1 max-h-[45vh] overflow-y-auto px-1">
         <div className="rounded-card border border-border bg-card">
           {candidates.map((item) => (
-            <div
+            <QuantityStepperRow
               key={item.id}
-              className="flex items-center justify-between gap-2.5 border-b border-secondary px-[15px] py-[11px] last:border-b-0"
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                <span className="size-2 shrink-0 rounded-full bg-success-dot" />
-                <span
-                  className={
-                    quantityOf(item) > 0
-                      ? "truncate text-sm font-semibold text-foreground"
-                      : "truncate text-sm font-semibold text-nav-inactive line-through"
-                  }
-                >
-                  {item.name}
-                </span>
-              </span>
-              <Stepper
-                value={quantityOf(item)}
-                onValueChange={(next) =>
-                  setOverrides((prev) => ({ ...prev, [item.id]: next }))
-                }
-                min={0}
-                max={99000}
-                step={QUANTITY_STEP_BY_UNIT[item.unit]}
-                formatValue={(value) => formatQuantity(value, item.unit)}
-                size="iconSm"
-                label={`Количество: ${item.name}`}
-                className="shrink-0 gap-2"
-              />
-            </div>
+              name={item.name}
+              unit={item.unit}
+              value={quantityOf(item)}
+              onChange={(next) => setOverrides((prev) => ({ ...prev, [item.id]: next }))}
+              dotClassName="bg-success-dot"
+              strikeZero
+            />
           ))}
         </div>
       </div>

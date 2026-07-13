@@ -108,10 +108,14 @@ describe("neededQuantity", () => {
     expect(neededQuantity(manual, ["2026-07-07"])).toBe(2);
   });
 
-  it("правленное вручную количество видно в недельном виде, дни считают по вкладам", () => {
+  it("правленное вручную количество распределяется по дням пропорционально вкладам", () => {
+    // Вклады 300 + 200 = 500, правка до 800 → дни масштабируются ×1.6.
     const edited = item({ perDay, quantity: 800, pantryQuantity: 100 });
     expect(neededQuantity(edited, null)).toBe(700);
-    expect(neededQuantity(edited, ["2026-07-08"])).toBe(100);
+    expect(neededQuantity(edited, ["2026-07-08"])).toBe(200 * 1.6 - 100);
+    // День не может требовать больше всей недели, а сумма дней равна неделе.
+    const allDays = neededQuantity(edited, ["2026-07-06", "2026-07-08"]);
+    expect(allDays).toBe(neededQuantity(edited, null));
   });
 });
 

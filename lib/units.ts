@@ -28,6 +28,13 @@ export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
   COUNT: "Штучно (шт)",
 };
 
+// Штуки не бывают дробными или нулевыми: любое сохраняемое штучное количество приводится
+// к целому не меньше 1. Единая точка для всех записей количеств (список покупок, инвентарь,
+// распознавание фото).
+export function normalizePcsQuantity(quantity: number, unit: Unit): number {
+  return unit === "PCS" ? Math.max(1, Math.round(quantity)) : quantity;
+}
+
 // Обрезает "хвост" плавающей точки до maxDecimals знаков без завершающих нулей.
 function trimNumber(value: number, maxDecimals: number): string {
   const rounded = Number(value.toFixed(maxDecimals));

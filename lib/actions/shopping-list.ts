@@ -16,7 +16,7 @@ import {
   toMealNeedsSource,
 } from "@/lib/shopping-list";
 import type { ManualShoppingItemInput } from "@/lib/types";
-import { UNIT_TO_TYPE } from "@/lib/units";
+import { normalizePcsQuantity, UNIT_TO_TYPE } from "@/lib/units";
 import {
   addBoughtToPantrySchema,
   manualShoppingItemInputSchema,
@@ -70,8 +70,7 @@ export async function createManualShoppingItem(
   householdId: string,
   input: ManualShoppingItemInput,
 ): Promise<{ id: string }> {
-  const quantity =
-    input.unit === "PCS" ? Math.max(1, Math.round(input.quantity)) : input.quantity;
+  const quantity = normalizePcsQuantity(input.quantity, input.unit);
   const weekStartDate = isoToDate(startOfWeekIso(todayIso()));
 
   return prisma.$transaction(async (tx) => {
@@ -93,9 +92,11 @@ export async function createManualShoppingItem(
 
 /**
  * Мгновенная отметка "куплено" — без подтверждений (см. CLAUDE.md §6, поток "отметил, что
- * купил"): галочка и boughtByUserId, инвентарь не трогается. Снятие галочки сбрасывает и
- * addedToPantry — иначе позиция, уже перенесённая в запасы и отмеченная заново, не попала бы
- * в следующий массовый перенос.
+ * купил"): галочка и boughtByUserId, инвентарь не трогается. addedToPantry при снятии
+ * галочки намеренно не сбрасывается: перенос в запасы уже состоялся, и сброс сделал бы
+ * позицию кандидатом на повторный перенос — двойное пополнение инвентаря (легче всего
+ * ловится в гонке с чужим массовым переносом). Флаг снимается только там, где потребность
+ * реально выросла (syncWeekItems, updateShoppingItem).
  */
 export async function toggleShoppingItemBought(input: unknown): Promise<ActionResult> {
   const user = await requireUser();
@@ -108,7 +109,7 @@ export async function toggleShoppingItemBought(input: unknown): Promise<ActionRe
     where: { id: itemId, householdId: user.householdId },
     data: isBought
       ? { isBought: true, boughtByUserId: user.id }
-      : { isBought: false, boughtByUserId: null, addedToPantry: false },
+      : { isBought: false, boughtByUserId: null },
   });
   if (updated.count === 0) return { error: "Позиция не найдена" };
 
@@ -124,7 +125,9 @@ type ShoppingItemEditState = FormState<ShoppingItemEditValues, { savedId: string
  * Редактирование позиции прямо в списке (см. CLAUDE.md §6): название и единица меняются
  * только у ручных позиций (у позиций из меню они идут из справочника), количество — у любых.
  * Правка количества не пересчитывает недельный план и переживает syncWeekItems — см. диф
- * там же.
+ * там же. Рост количества снимает isBought/addedToPantry (то же правило, что в syncWeekItems):
+ * прежняя покупка и перенос не покрывают разницу — иначе излишек молча терялся бы, не попадая
+ * ни в список к покупке, ни в инвентарь.
  */
 export async function updateShoppingItem(
   _prev: ShoppingItemEditState,
@@ -135,7 +138,7 @@ export async function updateShoppingItem(
   const itemId = String(formData.get("itemId") ?? "");
   const item = await prisma.shoppingListItem.findFirst({
     where: { id: itemId, householdId: user.householdId },
-    select: { id: true, isManual: true, name: true, unit: true },
+    select: { id: true, isManual: true, name: true, unit: true, quantity: true },
   });
   if (!item) return { error: "Позиция не найдена" };
 
@@ -153,15 +156,14 @@ export async function updateShoppingItem(
     return { error: null, fieldErrors: fieldIssues(parsed.error.issues), values: raw };
   }
 
-  const quantity =
-    parsed.data.unit === "PCS"
-      ? Math.max(1, Math.round(parsed.data.quantity))
-      : parsed.data.quantity;
+  const quantity = normalizePcsQuantity(parsed.data.quantity, parsed.data.unit);
+  const grewReset =
+    quantity > item.quantity ? { isBought: false, boughtByUserId: null, addedToPantry: false } : {};
   await prisma.shoppingListItem.updateMany({
     where: { id: item.id, householdId: user.householdId },
     data: item.isManual
-      ? { name: parsed.data.name, quantity, unit: parsed.data.unit }
-      : { quantity },
+      ? { name: parsed.data.name, quantity, unit: parsed.data.unit, ...grewReset }
+      : { quantity, ...grewReset },
   });
 
   revalidatePath("/shopping-list");

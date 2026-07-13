@@ -6,11 +6,11 @@ import { ServingsStepper } from "@/components/recipes/ServingsStepper";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
-import { Stepper } from "@/components/ui/stepper";
+import { QuantityStepperRow } from "@/components/ui/quantity-stepper-row";
 import { deductMealIngredients } from "@/lib/actions/meals";
 import { scaleIngredient } from "@/lib/recipes";
 import type { EatDeductionView } from "@/lib/types";
-import { formatQuantity, QUANTITY_STEP_BY_UNIT, UNIT_TO_TYPE } from "@/lib/units";
+import { UNIT_TO_TYPE } from "@/lib/units";
 
 type Props = {
   /** Payload из markMealEaten; null — шит закрыт. */
@@ -58,7 +58,7 @@ function EatSheetBody({ deduction, onClose }: { deduction: EatDeductionView; onC
   const [isPending, startTransition] = useTransition();
 
   // Смена порций пересчитывает все количества заново — точечные правки ± при этом
-  // сбрасываются (как в макете): новая пропорция важнее старых поправок.
+  // сбрасываются: новая пропорция важнее старых поправок.
   function onServingsChange(next: number) {
     setServings(next);
     setQuantities(scaledQuantities(deduction, next));
@@ -97,30 +97,16 @@ function EatSheetBody({ deduction, onClose }: { deduction: EatDeductionView; onC
       <div className="-mx-1 max-h-[38vh] overflow-y-auto px-1">
         <div className="rounded-card border border-border bg-card">
           {deduction.ingredients.map((ingredient, index) => (
-            <div
+            <QuantityStepperRow
               key={ingredient.ingredientId}
-              className="flex items-center justify-between gap-2.5 border-b border-secondary px-[15px] py-[11px] last:border-b-0"
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                <span className="size-2 shrink-0 rounded-full bg-accent" />
-                <span className="truncate text-sm font-semibold text-foreground">
-                  {ingredient.name}
-                </span>
-              </span>
-              <Stepper
-                value={quantities[index] ?? 0}
-                onValueChange={(next) =>
-                  setQuantities((prev) => prev.map((q, i) => (i === index ? next : q)))
-                }
-                min={0}
-                max={99000}
-                step={QUANTITY_STEP_BY_UNIT[ingredient.unit]}
-                formatValue={(value) => formatQuantity(value, ingredient.unit)}
-                size="iconSm"
-                label={`Количество: ${ingredient.name}`}
-                className="shrink-0 gap-2"
-              />
-            </div>
+              name={ingredient.name}
+              unit={ingredient.unit}
+              value={quantities[index] ?? 0}
+              onChange={(next) =>
+                setQuantities((prev) => prev.map((q, i) => (i === index ? next : q)))
+              }
+              dotClassName="bg-accent"
+            />
           ))}
         </div>
       </div>

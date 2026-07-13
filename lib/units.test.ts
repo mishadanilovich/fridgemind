@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatQuantity, sanitizeQuantityInput, UNIT_TO_TYPE, UNITS_BY_TYPE } from "./units";
+import {
+  formatQuantity,
+  normalizePcsQuantity,
+  sanitizeQuantityInput,
+  UNIT_TO_TYPE,
+  UNITS_BY_TYPE,
+} from "./units";
 
 describe("formatQuantity", () => {
   it("shows grams below 1000 and kilograms at or above", () => {
@@ -34,6 +40,19 @@ describe("sanitizeQuantityInput", () => {
   it("strips everything except digits and the dot", () => {
     expect(sanitizeQuantityInput("1.5 кг")).toBe("1.5");
     expect(sanitizeQuantityInput("abc")).toBe("");
+  });
+});
+
+describe("normalizePcsQuantity", () => {
+  it("rounds pieces to a whole number of at least one", () => {
+    expect(normalizePcsQuantity(2.4, "PCS")).toBe(2);
+    expect(normalizePcsQuantity(2.5, "PCS")).toBe(3);
+    expect(normalizePcsQuantity(0.2, "PCS")).toBe(1);
+  });
+
+  it("leaves weight and volume untouched", () => {
+    expect(normalizePcsQuantity(2.4, "G")).toBe(2.4);
+    expect(normalizePcsQuantity(0.5, "ML")).toBe(0.5);
   });
 });
 

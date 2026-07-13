@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { getShoppingListView } from "@/lib/queries/shopping-list";
 import { cn } from "@/lib/utils";
 
-// Цвета аватарок-инициалов участников — как в макете (зелёный/оранжевый/жёлтый по кругу).
 const AVATAR_CLASSES = ["bg-primary", "bg-accent", "bg-success-dot"];
 
 export default async function ShoppingListPage() {

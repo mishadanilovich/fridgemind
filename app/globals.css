@@ -44,7 +44,7 @@
     --dot-neutral: 210 6% 63%;
     --radius: 1rem;
     --shadow-card: 0 8px 20px -18px rgba(45, 32, 18, 0.5);
-    /* Свечение акцентных кнопок действия ("Скушал") и тёмно-зелёных CTA шитов — из макета. */
+    /* Свечение акцентных кнопок действия ("Скушал") и тёмно-зелёных CTA шитов. */
     --shadow-accent-glow: 0 8px 16px -8px hsl(var(--accent) / 0.9);
     --shadow-primary-glow: 0 10px 22px -12px hsl(var(--primary) / 0.9);
     --font-heading: "Bricolage Grotesque", sans-serif;
