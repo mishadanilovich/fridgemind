@@ -129,12 +129,17 @@ type NeededSource = Pick<ShoppingItemView, "isManual" | "quantity" | "pantryQuan
  * Сколько нужно купить по позиции под выбранные дни (null — вся неделя): потребность за дни
  * минус текущий остаток дома, не ниже нуля. Ручные позиции не привязаны к дням и запасам —
  * показываются всегда со своим количеством (см. CLAUDE.md §6, поток "фильтр по дням").
+ *
+ * Для всей недели берётся item.quantity, а не сумма perDay: обычно это одно и то же
+ * (quantity — сумма вкладов), но количество могло быть поправлено вручную прямо в списке —
+ * такая правка видна в недельном виде и не переживает лишь реальное изменение плана
+ * (см. syncWeekItems). Фильтры по дням считают по вкладам — ручная правка на них не влияет.
  */
 export function neededQuantity(item: NeededSource, days: readonly string[] | null): number {
   if (item.isManual) return item.quantity;
   const required =
     days === null
-      ? Object.values(item.perDay).reduce((sum, quantity) => sum + quantity, 0)
+      ? item.quantity
       : days.reduce((sum, day) => sum + (item.perDay[day] ?? 0), 0);
   return Math.max(0, required - item.pantryQuantity);
 }

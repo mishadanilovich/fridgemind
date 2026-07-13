@@ -179,6 +179,51 @@ export const menuAssignSchema = z.object({
 });
 export type MenuAssignInput = z.infer<typeof menuAssignSchema>;
 
+// ---------- Скушано и список покупок (этап 8) ----------
+
+// Списание запасов после отметки "скушано" (см. CLAUDE.md §6, поток "отметил, что скушал"):
+// выбранное число порций + итоговые (возможно, правленные вручную) количества по ингредиентам.
+// quantity = 0 — ингредиент не списывается.
+export const mealDeductSchema = z.object({
+  mealId: z.string().min(1),
+  servings: z.number().int().positive("Укажите число порций").max(99, "Слишком много порций"),
+  items: z.array(
+    z.object({
+      ingredientId: z.string().min(1),
+      quantity: z.number().min(0, "Количество не может быть отрицательным"),
+    }),
+  ),
+});
+export type MealDeductInput = z.infer<typeof mealDeductSchema>;
+
+export const shoppingItemBoughtSchema = z.object({
+  itemId: z.string().min(1),
+  isBought: z.boolean(),
+});
+
+// Редактирование позиции списка покупок: name/unit применяются только к ручным позициям
+// (у позиций из меню название и единица идут из справочника — см. lib/actions/shopping-list.ts).
+export const shoppingItemUpdateSchema = z.object({
+  itemId: z.string().min(1),
+  name: z.string().trim().min(1, "Введите название").max(60, "Слишком длинное название"),
+  quantity: z.number().positive("Укажите количество"),
+  unit: unitSchema,
+});
+
+// Массовый перенос купленного в инвентарь (см. CLAUDE.md §6, поток "массовое обновление
+// инвентаря"): quantity = 0 — позиция пропускается и остаётся addedToPantry = false.
+export const addBoughtToPantrySchema = z.object({
+  items: z
+    .array(
+      z.object({
+        itemId: z.string().min(1),
+        quantity: z.number().min(0, "Количество не может быть отрицательным"),
+      }),
+    )
+    .min(1, "Нет позиций для переноса"),
+});
+export type AddBoughtToPantryInput = z.infer<typeof addBoughtToPantrySchema>;
+
 // ---------- Auth-формы (server actions + useActionState) ----------
 
 export const loginFormSchema = z.object({

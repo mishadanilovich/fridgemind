@@ -1,0 +1,168 @@
+"use client";
+
+import { useActionState, useEffect, useState, useTransition } from "react";
+
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { Button } from "@/components/ui/button";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { QuantityInput } from "@/components/ui/quantity-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { deleteShoppingItem, updateShoppingItem } from "@/lib/actions/shopping-list";
+import { initialFormState } from "@/lib/form-state";
+import type { ShoppingItemView, Unit } from "@/lib/types";
+import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
+
+type Props = {
+  item: ShoppingItemView;
+  onClose: () => void;
+};
+
+const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
+
+/**
+ * Редактирование позиции прямо в списке (см. CLAUDE.md §6): у ручных — название, количество,
+ * единица и удаление; у позиций из меню — только количество (название/единица из справочника,
+ * а удалять их бессмысленно — синхронизация с меню пересоздаст).
+ */
+export function EditShoppingItemSheet({ item, onClose }: Props) {
+  const [state, formAction, isPending] = useActionState(updateShoppingItem, initialFormState);
+  const [qty, setQty] = useState(String(item.quantity));
+  const [unit, setUnit] = useState<Unit>(item.unit);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, startDelete] = useTransition();
+
+  useEffect(() => {
+    if (state.data) onClose();
+  }, [state, onClose]);
+
+  function onDelete() {
+    setDeleteError(null);
+    startDelete(async () => {
+      const result = await deleteShoppingItem(item.id);
+      if (result.error !== null) setDeleteError(result.error);
+      else onClose();
+    });
+  }
+
+  const error = confirmingDelete ? deleteError : state.error;
+
+  return (
+    <BottomSheet
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      eyebrow={confirmingDelete ? undefined : "Изменить позицию"}
+      title={confirmingDelete ? "Удалить из списка?" : item.name}
+      description={confirmingDelete ? `«${item.name}» пропадёт из списка покупок.` : undefined}
+    >
+      <FormErrorBanner message={error} />
+
+      {confirmingDelete ? (
+        <div className="flex gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="block"
+            onClick={() => setConfirmingDelete(false)}
+            className="flex-1 bg-card font-bold text-primary"
+          >
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="block"
+            loading={isDeleting}
+            onClick={onDelete}
+            className="flex-1 font-bold"
+          >
+            Удалить
+          </Button>
+        </div>
+      ) : (
+        <form action={formAction}>
+          <input type="hidden" name="itemId" value={item.id} />
+
+          <div className="space-y-3">
+            {item.isManual && (
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-item-name">Название</Label>
+                <Input
+                  id="edit-item-name"
+                  name="name"
+                  defaultValue={state.values?.name ?? item.name}
+                  error={state.fieldErrors?.name}
+                />
+              </div>
+            )}
+
+            {item.isManual ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-item-quantity">Количество</Label>
+                <div className="flex gap-2.5">
+                  <input type="hidden" name="unit" value={unit} />
+                  <Input
+                    id="edit-item-quantity"
+                    name="quantity"
+                    value={qty}
+                    onChange={(e) => setQty(sanitizeQuantityInput(e.target.value))}
+                    inputMode="decimal"
+                    error={state.fieldErrors?.quantity}
+                    className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
+                  />
+                  <Select value={unit} onValueChange={(v) => setUnit(v as Unit)}>
+                    <SelectTrigger className="h-12 w-[88px] rounded-lg" aria-label="Единица">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MANUAL_UNITS.map((u) => (
+                        <SelectItem key={u} value={u}>
+                          {DISPLAY_UNIT_LABEL[u]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : (
+              <QuantityInput
+                name="quantity"
+                value={qty}
+                onChange={setQty}
+                unitLabel={DISPLAY_UNIT_LABEL[item.unit]}
+                error={state.fieldErrors?.quantity}
+              />
+            )}
+          </div>
+
+          <div className="mt-5 flex gap-2.5">
+            {item.isManual && (
+              <Button
+                type="button"
+                variant="destructiveMuted"
+                size="block"
+                onClick={() => setConfirmingDelete(true)}
+                className="shrink-0 font-bold"
+              >
+                Удалить
+              </Button>
+            )}
+            <Button type="submit" size="block" loading={isPending} className="flex-1 font-bold">
+              Сохранить
+            </Button>
+          </div>
+        </form>
+      )}
+    </BottomSheet>
+  );
+}

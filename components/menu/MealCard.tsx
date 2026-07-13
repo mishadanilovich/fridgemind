@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, Clock, Plus } from "lucide-react";
+import { Check, Clock, Plus, Utensils } from "lucide-react";
 import Link from "next/link";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
 import { RecipePhoto } from "@/components/recipes/RecipePhoto";
+import { Button } from "@/components/ui/button";
 import type { MenuMealView } from "@/lib/types";
 
 import { RemoveMealButton } from "./RemoveMealButton";
@@ -13,12 +14,15 @@ type Props = {
   slotName: string;
   meal: MenuMealView;
   canEdit: boolean;
+  /** Отметить приём съеденным — кнопка "Скушал" видна, пока приём не отмечен. */
+  onEat?: () => void;
+  eatPending?: boolean;
 };
 
 const PHOTO_BADGE_CLASS =
   "flex items-center gap-1 rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold text-foreground backdrop-blur-sm";
 
-export function MealCard({ slotName, meal, canEdit }: Props) {
+export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) {
   return (
     <div className="mb-4 overflow-hidden rounded-hero border border-border bg-card shadow-card">
       <Link href={`/recipes/${meal.recipeId}`} className="relative block h-[150px]">
@@ -61,15 +65,30 @@ export function MealCard({ slotName, meal, canEdit }: Props) {
           </span>
         </div>
 
-        {canEdit && (
-          <RemoveMealButton
-            mealId={meal.id}
-            recipeTitle={meal.title}
-            slotName={slotName}
-            isEaten={meal.isEaten}
-            className="size-8 shrink-0 rounded-md border border-border bg-background text-destructive backdrop-blur-none"
-          />
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {!meal.isEaten && onEat && (
+            <Button
+              type="button"
+              variant="accent"
+              size="sm"
+              loading={eatPending}
+              icon={<Utensils className="size-[15px]" strokeWidth={2.2} />}
+              onClick={onEat}
+              className="rounded-full px-[17px] text-[13px] font-bold shadow-accent-glow"
+            >
+              Скушал
+            </Button>
+          )}
+          {canEdit && (
+            <RemoveMealButton
+              mealId={meal.id}
+              recipeTitle={meal.title}
+              slotName={slotName}
+              isEaten={meal.isEaten}
+              className="size-8 shrink-0 rounded-md border border-border bg-background text-destructive backdrop-blur-none"
+            />
+          )}
+        </div>
       </div>
     </div>
   );

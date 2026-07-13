@@ -25,6 +25,10 @@ function meal(
 }
 
 function item(overrides: Partial<ShoppingItemView>): ShoppingItemView {
+  // По умолчанию quantity = сумме вкладов по дням — инвариант syncWeekItems; расхождение
+  // задаётся явно в тестах ручной правки количества.
+  const perDay = overrides.perDay ?? {};
+  const weekTotal = Object.values(perDay).reduce((sum, quantity) => sum + quantity, 0);
   return {
     id: "item",
     name: "Продукт",
@@ -32,9 +36,11 @@ function item(overrides: Partial<ShoppingItemView>): ShoppingItemView {
     category: "OTHER",
     isManual: false,
     isBought: false,
-    quantity: 0,
+    addedToPantry: false,
+    boughtByName: null,
+    quantity: weekTotal,
     pantryQuantity: 0,
-    perDay: {},
+    perDay,
     ...overrides,
   };
 }
@@ -100,6 +106,12 @@ describe("neededQuantity", () => {
     const manual = item({ isManual: true, quantity: 2, pantryQuantity: 99 });
     expect(neededQuantity(manual, null)).toBe(2);
     expect(neededQuantity(manual, ["2026-07-07"])).toBe(2);
+  });
+
+  it("правленное вручную количество видно в недельном виде, дни считают по вкладам", () => {
+    const edited = item({ perDay, quantity: 800, pantryQuantity: 100 });
+    expect(neededQuantity(edited, null)).toBe(700);
+    expect(neededQuantity(edited, ["2026-07-08"])).toBe(100);
   });
 });
 
