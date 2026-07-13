@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock, Plus, Utensils } from "lucide-react";
+import { Check, Clock, Plus, Users, Utensils } from "lucide-react";
 import Link from "next/link";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
@@ -37,12 +37,17 @@ export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) 
           </span>
 
           <span className="flex shrink-0 items-center gap-1.5">
-            {meal.cookTimeMinutes !== null && (
-              <span className={PHOTO_BADGE_CLASS}>
+            {/* Время и порции — одним бейджем на фото, чтобы нижняя строка осталась только
+                под бейджи способов готовки и кнопки («Скушал» + убрать) и не переполнялась. */}
+            <span className={PHOTO_BADGE_CLASS}>
+              {meal.cookTimeMinutes !== null ? (
                 <Clock className="size-3.5" strokeWidth={2.5} />
-                ~{meal.cookTimeMinutes} мин
-              </span>
-            )}
+              ) : (
+                <Users className="size-3.5" strokeWidth={2.5} />
+              )}
+              {meal.cookTimeMinutes !== null && `~${meal.cookTimeMinutes} мин · `}
+              {meal.servings} порц.
+            </span>
             {meal.isEaten && (
               <span className="flex items-center gap-1 rounded-full bg-primary py-[5px] pl-2 pr-[11px] text-[11px] font-bold text-primary-foreground">
                 <Check className="size-3.5" strokeWidth={3} />
@@ -58,11 +63,8 @@ export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) 
       </Link>
 
       <div className="flex items-center justify-between gap-3 px-[15px] py-[13px]">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <CookingMethodBadges methods={meal.cookingMethods} max={3} />
-          <span className="text-[12.5px] font-semibold text-muted-foreground">
-            {meal.servings} порц.
-          </span>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
