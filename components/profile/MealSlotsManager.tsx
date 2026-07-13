@@ -111,7 +111,10 @@ export function MealSlotsManager({ slots }: Props) {
       </DndContext>
 
       <form ref={formRef} action={addAction} className="flex gap-2">
-        <Input name="name" placeholder="Новый приём пищи" maxLength={15} required />
+        {/* Схема считает 15 символов после trim; запас в HTML maxLength — чтобы случайный
+            пробел от автокоррекции на мобильной клавиатуре не съедал бюджет символов молча,
+            обрезая последнюю букву. Итоговую длину всё равно проверяет mealSlotNameSchema. */}
+        <Input name="name" placeholder="Новый приём пищи" maxLength={20} required />
         <Button type="submit" variant="outline" loading={isAdding} icon={<Plus />}>
           Добавить
         </Button>
@@ -187,7 +190,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        maxLength={15}
+        maxLength={20}
         disabled={isPending}
         className="h-9"
         aria-label={`Название приёма пищи «${slot.name}»`}

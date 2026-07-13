@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import type { RecipeCardView } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,10 +36,9 @@ export function RecipeCard({ recipe, canEdit }: Props) {
           <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
             {meta}
           </div>
-          <TruncatedText
-            text={title}
-            className="mb-2 mt-[3px] font-heading text-[18px] font-semibold leading-[1.12] text-foreground"
-          />
+          <div className="mb-2 mt-[3px] line-clamp-2 break-words font-heading text-[18px] font-semibold leading-[1.12] text-foreground">
+            {title}
+          </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {matchTotal > 0 && (
               <Badge
