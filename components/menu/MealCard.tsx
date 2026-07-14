@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock, Plus, Utensils } from "lucide-react";
+import { Check, Clock, Plus, Users, Utensils } from "lucide-react";
 import Link from "next/link";
 
 import { CookingMethodBadges } from "@/components/recipes/CookingMethodBadges";
@@ -19,37 +19,40 @@ type Props = {
   eatPending?: boolean;
 };
 
-const PHOTO_BADGE_CLASS =
-  "flex items-center gap-1 rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold text-foreground backdrop-blur-sm";
-
-export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) {
+export function MealCard({
+  slotName,
+  meal,
+  canEdit,
+  onEat,
+  eatPending,
+}: Props) {
   return (
     <div className="mb-4 overflow-hidden rounded-hero border border-border bg-card shadow-card">
-      <Link href={`/recipes/${meal.recipeId}`} className="relative block h-[150px]">
-        <RecipePhoto photoUrl={meal.photoUrl} fill sizes="420px" iconClassName="size-10" />
+      <Link
+        href={`/recipes/${meal.recipeId}`}
+        className="relative block h-[150px]"
+      >
+        <RecipePhoto
+          photoUrl={meal.photoUrl}
+          fill
+          sizes="420px"
+          iconClassName="size-10"
+        />
         <span className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/70" />
 
-        {/* justify-between вместо двух независимых absolute-углов: длинное имя слота и группа
-            бейджей справа делят одну строку, а не рискуют наложиться друг на друга на узких экранах. */}
+        {/* justify-between вместо двух независимых absolute-углов: длинное имя слота и «Съедено»
+            справа делят одну строку, а не рискуют наложиться друг на друга на узких экранах. */}
         <span className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
           <span className="min-w-0 truncate rounded-full bg-background/90 px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.05em] text-primary backdrop-blur-sm">
             {slotName}
           </span>
 
-          <span className="flex shrink-0 items-center gap-1.5">
-            {meal.cookTimeMinutes !== null && (
-              <span className={PHOTO_BADGE_CLASS}>
-                <Clock className="size-3.5" strokeWidth={2.5} />
-                ~{meal.cookTimeMinutes} мин
-              </span>
-            )}
-            {meal.isEaten && (
-              <span className="flex items-center gap-1 rounded-full bg-primary py-[5px] pl-2 pr-[11px] text-[11px] font-bold text-primary-foreground">
-                <Check className="size-3.5" strokeWidth={3} />
-                Съедено
-              </span>
-            )}
-          </span>
+          {meal.isEaten && (
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary py-[5px] pl-2 pr-[11px] text-[11px] font-bold text-primary-foreground">
+              <Check className="size-3.5" strokeWidth={3} />
+              Съедено
+            </span>
+          )}
         </span>
 
         <span className="absolute inset-x-3.5 bottom-3 line-clamp-2 break-words font-heading text-[21px] font-bold leading-[1.1] text-white drop-shadow">
@@ -57,12 +60,23 @@ export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) 
         </span>
       </Link>
 
-      <div className="flex items-center justify-between gap-3 px-[15px] py-[13px]">
-        <div className="flex flex-wrap items-center gap-2">
-          <CookingMethodBadges methods={meal.cookingMethods} max={3} />
-          <span className="text-[12.5px] font-semibold text-muted-foreground">
-            {meal.servings} порц.
+      <div className="flex items-start justify-between gap-3 px-[15px] py-[13px]">
+        {/* Слева — колонка: строка «время · порции», под ней бейджи способов готовки. Так
+            переменное число бейджей не соревнуется за ширину с кнопками справа. */}
+        <div className="flex min-w-0 flex-col items-start gap-1.5">
+          <span className="flex w-full items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground">
+            {meal.cookTimeMinutes !== null ? (
+              <Clock className="size-3.5 shrink-0" strokeWidth={2.5} />
+            ) : (
+              <Users className="size-3.5 shrink-0" strokeWidth={2.5} />
+            )}
+            <span className="truncate">
+              {meal.cookTimeMinutes !== null &&
+                `~${meal.cookTimeMinutes} мин · `}
+              {meal.servings} порц.
+            </span>
           </span>
+          <CookingMethodBadges methods={meal.cookingMethods} max={3} />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
