@@ -19,11 +19,25 @@ type Props = {
   eatPending?: boolean;
 };
 
-export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) {
+export function MealCard({
+  slotName,
+  meal,
+  canEdit,
+  onEat,
+  eatPending,
+}: Props) {
   return (
     <div className="mb-4 overflow-hidden rounded-hero border border-border bg-card shadow-card">
-      <Link href={`/recipes/${meal.recipeId}`} className="relative block h-[150px]">
-        <RecipePhoto photoUrl={meal.photoUrl} fill sizes="420px" iconClassName="size-10" />
+      <Link
+        href={`/recipes/${meal.recipeId}`}
+        className="relative block h-[150px]"
+      >
+        <RecipePhoto
+          photoUrl={meal.photoUrl}
+          fill
+          sizes="420px"
+          iconClassName="size-10"
+        />
         <span className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/70" />
 
         {/* justify-between вместо двух независимых absolute-углов: длинное имя слота и «Съедено»
@@ -46,7 +60,7 @@ export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) 
         </span>
       </Link>
 
-      <div className="flex items-center justify-between gap-3 px-[15px] py-[13px]">
+      <div className="flex items-start justify-between gap-3 px-[15px] py-[13px]">
         {/* Слева — колонка: строка «время · порции», под ней бейджи способов готовки. Так
             переменное число бейджей не соревнуется за ширину с кнопками справа. */}
         <div className="flex min-w-0 flex-col items-start gap-1.5">
@@ -57,7 +71,8 @@ export function MealCard({ slotName, meal, canEdit, onEat, eatPending }: Props) 
               <Users className="size-3.5 shrink-0" strokeWidth={2.5} />
             )}
             <span className="truncate">
-              {meal.cookTimeMinutes !== null && `~${meal.cookTimeMinutes} мин · `}
+              {meal.cookTimeMinutes !== null &&
+                `~${meal.cookTimeMinutes} мин · `}
               {meal.servings} порц.
             </span>
           </span>
