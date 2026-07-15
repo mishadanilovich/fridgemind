@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, Refrigerator, ShoppingBasket } from "lucide-react";
+import { Plus, Refrigerator, ShoppingBasket } from "lucide-react";
 import { useOptimistic, useState, useTransition } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
@@ -16,6 +16,7 @@ import { formatQuantity } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 import { AddShoppingItemSheet } from "./AddShoppingItemSheet";
+import { BoughtCheckbox } from "./BoughtCheckbox";
 import { BulkPantrySheet } from "./BulkPantrySheet";
 import { DayPickerSheet } from "./DayPickerSheet";
 import { EditShoppingItemSheet } from "./EditShoppingItemSheet";
@@ -180,21 +181,11 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
                 key={item.id}
                 className="flex items-center gap-3 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
               >
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={item.isBought}
-                  aria-label={`Куплено: ${item.name}`}
-                  onClick={() => onToggleBought(item)}
-                  className={cn(
-                    "pressable flex size-6 shrink-0 items-center justify-center rounded-xs border-2",
-                    item.isBought ? "border-primary bg-primary" : "border-tan-dashed bg-transparent",
-                  )}
-                >
-                  {item.isBought && (
-                    <Check className="size-3.5 text-primary-foreground" strokeWidth={3.2} />
-                  )}
-                </button>
+                <BoughtCheckbox
+                  isBought={item.isBought}
+                  label={`Куплено: ${item.name}`}
+                  onToggle={() => onToggleBought(item)}
+                />
 
                 <button
                   type="button"

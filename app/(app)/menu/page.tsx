@@ -20,7 +20,10 @@ export default async function MenuPage() {
     <div className="pb-8">
       <ScreenHeader eyebrow={formatWeekRange(weekStart)} title="Меню на неделю" />
       <WeekBoard days={days} recipes={recipes} canEdit={canEdit} />
-      <OfflineSnapshot snapshot={{ table: "menuWeeks", id: weekStart, data: days }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "menuWeeks", id: weekStart, data: days }}
+      />
     </div>
   );
 }

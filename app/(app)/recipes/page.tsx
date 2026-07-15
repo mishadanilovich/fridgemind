@@ -56,7 +56,10 @@ export default async function RecipesPage({ searchParams }: Props) {
       ) : (
         cards.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
       )}
-      <OfflineSnapshot snapshot={{ table: "recipeLists", id: "all", data: cards }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "recipeLists", id: "all", data: cards }}
+      />
     </div>
   );
 }

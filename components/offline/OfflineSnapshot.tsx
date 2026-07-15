@@ -5,18 +5,18 @@ import { useEffect } from "react";
 import { type OfflineSnapshotInput, saveOfflineSnapshot } from "@/lib/offline-db";
 
 type Props = {
+  householdId: string;
   snapshot: OfflineSnapshotInput;
 };
 
-// Кладёт данные, уже полученные серверным компонентом экрана, в офлайн-кэш Dexie — без
-// дублирующего запроса к API; при обновлении RSC-данных (revalidatePath, Realtime) снапшот
-// перезаписывается свежим.
-export function OfflineSnapshot({ snapshot }: Props) {
+// Эффект зависит от самого объекта snapshot: при каждом обновлении RSC-данных
+// (revalidatePath, Realtime) сервер присылает новый объект — кэш переписывается свежим.
+export function OfflineSnapshot({ householdId, snapshot }: Props) {
   useEffect(() => {
-    saveOfflineSnapshot(snapshot).catch(() => {
+    saveOfflineSnapshot(householdId, snapshot).catch(() => {
       // IndexedDB может быть недоступен (приватный режим) — тогда офлайн-кэша просто нет.
     });
-  }, [snapshot]);
+  }, [householdId, snapshot]);
 
   return null;
 }

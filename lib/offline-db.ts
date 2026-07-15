@@ -50,10 +50,36 @@ export type OfflineSnapshotInput =
   | { table: "recipeLists"; id: string; data: RecipeCardView[] };
 
 const MAX_SNAPSHOT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const SCOPE_KEY = "fridgemind-offline-household";
+
+/** Стирает офлайн-кэш целиком — выход из аккаунта и смена household (см. ensureHouseholdScope). */
+export async function clearOfflineCache(): Promise<void> {
+  localStorage.removeItem(SCOPE_KEY);
+  await Promise.all([
+    db.menuWeeks.clear(),
+    db.menuDays.clear(),
+    db.shoppingLists.clear(),
+    db.recipes.clear(),
+    db.recipeLists.clear(),
+  ]);
+}
+
+// Кэш принадлежит одному household: если в этом браузере вошли под другим (другой аккаунт,
+// выход из семьи, присоединение по приглашению) — чужие снапшоты стираются до первой записи,
+// иначе /~offline показал бы данные прежней семьи.
+async function ensureHouseholdScope(householdId: string): Promise<void> {
+  if (localStorage.getItem(SCOPE_KEY) === householdId) return;
+  await clearOfflineCache();
+  localStorage.setItem(SCOPE_KEY, householdId);
+}
 
 // Инвалидация — "последний успешный онлайн-визит побеждает": снапшот просто перезаписывается,
 // TTL нет; офлайн-страница показывает cachedAt, а записи старше 30 дней вычищаются при записи.
-export async function saveOfflineSnapshot(input: OfflineSnapshotInput): Promise<void> {
+export async function saveOfflineSnapshot(
+  householdId: string,
+  input: OfflineSnapshotInput,
+): Promise<void> {
+  await ensureHouseholdScope(householdId);
   const cachedAt = Date.now();
 
   switch (input.table) {
@@ -82,10 +108,3 @@ export async function saveOfflineSnapshot(input: OfflineSnapshotInput): Promise<
 }
 
 export { db as offlineDb };
-export type {
-  CachedMenuDay,
-  CachedMenuWeek,
-  CachedRecipeDetail,
-  CachedRecipeList,
-  CachedShoppingList,
-};

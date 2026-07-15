@@ -4,7 +4,6 @@ import { useLiveQuery } from "dexie-react-hooks";
 import {
   BookOpen,
   Calendar,
-  Check,
   ChevronLeft,
   CloudOff,
   RefreshCw,
@@ -15,11 +14,13 @@ import {
 import { useEffect, useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
+import { WeekdayBadge } from "@/components/menu/WeekdayBadge";
 import { RecipePhoto } from "@/components/recipes/RecipePhoto";
+import { BoughtCheckbox } from "@/components/shopping/BoughtCheckbox";
 import { CategorySection } from "@/components/ui/category-section";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDayTitle, startOfWeekIso, todayIso, weekdayName, weekdayShort } from "@/lib/dates";
+import { formatDayTitle, startOfWeekIso, todayIso, weekdayName } from "@/lib/dates";
 import { useOnline } from "@/lib/hooks/use-online";
 import { offlineDb } from "@/lib/offline-db";
 import { buildShoppingGroups } from "@/lib/shopping-list";
@@ -290,16 +291,7 @@ function OfflineMenuScreen() {
         return (
           <div key={day.date} className="mb-3 rounded-card border border-border bg-card px-[15px] py-3.5">
             <div className="mb-2 flex items-center gap-2.5">
-              <span
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-md font-heading text-sm font-extrabold",
-                  day.date === today
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-secondary text-muted-foreground",
-                )}
-              >
-                {weekdayShort(day.date)}
-              </span>
+              <WeekdayBadge date={day.date} isToday={day.date === today} />
               <span className="text-[15px] font-bold text-foreground">{weekdayName(day.date)}</span>
             </div>
             {meals.length === 0 ? (
@@ -470,16 +462,7 @@ function OfflineShoppingScreen() {
                 key={item.id}
                 className="flex items-center gap-3 border-b border-secondary px-[15px] py-[13px] last:border-b-0"
               >
-                <span
-                  className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-xs border-2",
-                    item.isBought ? "border-primary bg-primary" : "border-tan-dashed bg-transparent",
-                  )}
-                >
-                  {item.isBought && (
-                    <Check className="size-3.5 text-primary-foreground" strokeWidth={3.2} />
-                  )}
-                </span>
+                <BoughtCheckbox isBought={item.isBought} />
                 <span className="flex min-w-0 flex-1 items-center justify-between gap-2.5">
                   <span className="flex min-w-0 items-center gap-[11px]">
                     <CategoryDot category={item.category} />

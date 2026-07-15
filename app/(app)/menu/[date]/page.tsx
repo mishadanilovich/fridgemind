@@ -45,7 +45,10 @@ export default async function MenuDayPage({ params }: Props) {
       <DayBoard day={day} recipes={recipes} canEdit={canEdit} />
 
       <DayIngredients ingredients={ingredients} />
-      <OfflineSnapshot snapshot={{ table: "menuDays", id: date, data: day }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "menuDays", id: date, data: day }}
+      />
     </div>
   );
 }

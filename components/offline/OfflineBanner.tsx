@@ -4,8 +4,6 @@ import { WifiOff } from "lucide-react";
 
 import { useOnline } from "@/lib/hooks/use-online";
 
-// Индикатор офлайна поверх любого экрана: пользователь понимает, что видит сохранённые
-// данные, а не живые, и что изменения сейчас не сохранятся.
 export function OfflineBanner() {
   const online = useOnline();
   if (online) return null;

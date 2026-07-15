@@ -21,7 +21,10 @@ export default async function RecipeDetailPage({ params }: Props) {
   return (
     <>
       <RecipeDetail recipe={recipe} />
-      <OfflineSnapshot snapshot={{ table: "recipes", id: recipe.id, data: recipe }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "recipes", id: recipe.id, data: recipe }}
+      />
     </>
   );
 }

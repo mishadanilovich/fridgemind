@@ -36,7 +36,10 @@ export default async function TodayPage() {
       />
 
       <DayBoard day={day} recipes={recipes} canEdit={canEdit} />
-      <OfflineSnapshot snapshot={{ table: "menuDays", id: today, data: day }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "menuDays", id: today, data: day }}
+      />
     </div>
   );
 }

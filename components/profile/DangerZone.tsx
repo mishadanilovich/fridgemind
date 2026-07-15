@@ -17,6 +17,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/actions/auth";
 import { leaveHousehold } from "@/lib/actions/household";
+import { clearOfflineCache } from "@/lib/offline-db";
 
 type Props = {
   canLeave: boolean;
@@ -81,7 +82,9 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
         {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
       </div>
 
-      <form action={signOut}>
+      {/* Офлайн-кэш стирается при выходе: после него на /login никто снапшоты не перепишет,
+          и без очистки /~offline показывал бы данные семьи разлогиненного пользователя. */}
+      <form action={signOut} onSubmit={() => void clearOfflineCache().catch(() => {})}>
         <Button
           type="submit"
           variant="ghost"

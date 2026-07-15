@@ -54,7 +54,10 @@ export default async function ShoppingListPage() {
 
       <ShoppingListBoard items={items} today={today} weekStart={weekStart} />
       <ShoppingListRealtime householdId={user.householdId} />
-      <OfflineSnapshot snapshot={{ table: "shoppingLists", id: weekStart, data: { weekStart, items } }} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "shoppingLists", id: weekStart, data: { weekStart, items } }}
+      />
     </div>
   );
 }

@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { RecipePhoto } from "@/components/recipes/RecipePhoto";
-import { todayIso, weekdayName, weekdayShort } from "@/lib/dates";
+import { todayIso, weekdayName } from "@/lib/dates";
 import type { MenuDayView, MenuSlotView, PickerRecipeView } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { RecipePickerSheet } from "./RecipePickerSheet";
 import { RemoveMealButton } from "./RemoveMealButton";
+import { WeekdayBadge } from "./WeekdayBadge";
 
 type Props = {
   days: MenuDayView[];
@@ -60,14 +61,7 @@ function WeekDayCard({ day, isToday, canEdit, onPick }: DayProps) {
     <div className="mb-3 rounded-card border border-border bg-card px-[15px] py-3.5">
       <Link href={`/menu/${day.date}`} className="mb-2.5 flex items-center justify-between">
         <span className="flex items-center gap-2.5">
-          <span
-            className={cn(
-              "flex size-9 items-center justify-center rounded-md font-heading text-sm font-extrabold",
-              isToday ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground",
-            )}
-          >
-            {weekdayShort(day.date)}
-          </span>
+          <WeekdayBadge date={day.date} isToday={isToday} />
           <span>
             <span className="block text-[15px] font-bold text-foreground">
               {weekdayName(day.date)}
