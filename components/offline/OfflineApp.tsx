@@ -1,20 +1,12 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import {
-  BookOpen,
-  Calendar,
-  ChevronLeft,
-  CloudOff,
-  RefreshCw,
-  Refrigerator,
-  ShoppingBasket,
-  Sun,
-} from "lucide-react";
+import { BookOpen, ChevronLeft, CloudOff, RefreshCw, ShoppingBasket } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
 import { WeekdayBadge } from "@/components/menu/WeekdayBadge";
+import { APP_TABS, isTabActive } from "@/components/nav/tabs";
 import { RecipePhoto } from "@/components/recipes/RecipePhoto";
 import { BoughtCheckbox } from "@/components/shopping/BoughtCheckbox";
 import { CategorySection } from "@/components/ui/category-section";
@@ -54,25 +46,17 @@ function matchScreen(path: string): Screen {
   return { kind: "other" };
 }
 
-const NAV_TABS = [
-  { href: "/", label: "Сегодня", icon: Sun, kinds: ["today"] },
-  { href: "/menu", label: "Меню", icon: Calendar, kinds: ["menu", "day"] },
-  { href: "/recipes", label: "Рецепты", icon: BookOpen, kinds: ["recipes", "recipe"] },
-  { href: "/inventory", label: "Запасы", icon: Refrigerator, kinds: [] },
-  { href: "/shopping-list", label: "Покупки", icon: ShoppingBasket, kinds: ["shopping"] },
-] as const;
-
 export function OfflineApp() {
   const [screen, setScreen] = useState<Screen | null>(null);
-  const [reloadHref, setReloadHref] = useState("/");
+  const [path, setPath] = useState("/");
   const online = useOnline();
 
   useEffect(() => {
     const { pathname, search } = window.location;
     const from = new URLSearchParams(search).get("from");
-    const path = pathname === "/~offline" ? (from ?? "/") : pathname;
-    setScreen(matchScreen(path));
-    setReloadHref(pathname === "/~offline" ? (from ?? "/") : pathname);
+    const effectivePath = pathname === "/~offline" ? (from ?? "/") : pathname;
+    setScreen(matchScreen(effectivePath));
+    setPath(effectivePath);
   }, []);
 
   return (
@@ -81,7 +65,7 @@ export function OfflineApp() {
       <main className="mx-auto min-h-screen max-w-md px-5 pt-4">
         {online && (
           <a
-            href={reloadHref}
+            href={path}
             className="pressable mb-3 flex items-center justify-center gap-2 rounded-card border border-border bg-card px-4 py-3 text-[13px] font-bold text-primary"
           >
             <RefreshCw className="size-4" strokeWidth={2.4} />
@@ -93,25 +77,22 @@ export function OfflineApp() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card/90 px-2 pb-6 pt-2 backdrop-blur-md">
-        {NAV_TABS.map(({ href, label, icon: Icon, kinds }) => {
-          const isActive = screen !== null && (kinds as readonly string[]).includes(screen.kind);
-          return (
-            // Обычный <a>, не next/link: офлайн каждая навигация должна быть полной загрузкой
-            // документа, чтобы её перехватил service worker (client-side переход упал бы на
-            // недоступном RSC-запросе).
-            <a
-              key={href}
-              href={href}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-bold tracking-wide",
-                isActive ? "text-foreground" : "text-nav-inactive",
-              )}
-            >
-              <Icon size={24} strokeWidth={2} />
-              <span>{label}</span>
-            </a>
-          );
-        })}
+        {APP_TABS.map(({ href, label, icon: Icon }) => (
+          // Обычный <a>, не next/link: офлайн каждая навигация должна быть полной загрузкой
+          // документа, чтобы её перехватил service worker (client-side переход упал бы на
+          // недоступном RSC-запросе).
+          <a
+            key={href}
+            href={href}
+            className={cn(
+              "flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-bold tracking-wide",
+              screen !== null && isTabActive(href, path) ? "text-foreground" : "text-nav-inactive",
+            )}
+          >
+            <Icon size={24} strokeWidth={2} />
+            <span>{label}</span>
+          </a>
+        ))}
       </nav>
     </div>
   );
