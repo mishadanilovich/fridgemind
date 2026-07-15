@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { DayBoard } from "@/components/menu/DayBoard";
 import { DayIngredients } from "@/components/menu/DayIngredients";
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { formatDayTitle, isIsoDate, todayIso, weekdayName } from "@/lib/dates";
 import { getDayBoard, getPickerRecipes } from "@/lib/queries/menu";
@@ -44,6 +45,7 @@ export default async function MenuDayPage({ params }: Props) {
       <DayBoard day={day} recipes={recipes} canEdit={canEdit} />
 
       <DayIngredients ingredients={ingredients} />
+      <OfflineSnapshot snapshot={{ table: "menuDays", id: date, data: day }} />
     </div>
   );
 }

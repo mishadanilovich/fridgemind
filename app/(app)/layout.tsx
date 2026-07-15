@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { BottomNav } from "@/components/nav/BottomNav";
+import { OfflineBanner } from "@/components/offline/OfflineBanner";
 import { getCurrentUser } from "@/lib/auth";
 
 type Props = LayoutProps<"/">;
@@ -11,6 +12,7 @@ export default async function AppLayout({ children }: Props) {
 
   return (
     <div className="pb-24">
+      <OfflineBanner />
       <main className="mx-auto min-h-screen max-w-md px-5 pt-4">{children}</main>
       <BottomNav />
     </div>

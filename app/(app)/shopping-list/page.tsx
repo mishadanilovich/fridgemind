@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { ShoppingListBoard } from "@/components/shopping/ShoppingListBoard";
 import { ShoppingListRealtime } from "@/components/shopping/ShoppingListRealtime";
 import { getCurrentUser } from "@/lib/auth";
@@ -53,6 +54,7 @@ export default async function ShoppingListPage() {
 
       <ShoppingListBoard items={items} today={today} weekStart={weekStart} />
       <ShoppingListRealtime householdId={user.householdId} />
+      <OfflineSnapshot snapshot={{ table: "shoppingLists", id: weekStart, data: { weekStart, items } }} />
     </div>
   );
 }

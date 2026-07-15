@@ -70,13 +70,23 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
 
   function onToggleBought(item: ShoppingItemView) {
     setBoughtError(null);
+    // Без сети отметка не буферизуется (офлайн — только чтение, см. CLAUDE.md §7): честнее
+    // сразу сказать об этом, чем показать галочку, которая молча откатится.
+    if (!navigator.onLine) {
+      setBoughtError("Нет сети — отметка не сохранится. Попробуйте, когда появится соединение.");
+      return;
+    }
     startToggle(async () => {
       applyBought({ id: item.id, isBought: !item.isBought });
-      const result = await toggleShoppingItemBought({
-        itemId: item.id,
-        isBought: !item.isBought,
-      });
-      if (result.error !== null) setBoughtError(result.error);
+      try {
+        const result = await toggleShoppingItemBought({
+          itemId: item.id,
+          isBought: !item.isBought,
+        });
+        if (result.error !== null) setBoughtError(result.error);
+      } catch {
+        setBoughtError("Не удалось сохранить отметку — проверьте соединение.");
+      }
     });
   }
 

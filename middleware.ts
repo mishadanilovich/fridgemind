@@ -1,7 +1,8 @@
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth"];
+// /~offline публичен: SW precache'ит его без сессии, а рендерит он только локальный кэш Dexie.
+const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth", "/~offline"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

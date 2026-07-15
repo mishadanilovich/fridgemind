@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { RecipeDetail } from "@/components/recipes/RecipeDetail";
 import { getCurrentUser } from "@/lib/auth";
 import { getRecipeDetail } from "@/lib/queries/recipes";
@@ -17,5 +18,10 @@ export default async function RecipeDetailPage({ params }: Props) {
   const recipe = await getRecipeDetail(user.householdId, id, { includeDeleted: true });
   if (!recipe) notFound();
 
-  return <RecipeDetail recipe={recipe} />;
+  return (
+    <>
+      <RecipeDetail recipe={recipe} />
+      <OfflineSnapshot snapshot={{ table: "recipes", id: recipe.id, data: recipe }} />
+    </>
+  );
 }

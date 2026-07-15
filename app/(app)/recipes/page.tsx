@@ -2,6 +2,7 @@ import { BookOpen, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { RecipeSortToggle } from "@/components/recipes/RecipeSortToggle";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -55,6 +56,7 @@ export default async function RecipesPage({ searchParams }: Props) {
       ) : (
         cards.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
       )}
+      <OfflineSnapshot snapshot={{ table: "recipeLists", id: "all", data: cards }} />
     </div>
   );
 }
