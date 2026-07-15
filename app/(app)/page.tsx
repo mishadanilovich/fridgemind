@@ -1,5 +1,6 @@
 import { DayBoard } from "@/components/menu/DayBoard";
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { todayIso, weekdayName } from "@/lib/dates";
 import { countMeals } from "@/lib/menu";
@@ -35,6 +36,10 @@ export default async function TodayPage() {
       />
 
       <DayBoard day={day} recipes={recipes} canEdit={canEdit} />
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "menuDays", id: today, data: day }}
+      />
     </div>
   );
 }
