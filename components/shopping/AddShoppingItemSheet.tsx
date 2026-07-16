@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { addManualShoppingItem } from "@/lib/actions/shopping-list";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { ProductCategory, Unit } from "@/lib/types";
@@ -42,7 +42,7 @@ export function AddShoppingItemSheet({ open, onOpenChange }: Props) {
 }
 
 function AddItemForm({ onSaved }: { onSaved: () => void }) {
-  const [state, formAction, isPending] = useActionState(addManualShoppingItem, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(addManualShoppingItem), initialFormState);
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState<Unit>("PCS");
   const [category, setCategory] = useState<ProductCategory>("OTHER");

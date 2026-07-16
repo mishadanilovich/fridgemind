@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { markMealEaten } from "@/lib/actions/meals";
+import { callAction } from "@/lib/form-state";
 import type { EatDeductionView, MenuDayView, MenuSlotView, PickerRecipeView } from "@/lib/types";
 
 import { EatSheet } from "./EatSheet";
@@ -32,7 +33,7 @@ export function DayBoard({ day, recipes, canEdit }: Props) {
     setEatError(null);
     setEatingMealId(mealId);
     startEat(async () => {
-      const result = await markMealEaten(mealId);
+      const result = await callAction(() => markMealEaten(mealId));
       setEatingMealId(null);
       if (result.error !== null) {
         setEatError(result.error);

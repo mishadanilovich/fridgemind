@@ -22,6 +22,56 @@ export const initialFormState = { error: null } satisfies FormState;
  */
 export type ActionResult = { error: string | null };
 
+export const NETWORK_ERROR =
+  "Нет соединения с сервером — изменение не сохранено. Проверьте интернет и попробуйте ещё раз.";
+
+// redirect()/notFound() из server action долетают до клиента исключением со служебным
+// digest — их гасить нельзя, они обрабатываются самим Next.
+function isNextInternalError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    typeof (error as { digest: unknown }).digest === "string" &&
+    (error as { digest: string }).digest.startsWith("NEXT_")
+  );
+}
+
+/**
+ * Вызов императивного server action из клиента: сетевой сбой (офлайн, обрыв) превращается
+ * в обычный `{ error }` для показа в форме, а не в необработанное исключение, роняющее
+ * весь экран в error boundary.
+ */
+export async function callAction<T extends { error: string | null }>(
+  run: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (isNextInternalError(error)) throw error;
+    // Остальные поля T в ошибочной ветке не читаются — все результаты экшенов
+    // дискриминированы по error.
+    return { error: NETWORK_ERROR } as T;
+  }
+}
+
+/** То же для экшенов форм (useActionState): сетевой сбой → FormState с общей ошибкой. */
+export function guardFormAction<TValues extends object, TData>(
+  action: (
+    state: FormState<TValues, TData>,
+    formData: FormData,
+  ) => Promise<FormState<TValues, TData>>,
+): (state: FormState<TValues, TData>, formData: FormData) => Promise<FormState<TValues, TData>> {
+  return async (state, formData) => {
+    try {
+      return await action(state, formData);
+    } catch (error) {
+      if (isNextInternalError(error)) throw error;
+      return { error: NETWORK_ERROR };
+    }
+  };
+}
+
 /** Первое сообщение об ошибке из Zod-issues — для показа под формой. */
 export function firstIssue(issues: { message: string }[]): string {
   return issues[0]?.message ?? "Проверьте введённые данные";

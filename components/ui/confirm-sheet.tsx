@@ -14,7 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import type { ActionResult } from "@/lib/form-state";
+import { type ActionResult, callAction } from "@/lib/form-state";
 
 type Props = {
   /** Кнопка, открывающая шит (рендерится как SheetTrigger asChild). */
@@ -58,7 +58,7 @@ export function ConfirmSheet({
   function confirm() {
     setError(null);
     startTransition(async () => {
-      const result = await onConfirm();
+      const result = await callAction(onConfirm);
       if (result.error) {
         setError(result.error);
         return;

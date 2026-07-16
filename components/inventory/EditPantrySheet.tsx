@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { deletePantryItem, updatePantryItem } from "@/lib/actions/pantry";
-import { initialFormState } from "@/lib/form-state";
+import { callAction, guardFormAction, initialFormState } from "@/lib/form-state";
 import type { PantryItemView } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL } from "@/lib/units";
 
@@ -17,7 +17,7 @@ type Props = {
 };
 
 export function EditPantrySheet({ item, onClose }: Props) {
-  const [state, formAction, isPending] = useActionState(updatePantryItem, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(updatePantryItem), initialFormState);
   const [qty, setQty] = useState(String(item.quantity));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export function EditPantrySheet({ item, onClose }: Props) {
   function onDelete() {
     setDeleteError(null);
     startDelete(async () => {
-      const result = await deletePantryItem(item.id);
+      const result = await callAction(() => deletePantryItem(item.id));
       if (result.error !== null) setDeleteError(result.error);
       else onClose();
     });

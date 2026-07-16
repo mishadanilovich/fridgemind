@@ -39,7 +39,7 @@ import {
   renameMealSlot,
   reorderMealSlots,
 } from "@/lib/actions/meal-slots";
-import { initialFormState } from "@/lib/form-state";
+import { callAction, guardFormAction, initialFormState } from "@/lib/form-state";
 
 type Slot = { id: string; name: string };
 
@@ -50,7 +50,7 @@ type Props = {
 export function MealSlotsManager({ slots }: Props) {
   const [items, setItems] = useState(slots);
   const [error, setError] = useState<string | null>(null);
-  const [addState, addAction, isAdding] = useActionState(createMealSlot, initialFormState);
+  const [addState, addAction, isAdding] = useActionState(guardFormAction(createMealSlot), initialFormState);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Синхронизируемся с сервером после revalidate (add/delete/reorder) — новый проп slots.
@@ -150,7 +150,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
     }
     onError(null);
     startTransition(async () => {
-      const result = await renameMealSlot(slot.id, trimmed);
+      const result = await callAction(() => renameMealSlot(slot.id, trimmed));
       if (result.error) {
         onError(result.error);
         setName(slot.name);
@@ -161,7 +161,7 @@ function SlotRow({ slot, onError }: SlotRowProps) {
   function onDelete() {
     onError(null);
     startTransition(async () => {
-      const result = await deleteMealSlot(slot.id);
+      const result = await callAction(() => deleteMealSlot(slot.id));
       if (result.error) onError(result.error);
     });
   }

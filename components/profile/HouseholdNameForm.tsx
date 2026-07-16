@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { renameHousehold } from "@/lib/actions/household";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 
 type Props = {
   name: string | null;
 };
 
 export function HouseholdNameForm({ name }: Props) {
-  const [state, formAction, isPending] = useActionState(renameHousehold, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(renameHousehold), initialFormState);
 
   return (
     <form action={formAction} className="space-y-1.5">

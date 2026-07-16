@@ -9,7 +9,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { addPantryItem } from "@/lib/actions/pantry";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import type { Ingredient, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
@@ -37,7 +37,7 @@ export function AddPantrySheet({ open, onOpenChange }: Props) {
 }
 
 function AddPantryForm({ onSaved }: { onSaved: () => void }) {
-  const [state, formAction, isPending] = useActionState(addPantryItem, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(addPantryItem), initialFormState);
   const [product, setProduct] = useState<PickedProduct | null>(null);
   const [qty, setQty] = useState("");
 
