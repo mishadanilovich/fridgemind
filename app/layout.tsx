@@ -2,6 +2,8 @@ import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
 
+import { ReloadOnSwUpdate } from "@/components/offline/ReloadOnSwUpdate";
+
 // Bricolage Grotesque не отдаёт кириллицу через next/font (нет subset'а "cyrillic" в
 // текущей версии next/font/google) — поэтому оба шрифта подключаются напрямую через
 // Google Fonts CSS2, который сам отдаёт нужный unicode-range subset.
@@ -43,7 +45,10 @@ export default function RootLayout({ children }: Props) {
         precedence="default"
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
       />
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <ReloadOnSwUpdate />
+        {children}
+      </body>
     </html>
   );
 }
