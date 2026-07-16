@@ -1,7 +1,15 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { BookOpen, ChevronLeft, CloudOff, RefreshCw, Refrigerator, ShoppingBasket } from "lucide-react";
+import {
+  BookOpen,
+  ChevronLeft,
+  CloudOff,
+  LogIn,
+  RefreshCw,
+  Refrigerator,
+  ShoppingBasket,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
@@ -48,8 +56,21 @@ function matchScreen(path: string): Screen {
   return { kind: "other" };
 }
 
+// /~offline — публичный маршрут (SW должен precache'ить его без сессии), поэтому перед
+// показом снапшотов проверяется наличие auth-cookie Supabase: на общем устройстве человек
+// без входа не увидит чужие данные. Именно присутствие cookie, а не getSession(): офлайн
+// истёкший access token не обновить, и getSession() отказал бы легитимному пользователю;
+// выход из аккаунта удаляет cookie и заодно чистит весь офлайн-кэш (clearOfflineCache).
+function hasAuthCookie(): boolean {
+  return document.cookie.split("; ").some((cookie) => {
+    const name = cookie.split("=")[0];
+    return name.startsWith("sb-") && name.includes("-auth-token") && !name.endsWith("-code-verifier");
+  });
+}
+
 export function OfflineApp() {
   const [screen, setScreen] = useState<Screen | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [path, setPath] = useState("/");
   const online = useOnline();
 
@@ -59,6 +80,7 @@ export function OfflineApp() {
     const effectivePath = pathname === "/~offline" ? (from ?? "/") : pathname;
     setScreen(matchScreen(effectivePath));
     setPath(effectivePath);
+    setSignedIn(hasAuthCookie());
   }, []);
 
   return (
@@ -75,7 +97,13 @@ export function OfflineApp() {
           </a>
         )}
 
-        {screen === null ? <LoadingRows /> : <ScreenView screen={screen} />}
+        {screen === null || signedIn === null ? (
+          <LoadingRows />
+        ) : signedIn ? (
+          <ScreenView screen={screen} />
+        ) : (
+          <SignInPrompt />
+        )}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card/90 px-2 pb-6 pt-2 backdrop-blur-md">
@@ -170,6 +198,25 @@ function LoadingRows() {
       <Skeleton className="h-[88px] w-full rounded-card" />
       <Skeleton className="h-[88px] w-full rounded-card" />
     </div>
+  );
+}
+
+function SignInPrompt() {
+  return (
+    <>
+      <OfflineHeader title="Офлайн" />
+      <EmptyState
+        icon={LogIn}
+        title="Войдите в аккаунт"
+        description="Сохранённые офлайн-данные показываются только после входа."
+      />
+      <a
+        href="/login"
+        className="pressable mt-4 flex items-center justify-center gap-2 rounded-card bg-primary px-4 py-[14px] text-sm font-bold text-primary-foreground"
+      >
+        Войти
+      </a>
+    </>
   );
 }
 
