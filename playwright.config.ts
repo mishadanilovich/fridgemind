@@ -3,7 +3,9 @@ import "dotenv/config";
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = process.env.E2E_PORT ?? "3100";
-const baseURL = `http://localhost:${PORT}`;
+// E2E_BASE_URL — прогон против уже развёрнутого приложения (например, Vercel-прода):
+// локальный webServer не поднимается, тестовые пользователи создаются в той же Supabase.
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -20,10 +22,12 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: `npm run dev -- --port ${PORT}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: `npm run dev -- --port ${PORT}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });

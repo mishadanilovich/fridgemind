@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 
+import type { PantryGroup } from "./pantry";
 import type { MenuDayView, RecipeCardView, RecipeWithDetails, ShoppingItemView } from "./types";
 
 // Офлайн-кэш через IndexedDB (см. CLAUDE.md, раздел 4 "Локальное хранилище/офлайн").
@@ -22,6 +23,8 @@ type CachedShoppingList = Snapshot<{ weekStart: string; items: ShoppingItemView[
 type CachedRecipeDetail = Snapshot<RecipeWithDetails>;
 /** id — всегда "all": один снапшот последнего показанного списка карточек. */
 type CachedRecipeList = Snapshot<RecipeCardView[]>;
+/** id — всегда "all": один снапшот последнего показанного инвентаря. */
+type CachedPantry = Snapshot<PantryGroup[]>;
 
 const db = new Dexie("fridgemind-offline") as Dexie & {
   menuWeeks: EntityTable<CachedMenuWeek, "id">;
@@ -29,6 +32,7 @@ const db = new Dexie("fridgemind-offline") as Dexie & {
   shoppingLists: EntityTable<CachedShoppingList, "id">;
   recipes: EntityTable<CachedRecipeDetail, "id">;
   recipeLists: EntityTable<CachedRecipeList, "id">;
+  pantry: EntityTable<CachedPantry, "id">;
 };
 
 db.version(1).stores({
@@ -42,12 +46,17 @@ db.version(2).stores({
   recipeLists: "id, cachedAt",
 });
 
+db.version(3).stores({
+  pantry: "id, cachedAt",
+});
+
 export type OfflineSnapshotInput =
   | { table: "menuWeeks"; id: string; data: MenuDayView[] }
   | { table: "menuDays"; id: string; data: MenuDayView }
   | { table: "shoppingLists"; id: string; data: { weekStart: string; items: ShoppingItemView[] } }
   | { table: "recipes"; id: string; data: RecipeWithDetails }
-  | { table: "recipeLists"; id: string; data: RecipeCardView[] };
+  | { table: "recipeLists"; id: string; data: RecipeCardView[] }
+  | { table: "pantry"; id: string; data: PantryGroup[] };
 
 const MAX_SNAPSHOT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const SCOPE_KEY = "fridgemind-offline-household";
@@ -84,6 +93,7 @@ export async function clearOfflineCache(): Promise<void> {
     db.shoppingLists.clear(),
     db.recipes.clear(),
     db.recipeLists.clear(),
+    db.pantry.clear(),
     clearSwUserCaches(),
   ]);
 }
@@ -121,6 +131,9 @@ export async function saveOfflineSnapshot(
       break;
     case "recipeLists":
       await db.recipeLists.put({ id: input.id, data: input.data, cachedAt });
+      break;
+    case "pantry":
+      await db.pantry.put({ id: input.id, data: input.data, cachedAt });
       break;
   }
 
