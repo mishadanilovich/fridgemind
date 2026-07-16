@@ -143,13 +143,11 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
           className="absolute right-[5px] top-[5px] z-10"
         />
       )}
-      {/* flex-колонка, а не block: содержимое <button> браузер иначе центрирует по вертикали,
-          и фото отходило от верхнего края карточки на несколько пикселей. */}
-      <button
-        type="button"
-        onClick={onPick}
-        disabled={!canEdit}
-        className="flex size-full flex-col items-stretch p-0 text-left"
+      {/* Тап по назначенному блюду открывает его рецепт (как на «Сегодня») для любой роли;
+          заменить блюдо Редактор может через крестик и пустой слот. */}
+      <Link
+        href={`/recipes/${meal.recipeId}`}
+        className="flex size-full flex-col items-stretch text-left"
       >
         <RecipePhoto
           photoUrl={meal.photoUrl}
@@ -169,7 +167,7 @@ function SlotMiniCard({ slot, canEdit, onPick, wide }: MiniProps) {
             {meal.servings} порц.{meal.isEaten && " · съедено"}
           </span>
         </span>
-      </button>
+      </Link>
     </div>
   );
 }
