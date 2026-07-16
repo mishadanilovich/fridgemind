@@ -1,7 +1,15 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { BookOpen, ChevronLeft, CloudOff, RefreshCw, ShoppingBasket } from "lucide-react";
+import {
+  BookOpen,
+  ChevronLeft,
+  CloudOff,
+  LogIn,
+  RefreshCw,
+  Refrigerator,
+  ShoppingBasket,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
@@ -28,6 +36,7 @@ type Screen =
   | { kind: "day"; date: string }
   | { kind: "recipes" }
   | { kind: "recipe"; id: string }
+  | { kind: "inventory" }
   | { kind: "shopping" }
   | { kind: "other" };
 
@@ -42,12 +51,26 @@ function matchScreen(path: string): Screen {
   if (path === "/recipes") return { kind: "recipes" };
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
   if (recipeId && recipeId !== "new") return { kind: "recipe", id: recipeId };
+  if (path === "/inventory") return { kind: "inventory" };
   if (path === "/shopping-list") return { kind: "shopping" };
   return { kind: "other" };
 }
 
+// /~offline — публичный маршрут (SW должен precache'ить его без сессии), поэтому перед
+// показом снапшотов проверяется наличие auth-cookie Supabase: на общем устройстве человек
+// без входа не увидит чужие данные. Именно присутствие cookie, а не getSession(): офлайн
+// истёкший access token не обновить, и getSession() отказал бы легитимному пользователю;
+// выход из аккаунта удаляет cookie и заодно чистит весь офлайн-кэш (clearOfflineCache).
+function hasAuthCookie(): boolean {
+  return document.cookie.split("; ").some((cookie) => {
+    const name = cookie.split("=")[0];
+    return name.startsWith("sb-") && name.includes("-auth-token") && !name.endsWith("-code-verifier");
+  });
+}
+
 export function OfflineApp() {
   const [screen, setScreen] = useState<Screen | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [path, setPath] = useState("/");
   const online = useOnline();
 
@@ -57,6 +80,7 @@ export function OfflineApp() {
     const effectivePath = pathname === "/~offline" ? (from ?? "/") : pathname;
     setScreen(matchScreen(effectivePath));
     setPath(effectivePath);
+    setSignedIn(hasAuthCookie());
   }, []);
 
   return (
@@ -73,7 +97,13 @@ export function OfflineApp() {
           </a>
         )}
 
-        {screen === null ? <LoadingRows /> : <ScreenView screen={screen} />}
+        {screen === null || signedIn === null ? (
+          <LoadingRows />
+        ) : signedIn ? (
+          <ScreenView screen={screen} />
+        ) : (
+          <SignInPrompt />
+        )}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card/90 px-2 pb-6 pt-2 backdrop-blur-md">
@@ -110,6 +140,8 @@ function ScreenView({ screen }: { screen: Screen }) {
       return <OfflineRecipesScreen />;
     case "recipe":
       return <OfflineRecipeScreen id={screen.id} />;
+    case "inventory":
+      return <OfflineInventoryScreen />;
     case "shopping":
       return <OfflineShoppingScreen />;
     case "other":
@@ -119,7 +151,7 @@ function ScreenView({ screen }: { screen: Screen }) {
           <EmptyState
             icon={CloudOff}
             title="Эта страница недоступна офлайн"
-            description="Без сети открываются сохранённые копии экранов: Сегодня, Меню, Рецепты и Список покупок."
+            description="Без сети открываются сохранённые копии экранов: Сегодня, Меню, Рецепты, Запасы и Список покупок."
           />
         </>
       );
@@ -166,6 +198,25 @@ function LoadingRows() {
       <Skeleton className="h-[88px] w-full rounded-card" />
       <Skeleton className="h-[88px] w-full rounded-card" />
     </div>
+  );
+}
+
+function SignInPrompt() {
+  return (
+    <>
+      <OfflineHeader title="Офлайн" />
+      <EmptyState
+        icon={LogIn}
+        title="Войдите в аккаунт"
+        description="Сохранённые офлайн-данные показываются только после входа."
+      />
+      <a
+        href="/login"
+        className="pressable mt-4 flex items-center justify-center gap-2 rounded-card bg-primary px-4 py-[14px] text-sm font-bold text-primary-foreground"
+      >
+        Войти
+      </a>
+    </>
   );
 }
 
@@ -405,6 +456,52 @@ function OfflineRecipeScreen({ id }: { id: string }) {
           </p>
         </div>
       ))}
+    </>
+  );
+}
+
+// --- Запасы ---
+
+// Офлайн-инвентарь — только чтение: редактирование и удаление позиций требуют сети.
+function OfflineInventoryScreen() {
+  const snapshot = useLiveQuery(async () => (await offlineDb.pantry.get("all")) ?? null, []);
+  if (snapshot === undefined) return <LoadingRows />;
+  if (snapshot === null) {
+    return (
+      <>
+        <OfflineHeader title="Запасы" />
+        <NoSnapshot title="Запасы" />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <OfflineHeader title="Запасы" cachedAt={snapshot.cachedAt} />
+      {snapshot.data.length === 0 ? (
+        <EmptyState icon={Refrigerator} title="Пока пусто" />
+      ) : (
+        snapshot.data.map((group) => (
+          <CategorySection key={group.category} category={group.category} count={group.items.length}>
+            {group.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between border-b border-secondary px-[15px] py-[13px] last:border-b-0"
+              >
+                <span className="flex min-w-0 items-center gap-[11px]">
+                  <CategoryDot category={group.category} />
+                  <span className="truncate text-[14.5px] font-semibold text-foreground">
+                    {item.ingredient.name}
+                  </span>
+                </span>
+                <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
+                  {formatQuantity(item.quantity, item.unit)}
+                </span>
+              </div>
+            ))}
+          </CategorySection>
+        ))
+      )}
     </>
   );
 }
