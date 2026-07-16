@@ -1,7 +1,7 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { BookOpen, ChevronLeft, CloudOff, RefreshCw, ShoppingBasket } from "lucide-react";
+import { BookOpen, ChevronLeft, CloudOff, RefreshCw, Refrigerator, ShoppingBasket } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
@@ -28,6 +28,7 @@ type Screen =
   | { kind: "day"; date: string }
   | { kind: "recipes" }
   | { kind: "recipe"; id: string }
+  | { kind: "inventory" }
   | { kind: "shopping" }
   | { kind: "other" };
 
@@ -42,6 +43,7 @@ function matchScreen(path: string): Screen {
   if (path === "/recipes") return { kind: "recipes" };
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
   if (recipeId && recipeId !== "new") return { kind: "recipe", id: recipeId };
+  if (path === "/inventory") return { kind: "inventory" };
   if (path === "/shopping-list") return { kind: "shopping" };
   return { kind: "other" };
 }
@@ -110,6 +112,8 @@ function ScreenView({ screen }: { screen: Screen }) {
       return <OfflineRecipesScreen />;
     case "recipe":
       return <OfflineRecipeScreen id={screen.id} />;
+    case "inventory":
+      return <OfflineInventoryScreen />;
     case "shopping":
       return <OfflineShoppingScreen />;
     case "other":
@@ -119,7 +123,7 @@ function ScreenView({ screen }: { screen: Screen }) {
           <EmptyState
             icon={CloudOff}
             title="Эта страница недоступна офлайн"
-            description="Без сети открываются сохранённые копии экранов: Сегодня, Меню, Рецепты и Список покупок."
+            description="Без сети открываются сохранённые копии экранов: Сегодня, Меню, Рецепты, Запасы и Список покупок."
           />
         </>
       );
@@ -405,6 +409,52 @@ function OfflineRecipeScreen({ id }: { id: string }) {
           </p>
         </div>
       ))}
+    </>
+  );
+}
+
+// --- Запасы ---
+
+// Офлайн-инвентарь — только чтение: редактирование и удаление позиций требуют сети.
+function OfflineInventoryScreen() {
+  const snapshot = useLiveQuery(async () => (await offlineDb.pantry.get("all")) ?? null, []);
+  if (snapshot === undefined) return <LoadingRows />;
+  if (snapshot === null) {
+    return (
+      <>
+        <OfflineHeader title="Запасы" />
+        <NoSnapshot title="Запасы" />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <OfflineHeader title="Запасы" cachedAt={snapshot.cachedAt} />
+      {snapshot.data.length === 0 ? (
+        <EmptyState icon={Refrigerator} title="Пока пусто" />
+      ) : (
+        snapshot.data.map((group) => (
+          <CategorySection key={group.category} category={group.category} count={group.items.length}>
+            {group.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between border-b border-secondary px-[15px] py-[13px] last:border-b-0"
+              >
+                <span className="flex min-w-0 items-center gap-[11px]">
+                  <CategoryDot category={group.category} />
+                  <span className="truncate text-[14.5px] font-semibold text-foreground">
+                    {item.ingredient.name}
+                  </span>
+                </span>
+                <span className="shrink-0 font-heading text-[13.5px] font-bold text-muted-foreground">
+                  {formatQuantity(item.quantity, item.unit)}
+                </span>
+              </div>
+            ))}
+          </CategorySection>
+        ))
+      )}
     </>
   );
 }
