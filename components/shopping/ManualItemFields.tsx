@@ -65,7 +65,7 @@ export function ManualItemFields({
             inputMode="decimal"
             placeholder="Кол-во"
             error={qtyError}
-            className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
+            className="h-12 flex-1 rounded-lg text-center text-base font-semibold"
           />
           <Select value={unit} onValueChange={(v) => onUnitChange(v as Unit)}>
             <SelectTrigger className="h-12 w-[88px] rounded-lg" aria-label="Единица">

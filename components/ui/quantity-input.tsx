@@ -22,7 +22,7 @@ export function QuantityInput({ value, onChange, unitLabel, name, error }: Props
         inputMode="decimal"
         placeholder="Кол-во"
         error={error}
-        className="h-12 flex-1 rounded-lg text-center text-[15px] font-semibold"
+        className="h-12 flex-1 rounded-lg text-center text-base font-semibold"
       />
       <span className="w-[52px] shrink-0 text-center text-sm font-semibold text-muted-foreground">
         {unitLabel}
