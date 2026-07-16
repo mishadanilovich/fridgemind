@@ -3,6 +3,7 @@ import { Refrigerator } from "lucide-react";
 import { InventoryActions } from "@/components/inventory/InventoryActions";
 import { PantryGroups } from "@/components/inventory/PantryGroups";
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
+import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/lib/auth";
 import { getPantryGroups } from "@/lib/queries/pantry";
@@ -27,6 +28,10 @@ export default async function InventoryPage() {
       ) : (
         <PantryGroups groups={groups} />
       )}
+      <OfflineSnapshot
+        householdId={user.householdId}
+        snapshot={{ table: "pantry", id: "all", data: groups }}
+      />
     </div>
   );
 }
