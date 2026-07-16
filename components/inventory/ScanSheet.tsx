@@ -11,6 +11,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { Stepper } from "@/components/ui/stepper";
 import { confirmRecognizedProducts } from "@/lib/actions/pantry";
 import { compressImage } from "@/lib/compress-image";
+import { callAction } from "@/lib/form-state";
 import type { RecognizedProduct, Unit } from "@/lib/types";
 import { formatQuantity } from "@/lib/units";
 
@@ -125,7 +126,7 @@ export function ScanSheet({ open, onOpenChange }: Props) {
     setError(null);
     startSave(async () => {
       // Клиентский key уходит вместе с продуктом — Zod-схема на сервере отбросит лишнее поле.
-      const result = await confirmRecognizedProducts({ products: items });
+      const result = await callAction(() => confirmRecognizedProducts({ products: items }));
       if (result.error !== null) {
         setError(result.error);
         return;

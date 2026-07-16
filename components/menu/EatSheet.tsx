@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityStepperRow } from "@/components/ui/quantity-stepper-row";
 import { deductMealIngredients } from "@/lib/actions/meals";
+import { callAction } from "@/lib/form-state";
 import { scaleIngredient } from "@/lib/recipes";
 import type { EatDeductionView } from "@/lib/types";
 import { UNIT_TO_TYPE } from "@/lib/units";
@@ -67,14 +68,16 @@ function EatSheetBody({ deduction, onClose }: { deduction: EatDeductionView; onC
   function onConfirm() {
     setError(null);
     startTransition(async () => {
-      const result = await deductMealIngredients({
-        mealId: deduction.mealId,
-        servings,
-        items: deduction.ingredients.map((ingredient, index) => ({
-          ingredientId: ingredient.ingredientId,
-          quantity: quantities[index],
-        })),
-      });
+      const result = await callAction(() =>
+        deductMealIngredients({
+          mealId: deduction.mealId,
+          servings,
+          items: deduction.ingredients.map((ingredient, index) => ({
+            ingredientId: ingredient.ingredientId,
+            quantity: quantities[index],
+          })),
+        }),
+      );
       if (result.error !== null) {
         setError(result.error);
         return;

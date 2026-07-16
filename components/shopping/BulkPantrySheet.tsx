@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityStepperRow } from "@/components/ui/quantity-stepper-row";
 import { addBoughtToPantry } from "@/lib/actions/shopping-list";
+import { callAction } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { neededQuantity } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
@@ -54,9 +55,11 @@ function BulkBody({ candidates, onDone }: { candidates: ShoppingItemView[]; onDo
   function onConfirm() {
     setError(null);
     startTransition(async () => {
-      const result = await addBoughtToPantry({
-        items: candidates.map((item) => ({ itemId: item.id, quantity: quantityOf(item) })),
-      });
+      const result = await callAction(() =>
+        addBoughtToPantry({
+          items: candidates.map((item) => ({ itemId: item.id, quantity: quantityOf(item) })),
+        }),
+      );
       if (result.error !== null) {
         setError(result.error);
         return;

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { deleteShoppingItem, updateShoppingItem } from "@/lib/actions/shopping-list";
-import { initialFormState } from "@/lib/form-state";
+import { callAction, guardFormAction, initialFormState } from "@/lib/form-state";
 import type { ShoppingItemView, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL } from "@/lib/units";
 
@@ -24,7 +24,7 @@ type Props = {
  * а удалять их бессмысленно — синхронизация с меню пересоздаст).
  */
 export function EditShoppingItemSheet({ item, onClose }: Props) {
-  const [state, formAction, isPending] = useActionState(updateShoppingItem, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(updateShoppingItem), initialFormState);
   const [qty, setQty] = useState(String(item.quantity));
   const [unit, setUnit] = useState<Unit>(item.unit);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -38,7 +38,7 @@ export function EditShoppingItemSheet({ item, onClose }: Props) {
   function onDelete() {
     setDeleteError(null);
     startDelete(async () => {
-      const result = await deleteShoppingItem(item.id);
+      const result = await callAction(() => deleteShoppingItem(item.id));
       if (result.error !== null) setDeleteError(result.error);
       else onClose();
     });

@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp } from "@/lib/actions/auth";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 
 type Props = {
   inviteCode?: string;
 };
 
 export function SignupForm({ inviteCode }: Props) {
-  const [state, formAction, isPending] = useActionState(signUp, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(signUp), initialFormState);
 
   if (state.data?.sentTo) {
     return (

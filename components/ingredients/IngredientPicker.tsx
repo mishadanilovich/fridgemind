@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createIngredient, searchIngredients } from "@/lib/actions/ingredients";
+import { callAction } from "@/lib/form-state";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { Ingredient, ProductCategory, UnitType } from "@/lib/types";
 import { UNIT_TYPE_LABELS } from "@/lib/units";
@@ -56,8 +57,13 @@ export function IngredientPicker({ value, onSelect }: Props) {
     const t = setTimeout(() => {
       const requestId = ++latestRequestId.current;
       startSearch(async () => {
-        const found = await searchIngredients(q);
-        if (requestId === latestRequestId.current) setResults(found);
+        try {
+          const found = await searchIngredients(q);
+          if (requestId === latestRequestId.current) setResults(found);
+        } catch {
+          // Офлайн/обрыв сети: поиск даёт пустой список, а не роняет экран в error boundary.
+          if (requestId === latestRequestId.current) setResults([]);
+        }
       });
     }, 250);
     return () => clearTimeout(t);
@@ -81,11 +87,13 @@ export function IngredientPicker({ value, onSelect }: Props) {
   function onCreate() {
     setCreateError(null);
     startCreate(async () => {
-      const result = await createIngredient({
-        name: query,
-        defaultUnitType: newUnitType,
-        category: newCategory,
-      });
+      const result = await callAction(() =>
+        createIngredient({
+          name: query,
+          defaultUnitType: newUnitType,
+          category: newCategory,
+        }),
+      );
       if (result.error !== null) {
         setCreateError(result.error);
         return;

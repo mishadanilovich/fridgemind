@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { changeMemberRole, removeMember } from "@/lib/actions/household";
+import { callAction } from "@/lib/form-state";
 import { ASSIGNABLE_ROLES, ROLE_LABELS } from "@/lib/roles";
 import type { HouseholdRole, HouseholdRoleValue } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -46,7 +47,7 @@ export function MemberControls({ userId, name, role }: Props) {
   function onRoleChange(value: string) {
     setError(null);
     startTransition(async () => {
-      const result = await changeMemberRole(userId, value as HouseholdRoleValue);
+      const result = await callAction(() => changeMemberRole(userId, value as HouseholdRoleValue));
       if (result.error) setError(result.error);
     });
   }
@@ -54,7 +55,7 @@ export function MemberControls({ userId, name, role }: Props) {
   function onRemove() {
     setError(null);
     startTransition(async () => {
-      const result = await removeMember(userId);
+      const result = await callAction(() => removeMember(userId));
       if (result.error) setError(result.error);
     });
   }

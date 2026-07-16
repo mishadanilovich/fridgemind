@@ -10,6 +10,7 @@ import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toggleShoppingItemBought } from "@/lib/actions/shopping-list";
 import { addDaysIso, weekDatesIso } from "@/lib/dates";
+import { callAction } from "@/lib/form-state";
 import { buildShoppingGroups } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
 import { formatQuantity } from "@/lib/units";
@@ -79,15 +80,10 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
     }
     startToggle(async () => {
       applyBought({ id: item.id, isBought: !item.isBought });
-      try {
-        const result = await toggleShoppingItemBought({
-          itemId: item.id,
-          isBought: !item.isBought,
-        });
-        if (result.error !== null) setBoughtError(result.error);
-      } catch {
-        setBoughtError("Не удалось сохранить отметку — проверьте соединение.");
-      }
+      const result = await callAction(() =>
+        toggleShoppingItemBought({ itemId: item.id, isBought: !item.isBought }),
+      );
+      if (result.error !== null) setBoughtError(result.error);
     });
   }
 

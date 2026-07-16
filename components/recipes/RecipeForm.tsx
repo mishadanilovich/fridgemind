@@ -17,7 +17,7 @@ import {
   COOKING_METHOD_LABELS,
   COOKING_METHODS,
 } from "@/lib/cooking-methods";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 import type {
   CookingMethod,
   Ingredient,
@@ -49,7 +49,7 @@ function unitForIngredient(ingredient: Ingredient): Unit {
 export function RecipeForm({ recipe }: Props) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(
-    saveRecipe,
+    guardFormAction(saveRecipe),
     initialFormState,
   );
 

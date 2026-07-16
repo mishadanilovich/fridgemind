@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { assignMeal } from "@/lib/actions/menu";
 import { formatDayTitle } from "@/lib/dates";
+import { callAction } from "@/lib/form-state";
 import type { MenuSlotView, PickerRecipeView } from "@/lib/types";
 
 type Props = {
@@ -111,12 +112,14 @@ function PickerBody({ date, slot, recipes, onDone }: BodyProps) {
     if (!chosen) return;
     setError(null);
     startTransition(async () => {
-      const result = await assignMeal({
-        date,
-        mealSlotId: slot.slotId,
-        recipeId: chosen.id,
-        servings,
-      });
+      const result = await callAction(() =>
+        assignMeal({
+          date,
+          mealSlotId: slot.slotId,
+          recipeId: chosen.id,
+          servings,
+        }),
+      );
       if (result.error) {
         setError(result.error);
         return;

@@ -17,6 +17,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/actions/auth";
 import { leaveHousehold } from "@/lib/actions/household";
+import { callAction } from "@/lib/form-state";
 import { clearOfflineCache } from "@/lib/offline-db";
 
 type Props = {
@@ -32,7 +33,7 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
     setError(null);
     startTransition(async () => {
       // При успехе экшен делает redirect и сюда не возвращается.
-      const result = await leaveHousehold();
+      const result = await callAction(async () => (await leaveHousehold()) ?? { error: null });
       if (result?.error) setError(result.error);
     });
   }

@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { regenerateInviteCode } from "@/lib/actions/household";
+import { callAction } from "@/lib/form-state";
 
 type Props = {
   inviteCode: string;
@@ -54,7 +55,7 @@ export function InviteSection({ inviteCode }: Props) {
   function onRegenerate() {
     setError(null);
     startTransition(async () => {
-      const result = await regenerateInviteCode();
+      const result = await callAction(regenerateInviteCode);
       if (result.error) setError(result.error);
     });
   }

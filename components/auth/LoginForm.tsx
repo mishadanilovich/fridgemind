@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/actions/auth";
-import { initialFormState } from "@/lib/form-state";
+import { guardFormAction, initialFormState } from "@/lib/form-state";
 
 type Props = {
   next?: string;
 };
 
 export function LoginForm({ next }: Props) {
-  const [state, formAction, isPending] = useActionState(signIn, initialFormState);
+  const [state, formAction, isPending] = useActionState(guardFormAction(signIn), initialFormState);
 
   return (
     <div className="space-y-6">
