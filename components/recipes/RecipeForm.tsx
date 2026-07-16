@@ -147,7 +147,7 @@ export function RecipeForm({ recipe }: Props) {
             placeholder="Например, Тыквенный крем-суп"
             maxLength={80}
             error={state.fieldErrors?.title}
-            className="h-12 rounded-lg px-4 text-[15px] font-semibold"
+            className="h-12 rounded-lg px-4 text-base font-semibold"
           />
         </div>
 
@@ -170,7 +170,7 @@ export function RecipeForm({ recipe }: Props) {
             placeholder="Необязательно"
             maxLength={4}
             error={state.fieldErrors?.cookTimeMinutes}
-            className="h-12 rounded-lg px-4 text-[15px] font-semibold"
+            className="h-12 rounded-lg px-4 text-base font-semibold"
           />
         </div>
 
