@@ -103,20 +103,29 @@ export async function getInviteCodeFor(userId: string): Promise<string> {
 export async function deleteSecondaryUser(user: SecondaryTestUser): Promise<void> {
   const supabase = adminClient();
 
-  // Строка public.users удаляется явно (FK на auth.users нет, каскада от deleteUser не будет),
-  // затем — осиротевший после присоединения к чужой семье собственный household.
+  // Каждый шаг очистки best-effort и независим: сбой раннего не должен прерывать остальные,
+  // иначе в общем dev/prod-проекте Supabase копятся осиротевшие household'ы и auth-пользователи.
+  // Собственный household (originalHouseholdId) и так осиротел после присоединения к семье A,
+  // поэтому auth-пользователя удаляем в любом случае. Ошибки агрегируем и бросаем в конце.
+  const errors: string[] = [];
+
+  // Строка public.users — FK на auth.users нет, каскада от deleteUser не будет; удаляем первой,
+  // чтобы снять ссылку users.household_id перед удалением самого household.
   const { error: userError } = await supabase.from("users").delete().eq("id", user.id);
-  if (userError) {
-    throw new Error(`Не удалось удалить второго пользователя из users: ${userError.message}`);
-  }
+  if (userError) errors.push(`users: ${userError.message}`);
+
   const { error: householdError } = await supabase
     .from("households")
     .delete()
     .eq("id", user.originalHouseholdId);
-  if (householdError) {
-    throw new Error(`Не удалось удалить household второго пользователя: ${householdError.message}`);
+  if (householdError) errors.push(`households: ${householdError.message}`);
+
+  const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+  if (authError) errors.push(`auth: ${authError.message}`);
+
+  if (errors.length > 0) {
+    throw new Error(`Неполная очистка второго тестового пользователя: ${errors.join("; ")}`);
   }
-  await supabase.auth.admin.deleteUser(user.id);
 }
 
 export async function deleteTestUser(user: TestUser): Promise<void> {
