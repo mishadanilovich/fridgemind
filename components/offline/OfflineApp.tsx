@@ -63,7 +63,7 @@ function matchScreen(path: string): Screen {
 // выход из аккаунта удаляет cookie и заодно чистит весь офлайн-кэш (clearOfflineCache).
 function hasAuthCookie(): boolean {
   return document.cookie.split("; ").some((cookie) => {
-    const name = cookie.split("=")[0];
+    const name = cookie.split("=")[0] ?? "";
     return name.startsWith("sb-") && name.includes("-auth-token") && !name.endsWith("-code-verifier");
   });
 }
