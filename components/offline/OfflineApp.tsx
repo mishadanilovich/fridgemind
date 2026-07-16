@@ -62,9 +62,10 @@ function matchScreen(path: string): Screen {
 // истёкший access token не обновить, и getSession() отказал бы легитимному пользователю;
 // выход из аккаунта удаляет cookie и заодно чистит весь офлайн-кэш (clearOfflineCache).
 function hasAuthCookie(): boolean {
-  return document.cookie
-    .split("; ")
-    .some((cookie) => cookie.startsWith("sb-") && cookie.includes("-auth-token"));
+  return document.cookie.split("; ").some((cookie) => {
+    const name = cookie.split("=")[0];
+    return name.startsWith("sb-") && name.includes("-auth-token") && !name.endsWith("-code-verifier");
+  });
 }
 
 export function OfflineApp() {
