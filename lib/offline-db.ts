@@ -52,6 +52,29 @@ export type OfflineSnapshotInput =
 const MAX_SNAPSHOT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const SCOPE_KEY = "fridgemind-offline-household";
 
+// Runtime-кэши service worker'а с пользовательскими ответами (HTML/RSC/данные/фото) — имена
+// из defaultCache @serwist/next. Без их очистки офлайн показывал бы страницы прежнего
+// пользователя вперемешку с новыми: SW кэширует отрендеренный HTML по URL, без учёта сессии.
+// Статика, шрифты и precache не трогаются.
+const USER_SW_CACHES = [
+  "pages",
+  "pages-rsc",
+  "pages-rsc-prefetch",
+  "next-data",
+  "static-data-assets",
+  "apis",
+  "others",
+  "next-image",
+];
+
+async function clearSwUserCaches(): Promise<void> {
+  if (typeof caches === "undefined") return;
+  const names = await caches.keys();
+  await Promise.all(
+    names.filter((name) => USER_SW_CACHES.includes(name)).map((name) => caches.delete(name)),
+  );
+}
+
 /** Стирает офлайн-кэш целиком — выход из аккаунта и смена household (см. ensureHouseholdScope). */
 export async function clearOfflineCache(): Promise<void> {
   localStorage.removeItem(SCOPE_KEY);
@@ -61,6 +84,7 @@ export async function clearOfflineCache(): Promise<void> {
     db.shoppingLists.clear(),
     db.recipes.clear(),
     db.recipeLists.clear(),
+    clearSwUserCaches(),
   ]);
 }
 
