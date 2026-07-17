@@ -1,5 +1,6 @@
 "use client";
 
+import { IngredientSuggestInput } from "@/components/ingredients/IngredientSuggestInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Unit } from "@/lib/types";
+import type { Ingredient, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
 
 export const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
@@ -18,6 +19,10 @@ type Props = {
   nameDefault?: string;
   namePlaceholder?: string;
   nameError?: string;
+  /** Управляемое имя + подсказки из справочника (добавление); без него поле неуправляемое (правка). */
+  nameValue?: string;
+  onNameChange?: (value: string) => void;
+  onNamePick?: (ingredient: Ingredient) => void;
   qty: string;
   onQtyChange: (value: string) => void;
   qtyError?: string;
@@ -34,6 +39,9 @@ export function ManualItemFields({
   nameDefault,
   namePlaceholder,
   nameError,
+  nameValue,
+  onNameChange,
+  onNamePick,
   qty,
   onQtyChange,
   qtyError,
@@ -44,13 +52,25 @@ export function ManualItemFields({
     <>
       <div className="space-y-1.5">
         <Label htmlFor="manual-name">Название</Label>
-        <Input
-          id="manual-name"
-          name="name"
-          defaultValue={nameDefault}
-          placeholder={namePlaceholder}
-          error={nameError}
-        />
+        {onNameChange ? (
+          <IngredientSuggestInput
+            id="manual-name"
+            name="name"
+            value={nameValue ?? ""}
+            onChange={onNameChange}
+            onPick={onNamePick}
+            placeholder={namePlaceholder}
+            error={nameError}
+          />
+        ) : (
+          <Input
+            id="manual-name"
+            name="name"
+            defaultValue={nameDefault}
+            placeholder={namePlaceholder}
+            error={nameError}
+          />
+        )}
       </div>
 
       <div className="space-y-1.5">

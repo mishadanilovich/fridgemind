@@ -18,6 +18,7 @@ import { guardFormAction, initialFormState } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { ProductCategory, Unit } from "@/lib/types";
+import { UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
 import { ManualItemFields } from "./ManualItemFields";
 
@@ -43,6 +44,7 @@ export function AddShoppingItemSheet({ open, onOpenChange }: Props) {
 
 function AddItemForm({ onSaved }: { onSaved: () => void }) {
   const [state, formAction, isPending] = useActionState(guardFormAction(addManualShoppingItem), initialFormState);
+  const [name, setName] = useState("");
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState<Unit>("PCS");
   const [category, setCategory] = useState<ProductCategory>("OTHER");
@@ -59,7 +61,12 @@ function AddItemForm({ onSaved }: { onSaved: () => void }) {
 
       <div className="space-y-3">
         <ManualItemFields
-          nameDefault={state.values?.name}
+          nameValue={name}
+          onNameChange={setName}
+          onNamePick={(ingredient) => {
+            setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType]);
+            setCategory(ingredient.category);
+          }}
           namePlaceholder="Например, губки для посуды"
           nameError={state.fieldErrors?.name}
           qty={qty}
