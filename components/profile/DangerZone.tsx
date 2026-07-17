@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { signOut } from "@/lib/actions/auth";
 import { leaveHousehold } from "@/lib/actions/household";
 import { callAction } from "@/lib/form-state";
@@ -86,14 +87,9 @@ export function DangerZone({ canLeave, leaveReason }: Props) {
       {/* Офлайн-кэш стирается при выходе: после него на /login никто снапшоты не перепишет,
           и без очистки /~offline показывал бы данные семьи разлогиненного пользователя. */}
       <form action={signOut} onSubmit={() => void clearOfflineCache().catch(() => {})}>
-        <Button
-          type="submit"
-          variant="ghost"
-          className="w-full text-muted-foreground"
-          icon={<LogOut />}
-        >
+        <SubmitButton variant="ghost" className="w-full text-muted-foreground" icon={<LogOut />}>
           Выйти из аккаунта
-        </Button>
+        </SubmitButton>
       </form>
     </div>
   );
