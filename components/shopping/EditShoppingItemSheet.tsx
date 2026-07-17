@@ -9,7 +9,7 @@ import { QuantityInput } from "@/components/ui/quantity-input";
 import { deleteShoppingItem, updateShoppingItem } from "@/lib/actions/shopping-list";
 import { callAction, guardFormAction, initialFormState } from "@/lib/form-state";
 import type { ShoppingItemView, Unit } from "@/lib/types";
-import { DISPLAY_UNIT_LABEL } from "@/lib/units";
+import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
 import { ManualItemFields } from "./ManualItemFields";
 
@@ -25,6 +25,7 @@ type Props = {
  */
 export function EditShoppingItemSheet({ item, onClose }: Props) {
   const [state, formAction, isPending] = useActionState(guardFormAction(updateShoppingItem), initialFormState);
+  const [name, setName] = useState(item.name);
   const [qty, setQty] = useState(String(item.quantity));
   const [unit, setUnit] = useState<Unit>(item.unit);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -87,7 +88,9 @@ export function EditShoppingItemSheet({ item, onClose }: Props) {
           <div className="space-y-3">
             {item.isManual ? (
               <ManualItemFields
-                nameDefault={state.values?.name ?? item.name}
+                nameValue={name}
+                onNameChange={setName}
+                onNamePick={(ingredient) => setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType])}
                 nameError={state.fieldErrors?.name}
                 qty={qty}
                 onQtyChange={setQty}

@@ -1,5 +1,6 @@
 "use client";
 
+import { IngredientSuggestInput } from "@/components/ingredients/IngredientSuggestInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,15 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Unit } from "@/lib/types";
+import type { Ingredient, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
 
 export const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
 
 type Props = {
-  nameDefault?: string;
   namePlaceholder?: string;
   nameError?: string;
+  nameValue: string;
+  onNameChange: (value: string) => void;
+  onNamePick?: (ingredient: Ingredient) => void;
   qty: string;
   onQtyChange: (value: string) => void;
   qtyError?: string;
@@ -31,9 +34,11 @@ type Props = {
  * уходят в FormData под именами name/quantity/unit.
  */
 export function ManualItemFields({
-  nameDefault,
   namePlaceholder,
   nameError,
+  nameValue,
+  onNameChange,
+  onNamePick,
   qty,
   onQtyChange,
   qtyError,
@@ -44,10 +49,12 @@ export function ManualItemFields({
     <>
       <div className="space-y-1.5">
         <Label htmlFor="manual-name">Название</Label>
-        <Input
+        <IngredientSuggestInput
           id="manual-name"
           name="name"
-          defaultValue={nameDefault}
+          value={nameValue}
+          onChange={onNameChange}
+          onPick={onNamePick}
           placeholder={namePlaceholder}
           error={nameError}
         />

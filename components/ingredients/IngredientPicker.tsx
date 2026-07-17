@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Plus, Search } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createIngredient, searchIngredients } from "@/lib/actions/ingredients";
+import { createIngredient } from "@/lib/actions/ingredients";
 import { callAction } from "@/lib/form-state";
+import { useIngredientSearch } from "@/lib/hooks/use-ingredient-search";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import type { Ingredient, ProductCategory, UnitType } from "@/lib/types";
 import { UNIT_TYPE_LABELS } from "@/lib/units";
@@ -38,9 +39,8 @@ const UNIT_TYPES = Object.keys(UNIT_TYPE_LABELS) as UnitType[];
 export function IngredientPicker({ value, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Ingredient[]>([]);
   const [creating, setCreating] = useState(false);
-  const [isSearching, startSearch] = useTransition();
+  const { results, isSearching, clear } = useIngredientSearch(query, open);
 
   // Поля формы создания нового продукта.
   const [newUnitType, setNewUnitType] = useState<UnitType>("WEIGHT");
@@ -48,30 +48,9 @@ export function IngredientPicker({ value, onSelect }: Props) {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, startCreate] = useTransition();
 
-  // Дебаунс поиска: 250 мс после последнего нажатия. requestId защищает от гонки — если ответ
-  // на более раннюю раскладку придёт позже (сетевой джиттер), он не перезапишет свежие results.
-  const latestRequestId = useRef(0);
-  useEffect(() => {
-    if (!open) return;
-    const q = query;
-    const t = setTimeout(() => {
-      const requestId = ++latestRequestId.current;
-      startSearch(async () => {
-        try {
-          const found = await searchIngredients(q);
-          if (requestId === latestRequestId.current) setResults(found);
-        } catch {
-          // Офлайн/обрыв сети: поиск даёт пустой список, а не роняет экран в error boundary.
-          if (requestId === latestRequestId.current) setResults([]);
-        }
-      });
-    }, 250);
-    return () => clearTimeout(t);
-  }, [query, open]);
-
   function reset() {
     setQuery("");
-    setResults([]);
+    clear();
     setCreating(false);
     setNewUnitType("WEIGHT");
     setNewCategory("OTHER");
