@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 import { type ComponentPropsWithoutRef, type ComponentRef, forwardRef, type HTMLAttributes } from "react"
 
+import { useKeyboardInset } from "@/lib/hooks/use-keyboard-inset"
 import { cn } from "@/lib/utils"
 
 const Sheet = SheetPrimitive.Root
@@ -57,24 +58,33 @@ type SheetContentProps = {
 const SheetContent = forwardRef<
   ComponentRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", hideClose = false, className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-      {!hideClose && (
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-      )}
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+>(({ side = "right", hideClose = false, className, style, children, ...props }, ref) => {
+  const keyboardInset = useKeyboardInset()
+  const bottomStyle =
+    side === "bottom"
+      ? { ...style, bottom: keyboardInset, transition: "bottom 0.15s ease-out" }
+      : style
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        style={bottomStyle}
+        {...props}
+      >
+        {children}
+        {!hideClose && (
+          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        )}
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({
