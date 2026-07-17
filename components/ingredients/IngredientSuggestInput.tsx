@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { searchIngredients } from "@/lib/actions/ingredients";
+import { useIngredientSearch } from "@/lib/hooks/use-ingredient-search";
 import type { Ingredient } from "@/lib/types";
 
 type Props = {
@@ -16,11 +16,6 @@ type Props = {
   error?: string;
 };
 
-/**
- * Поле названия с подсказками из справочника: при вводе показывает совпадающие продукты, тап по
- * подсказке подставляет каноничное имя (и через onPick — единицу/категорию). Своё название вписать
- * по-прежнему можно — позиция остаётся свободной, справочник не навязывается.
- */
 export function IngredientSuggestInput({
   id,
   name,
@@ -30,49 +25,25 @@ export function IngredientSuggestInput({
   placeholder,
   error,
 }: Props) {
-  const [results, setResults] = useState<Ingredient[]>([]);
   const [open, setOpen] = useState(false);
-  const [, startSearch] = useTransition();
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Гонка запросов (как в IngredientPicker): поздний ответ на старую раскладку не перезаписывает
-  // свежий. justPicked гасит поиск сразу после выбора — иначе всплыл бы список с одним точным
-  // совпадением, которое мы тут же отфильтровываем.
-  const latestRequestId = useRef(0);
-  const justPicked = useRef(false);
+  const trimmed = value.trim();
+  const { results, clear } = useIngredientSearch(trimmed, trimmed !== "");
 
   useEffect(() => {
-    if (justPicked.current) {
-      justPicked.current = false;
-      return;
-    }
-    const q = value.trim();
-    if (q === "") {
-      setResults([]);
-      return;
-    }
-    const t = setTimeout(() => {
-      const requestId = ++latestRequestId.current;
-      startSearch(async () => {
-        try {
-          const found = await searchIngredients(q);
-          if (requestId === latestRequestId.current) setResults(found);
-        } catch {
-          if (requestId === latestRequestId.current) setResults([]);
-        }
-      });
-    }, 250);
-    return () => clearTimeout(t);
-  }, [value]);
+    return () => {
+      if (blurTimer.current) clearTimeout(blurTimer.current);
+    };
+  }, []);
 
-  const trimmed = value.trim().toLowerCase();
-  const suggestions = results.filter((r) => r.name.toLowerCase() !== trimmed);
+  const suggestions = results.filter((r) => r.name.toLowerCase() !== trimmed.toLowerCase());
   const showList = open && suggestions.length > 0;
 
   function pick(ingredient: Ingredient) {
-    justPicked.current = true;
+    clear();
     onChange(ingredient.name);
     onPick?.(ingredient);
-    setResults([]);
     setOpen(false);
   }
 
@@ -86,8 +57,13 @@ export function IngredientSuggestInput({
           onChange(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => {
+          if (blurTimer.current) clearTimeout(blurTimer.current);
+          setOpen(true);
+        }}
+        onBlur={() => {
+          blurTimer.current = setTimeout(() => setOpen(false), 150);
+        }}
         placeholder={placeholder}
         maxLength={60}
         autoComplete="off"

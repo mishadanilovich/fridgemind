@@ -59,18 +59,19 @@ const SheetContent = forwardRef<
   ComponentRef<typeof SheetPrimitive.Content>,
   SheetContentProps
 >(({ side = "right", hideClose = false, className, style, children, ...props }, ref) => {
-  const keyboardInset = useKeyboardInset()
-  const bottomStyle =
-    side === "bottom"
-      ? { ...style, bottom: keyboardInset, transition: "bottom 0.15s ease-out" }
-      : style
+  const keyboardInset = useKeyboardInset(side === "bottom")
+  const bottomStyle = side === "bottom" ? { ...style, bottom: keyboardInset } : style
 
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         ref={ref}
-        className={cn(sheetVariants({ side }), className)}
+        className={cn(
+          sheetVariants({ side }),
+          side === "bottom" && "transition-[bottom] duration-150 ease-out",
+          className
+        )}
         style={bottomStyle}
         {...props}
       >

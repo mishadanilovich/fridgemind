@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
  * клавиатура наезжает поверх position:fixed;bottom:0, пряча низ шита и кнопку действия. Считается
  * через visualViewport, поэтому работает и там, где layout-вьюпорт под клавиатуру не сжимается.
  */
-export function useKeyboardInset(): number {
+export function useKeyboardInset(enabled = true): number {
   const [inset, setInset] = useState(0);
 
   useEffect(() => {
+    if (!enabled) return;
     const vv = window.visualViewport;
     if (!vv) return;
 
@@ -26,7 +27,7 @@ export function useKeyboardInset(): number {
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
     };
-  }, []);
+  }, [enabled]);
 
   return inset;
 }

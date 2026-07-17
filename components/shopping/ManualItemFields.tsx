@@ -16,12 +16,10 @@ import { DISPLAY_UNIT_LABEL, sanitizeQuantityInput } from "@/lib/units";
 export const MANUAL_UNITS: Unit[] = ["PCS", "G", "ML"];
 
 type Props = {
-  nameDefault?: string;
   namePlaceholder?: string;
   nameError?: string;
-  /** Управляемое имя + подсказки из справочника (добавление); без него поле неуправляемое (правка). */
-  nameValue?: string;
-  onNameChange?: (value: string) => void;
+  nameValue: string;
+  onNameChange: (value: string) => void;
   onNamePick?: (ingredient: Ingredient) => void;
   qty: string;
   onQtyChange: (value: string) => void;
@@ -36,7 +34,6 @@ type Props = {
  * уходят в FormData под именами name/quantity/unit.
  */
 export function ManualItemFields({
-  nameDefault,
   namePlaceholder,
   nameError,
   nameValue,
@@ -52,25 +49,15 @@ export function ManualItemFields({
     <>
       <div className="space-y-1.5">
         <Label htmlFor="manual-name">Название</Label>
-        {onNameChange ? (
-          <IngredientSuggestInput
-            id="manual-name"
-            name="name"
-            value={nameValue ?? ""}
-            onChange={onNameChange}
-            onPick={onNamePick}
-            placeholder={namePlaceholder}
-            error={nameError}
-          />
-        ) : (
-          <Input
-            id="manual-name"
-            name="name"
-            defaultValue={nameDefault}
-            placeholder={namePlaceholder}
-            error={nameError}
-          />
-        )}
+        <IngredientSuggestInput
+          id="manual-name"
+          name="name"
+          value={nameValue}
+          onChange={onNameChange}
+          onPick={onNamePick}
+          placeholder={namePlaceholder}
+          error={nameError}
+        />
       </div>
 
       <div className="space-y-1.5">
