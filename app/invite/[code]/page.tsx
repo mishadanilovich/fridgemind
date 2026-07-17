@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { acceptInvite } from "@/lib/actions/invite";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -66,9 +66,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
       </div>
 
       <form action={acceptInvite.bind(null, code)}>
-        <Button type="submit" className="w-full">
-          Присоединиться
-        </Button>
+        <SubmitButton className="w-full">Присоединиться</SubmitButton>
       </form>
 
       <Link href="/" className="text-center text-sm font-semibold text-primary">
