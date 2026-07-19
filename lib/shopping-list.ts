@@ -1,8 +1,8 @@
 import type { Prisma } from "./generated/prisma/client";
-import { PRODUCT_CATEGORIES } from "./product-categories";
+import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "./product-categories";
 import { scaleIngredient } from "./recipes";
 import type { ProductCategory, ShoppingItemView, Unit } from "./types";
-import { UNIT_TO_TYPE } from "./units";
+import { formatQuantity, UNIT_TO_TYPE } from "./units";
 
 /** Приём пищи с ингредиентами рецепта — вход агрегации (см. CLAUDE.md §6, поток "список покупок"). */
 export type MealNeedsSource = {
@@ -172,6 +172,23 @@ export function buildShoppingGroups(
       .filter((item) => item.category === category)
       .sort((a, b) => a.name.localeCompare(b.name, "ru")),
   })).filter((group) => group.items.length > 0);
+}
+
+// Текстовое представление списка для кнопки "Поделиться" (см. CLAUDE.md §3 п.13).
+export function formatShoppingListText(groups: ShoppingGroup[], filterLabel: string): string {
+  const header = `Список покупок · ${filterLabel}`;
+  if (groups.length === 0) return `${header}\n\nСписок пуст`;
+
+  const body = groups
+    .map((group) => {
+      const lines = group.items
+        .map((i) => `${i.isBought ? "✓" : "•"} ${i.name} — ${formatQuantity(i.needed, i.unit)}`)
+        .join("\n");
+      return `${PRODUCT_CATEGORY_LABELS[group.category]}\n${lines}`;
+    })
+    .join("\n\n");
+
+  return `${header}\n\n${body}`;
 }
 
 /** Ингредиент дня с отметкой "есть дома"/"нужно купить" — экран просмотра дня (MVP-пункт 6). */
