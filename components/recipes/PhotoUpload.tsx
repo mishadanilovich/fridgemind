@@ -99,7 +99,7 @@ export function PhotoUpload({ value, onChange, variant }: Props) {
               size="iconSm"
               onClick={() => onChange(null)}
               aria-label="Убрать фото шага"
-              className="absolute right-2 top-2 bg-foreground/60 text-white backdrop-blur"
+              className="absolute right-2 top-2 bg-foreground/65 text-background backdrop-blur"
             >
               <X />
             </Button>

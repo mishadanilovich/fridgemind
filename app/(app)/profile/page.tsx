@@ -12,6 +12,7 @@ import { MealSlotsManager } from "@/components/profile/MealSlotsManager";
 import { MembersList } from "@/components/profile/MembersList";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { SettingsSection } from "@/components/profile/SettingsSection";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { canLeaveHousehold } from "@/lib/household-rules";
 import { prisma } from "@/lib/prisma";
@@ -75,6 +76,10 @@ export default async function ProfilePage() {
           />
         </SettingsSection>
       )}
+
+      <SettingsSection title="Оформление" description="«Как в системе» следует настройке телефона.">
+        <ThemeToggle />
+      </SettingsSection>
 
       <SettingsSection title="Аккаунт">
         <DangerZone canLeave={leaveCheck.allowed} leaveReason={leaveCheck.reason} />

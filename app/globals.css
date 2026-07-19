@@ -49,6 +49,47 @@
     --shadow-primary-glow: 0 10px 22px -12px hsl(var(--primary) / 0.9);
     --font-heading: "Bricolage Grotesque", sans-serif;
     --font-sans: "Hanken Grotesk", sans-serif;
+    color-scheme: light;
+  }
+
+  /* Тёмная палитра — производная от .fm-dark из макета FridgeMind.dc.html (см. CLAUDE.md §3 п.14).
+     Точки категорий (--dot-*) и glow-тени наследуются из :root: точки и так яркие на тёмном фоне,
+     а glow'ы ссылаются на --accent/--primary, которые здесь уже переопределены. */
+  .dark {
+    --background: 35 22% 11%;
+    --foreground: 41 42% 91%;
+    --card: 34 19% 14%;
+    --card-foreground: 41 42% 91%;
+    --popover: 34 19% 14%;
+    --popover-foreground: 41 42% 91%;
+    --primary: 138 23% 31%;
+    --primary-foreground: 40 45% 92%;
+    --secondary: 36 17% 17%;
+    --secondary-foreground: 41 42% 91%;
+    --accent: 20 85% 62%;
+    --accent-foreground: 40 45% 92%;
+    --accent-muted: 24 30% 17%;
+    --accent-border: 31 39% 20%;
+    --destructive: 22 58% 62%;
+    --destructive-foreground: 40 45% 92%;
+    --destructive-muted: 21 29% 18%;
+    --destructive-border: 22 29% 23%;
+    --muted: 36 17% 17%;
+    --muted-foreground: 38 14% 61%;
+    --border: 35 17% 20%;
+    --input: 35 17% 20%;
+    --ring: 138 23% 31%;
+    --success: 140 19% 16%;
+    --success-border: 129 14% 20%;
+    --success-foreground: 92 34% 63%;
+    --success-dot: 95 31% 58%;
+    --badge: 36 17% 17%;
+    --badge-border: 36 17% 23%;
+    --badge-foreground: 38 61% 60%;
+    --nav-inactive: 38 11% 47%;
+    --tan-dashed: 38 16% 26%;
+    --shadow-card: 0 8px 20px -18px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
   }
 }
 
