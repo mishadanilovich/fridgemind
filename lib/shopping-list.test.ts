@@ -5,6 +5,7 @@ import {
   aggregateWeekNeeds,
   buildShoppingGroups,
   compareDayIngredients,
+  formatShoppingListText,
   neededQuantity,
 } from "./shopping-list";
 import type { ShoppingItemView, Unit } from "./types";
@@ -159,6 +160,54 @@ describe("buildShoppingGroups", () => {
 
     expect(groups).toHaveLength(1);
     expect(groups[0]?.items[0]?.id).toBe("m");
+  });
+});
+
+describe("formatShoppingListText", () => {
+  it("группирует по категориям с заголовком фильтра и количествами", () => {
+    const groups = buildShoppingGroups(
+      [
+        item({ id: "1", name: "Молоко", unit: "ML", category: "DAIRY", perDay: { d1: 1000 } }),
+        item({ id: "2", name: "Рис", unit: "G", category: "GROCERY", perDay: { d1: 500 } }),
+      ],
+      null,
+    );
+
+    expect(formatShoppingListText(groups, "Вся неделя")).toBe(
+      [
+        "Список покупок · Вся неделя",
+        "",
+        "Молочные продукты",
+        "• Молоко — 1 л",
+        "",
+        "Крупы и бакалея",
+        "• Рис — 500 г",
+      ].join("\n"),
+    );
+  });
+
+  it("купленные позиции помечает галочкой", () => {
+    const groups = buildShoppingGroups(
+      [
+        item({
+          id: "1",
+          name: "Хлеб",
+          unit: "PCS",
+          category: "BAKERY",
+          isBought: true,
+          perDay: { d1: 2 },
+        }),
+      ],
+      null,
+    );
+
+    expect(formatShoppingListText(groups, "Сегодня")).toContain("✓ Хлеб — 2 шт");
+  });
+
+  it("пустой список — только заголовок и пометка", () => {
+    expect(formatShoppingListText([], "Вся неделя")).toBe(
+      "Список покупок · Вся неделя\n\nСписок пуст",
+    );
   });
 });
 

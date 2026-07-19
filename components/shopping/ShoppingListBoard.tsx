@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus, Refrigerator, ShoppingBasket } from "lucide-react";
-import { useOptimistic, useState, useTransition } from "react";
+import { Plus, Refrigerator, Share, ShoppingBasket } from "lucide-react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
 
 import { CategoryDot } from "@/components/inventory/CategoryDot";
+import { Button } from "@/components/ui/button";
 import { CategorySection } from "@/components/ui/category-section";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormErrorBanner } from "@/components/ui/form-error-banner";
@@ -11,7 +12,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toggleShoppingItemBought } from "@/lib/actions/shopping-list";
 import { addDaysIso, weekDatesIso } from "@/lib/dates";
 import { callAction } from "@/lib/form-state";
-import { buildShoppingGroups } from "@/lib/shopping-list";
+import { buildShoppingGroups, formatShoppingListText } from "@/lib/shopping-list";
 import type { ShoppingItemView } from "@/lib/types";
 import { formatQuantity } from "@/lib/units";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,18 @@ function selectedDays(filter: DayFilter, today: string): string[] | null {
   }
 }
 
+const FILTER_LABELS: Record<"week" | "today" | "tomorrow", string> = {
+  today: "Сегодня",
+  tomorrow: "Завтра",
+  week: "Вся неделя",
+};
+
+function filterLabel(filter: DayFilter): string {
+  return filter.kind === "custom"
+    ? `Выбранные дни (${filter.days.length})`
+    : FILTER_LABELS[filter.kind];
+}
+
 const CHIP_CLASS = "shrink-0 whitespace-nowrap px-[15px] py-[9px] font-bold";
 
 export function ShoppingListBoard({ items, today, weekStart }: Props) {
@@ -57,7 +70,14 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
   const [transferring, setTransferring] = useState(false);
   const [editing, setEditing] = useState<ShoppingItemView | null>(null);
   const [boughtError, setBoughtError] = useState<string | null>(null);
+  const [canShare, setCanShare] = useState(false);
+  const [shareNote, setShareNote] = useState<string | null>(null);
   const [, startToggle] = useTransition();
+
+  // Наличие Web Share API читаем после монтирования — иначе рассинхрон с SSR (как в InviteSection).
+  useEffect(() => {
+    setCanShare(typeof navigator !== "undefined" && Boolean(navigator.share));
+  }, []);
 
   // Optimistic-отметка "куплено": галочка меняется мгновенно (в магазине их ставят одну за
   // другой), сервер подтверждает следом через revalidatePath; при ошибке состояние само
@@ -100,6 +120,26 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
     (item) => item.isBought && !item.addedToPantry && !item.isManual,
   );
 
+  // Делимся ровно тем, что видно под текущим фильтром по дням (groups уже посчитаны от него).
+  async function onShare() {
+    const text = formatShoppingListText(groups, filterLabel(filter));
+    if (canShare) {
+      try {
+        await navigator.share({ title: "Список покупок · FridgeMind", text });
+      } catch {
+        // Пользователь отменил системный шит — ничего не делаем.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareNote("Список скопирован в буфер обмена");
+    } catch {
+      setShareNote("Не удалось поделиться списком");
+    }
+    setTimeout(() => setShareNote(null), 2000);
+  }
+
   // "Выбрать дни" не переключает фильтр напрямую — открывает шит, а к "custom" фильтр
   // переходит только после подтверждения в DayPickerSheet (см. onApply ниже).
   function onFilterChange(value: string) {
@@ -113,29 +153,47 @@ export function ShoppingListBoard({ items, today, weekStart }: Props) {
 
   return (
     <>
-      <ToggleGroup
-        type="single"
-        variant="pill"
-        size="pill"
-        value={filter.kind}
-        onValueChange={onFilterChange}
-        className="-mx-5 mb-4 justify-start overflow-x-auto px-5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <ToggleGroupItem value="today" className={CHIP_CLASS}>
-          Сегодня
-        </ToggleGroupItem>
-        {hasTomorrow && (
-          <ToggleGroupItem value="tomorrow" className={CHIP_CLASS}>
-            Завтра
+      <div className="mb-4 flex items-center gap-2.5">
+        <ToggleGroup
+          type="single"
+          variant="pill"
+          size="pill"
+          value={filter.kind}
+          onValueChange={onFilterChange}
+          className="min-w-0 flex-1 justify-start overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <ToggleGroupItem value="today" className={CHIP_CLASS}>
+            Сегодня
           </ToggleGroupItem>
-        )}
-        <ToggleGroupItem value="week" className={CHIP_CLASS}>
-          Вся неделя
-        </ToggleGroupItem>
-        <ToggleGroupItem value="custom" className={CHIP_CLASS}>
-          {filter.kind === "custom" ? `Выбраны дни · ${filter.days.length}` : "Выбрать дни"}
-        </ToggleGroupItem>
-      </ToggleGroup>
+          {hasTomorrow && (
+            <ToggleGroupItem value="tomorrow" className={CHIP_CLASS}>
+              Завтра
+            </ToggleGroupItem>
+          )}
+          <ToggleGroupItem value="week" className={CHIP_CLASS}>
+            Вся неделя
+          </ToggleGroupItem>
+          <ToggleGroupItem value="custom" className={CHIP_CLASS}>
+            {filter.kind === "custom" ? `Выбраны дни · ${filter.days.length}` : "Выбрать дни"}
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={onShare}
+          disabled={groups.length === 0}
+          aria-label="Поделиться списком"
+          className="shrink-0 bg-card text-primary"
+        >
+          <Share />
+        </Button>
+      </div>
+
+      {shareNote && (
+        <p className="mb-3 text-center text-xs font-medium text-muted-foreground">{shareNote}</p>
+      )}
 
       <FormErrorBanner message={boughtError} />
 
