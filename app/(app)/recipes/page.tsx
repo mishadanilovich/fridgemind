@@ -1,13 +1,9 @@
-import { BookOpen, Plus } from "lucide-react";
-import Link from "next/link";
-
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
 import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
-import { RecipeCard } from "@/components/recipes/RecipeCard";
-import { RecipeSortToggle } from "@/components/recipes/RecipeSortToggle";
-import { EmptyState } from "@/components/ui/empty-state";
+import { RecipeBrowser } from "@/components/recipes/RecipeBrowser";
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { getRecipeCards } from "@/lib/queries/recipes";
+import { toRecipeListSnapshot } from "@/lib/recipes";
 
 type Props = PageProps<"/recipes">;
 
@@ -22,43 +18,10 @@ export default async function RecipesPage({ searchParams }: Props) {
   return (
     <div className="pb-8">
       <ScreenHeader eyebrow="Библиотека" title="Рецепты" />
-      <RecipeSortToggle active={onlyHave} />
-
-      {canEdit && (
-        <Link
-          href="/recipes/new"
-          className="pressable mb-3 flex items-center gap-[13px] rounded-card border-[1.5px] border-dashed border-nav-inactive px-[11px] py-[19px]"
-        >
-          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-lg bg-success text-primary">
-            <Plus className="size-[26px]" strokeWidth={2.4} />
-          </span>
-          <span>
-            <span className="block font-heading text-[17px] font-bold leading-[1.1] text-primary">
-              Добавить рецепт
-            </span>
-            <span className="mt-0.5 block text-[12.5px] font-medium text-muted-foreground">
-              Ингредиенты, шаги, фото
-            </span>
-          </span>
-        </Link>
-      )}
-
-      {cards.length === 0 ? (
-        <EmptyState
-          icon={BookOpen}
-          title="Пока нет рецептов"
-          description={
-            canEdit
-              ? "Добавьте первый рецепт, чтобы собирать из них меню на неделю."
-              : "Рецепты добавляют Организатор и Редактор."
-          }
-        />
-      ) : (
-        cards.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
-      )}
+      <RecipeBrowser cards={cards} canEdit={canEdit} sortActive={onlyHave} />
       <OfflineSnapshot
         householdId={user.householdId}
-        snapshot={{ table: "recipeLists", id: "all", data: cards }}
+        snapshot={{ table: "recipeLists", id: "all", data: toRecipeListSnapshot(cards) }}
       />
     </div>
   );

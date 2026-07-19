@@ -66,6 +66,7 @@ export type RecipeCardView = {
   cookingMethods: CookingMethod[];
   matchHave: number;
   matchTotal: number;
+  ingredientNames: string[];
 };
 
 /** Приём пищи, назначенный в слот дня — карточка на "Сегодня"/"Меню на неделю"/просмотре дня. */

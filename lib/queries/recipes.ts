@@ -29,7 +29,11 @@ export async function getRecipeCards(
     prisma.recipe.findMany({
       where: { householdId, deletedAt: null },
       orderBy: { createdAt: "desc" },
-      include: { ingredients: { select: { ingredientId: true } } },
+      include: {
+        ingredients: {
+          select: { ingredientId: true, ingredient: { select: { name: true } } },
+        },
+      },
     }),
     prisma.pantryItem.findMany({
       where: { householdId },
@@ -51,6 +55,7 @@ export async function getRecipeCards(
       cookingMethods: r.cookingMethods,
       matchHave: have,
       matchTotal: total,
+      ingredientNames: r.ingredients.map((i) => i.ingredient.name),
     };
   });
 
