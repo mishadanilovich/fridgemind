@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { regenerateInviteCode } from "@/lib/actions/household";
 import { callAction } from "@/lib/form-state";
+import { useWebShare } from "@/lib/hooks/use-web-share";
 
 type Props = {
   inviteCode: string;
@@ -16,14 +17,13 @@ export function InviteSection({ inviteCode }: Props) {
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
-  const [canShare, setCanShare] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { canShare, share } = useWebShare();
 
-  // Origin и наличие Web Share API читаем после монтирования — иначе рассинхрон с SSR.
+  // Origin читаем после монтирования — иначе рассинхрон с SSR.
   useEffect(() => {
     setOrigin(window.location.origin);
-    setCanShare(typeof navigator !== "undefined" && Boolean(navigator.share));
   }, []);
 
   // inviteCode — единственный источник истины: после регенерации revalidatePath приносит
@@ -45,11 +45,7 @@ export function InviteSection({ inviteCode }: Props) {
 
   async function onShare() {
     if (!link) return;
-    try {
-      await navigator.share({ title: "FridgeMind", text: "Присоединяйтесь к нашей семье", url: link });
-    } catch {
-      // Пользователь отменил шаринг — ничего не делаем.
-    }
+    await share({ title: "FridgeMind", text: "Присоединяйтесь к нашей семье", url: link });
   }
 
   function onRegenerate() {

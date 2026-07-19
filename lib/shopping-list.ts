@@ -174,9 +174,7 @@ export function buildShoppingGroups(
   })).filter((group) => group.items.length > 0);
 }
 
-// Список обычным текстом для кнопки "Поделиться" (Web Share API, см. CLAUDE.md §3 п.13):
-// сгруппирован по категориям, как на экране; купленные помечаются галочкой, filterLabel — метка
-// текущего фильтра по дням, чтобы получатель видел, на какой период список.
+// Текстовое представление списка для кнопки "Поделиться" (см. CLAUDE.md §3 п.13).
 export function formatShoppingListText(groups: ShoppingGroup[], filterLabel: string): string {
   const header = `Список покупок · ${filterLabel}`;
   if (groups.length === 0) return `${header}\n\nСписок пуст`;
