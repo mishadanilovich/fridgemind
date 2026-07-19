@@ -58,15 +58,17 @@ export function IngredientSuggestInput({
     const q = trimmed.toLowerCase();
     if (appliedMatch.current && appliedMatch.current.name.toLowerCase() === q) return;
 
-    if (appliedMatch.current) {
-      appliedMatch.current = null;
-      onPick?.(null);
-    }
+    // Один вызов onPick за проход: при переходе сразу от одного совпадения к другому родитель
+    // получает только новое значение, а не null+новое — иначе оба вызова читают один и тот же
+    // непрокрученный unit/category из замыкания, и базовое (до автоподстановки) значение теряется.
     // Предзаполненное при монтировании имя (userTyped=false, напр. редактирование позиции) не
     // трогаем, чтобы не перезатереть сохранённую единицу.
     if (exactMatch && userTyped.current) {
       appliedMatch.current = exactMatch;
       onPick?.(exactMatch);
+    } else if (appliedMatch.current) {
+      appliedMatch.current = null;
+      onPick?.(null);
     }
   }, [exactMatch, trimmed, onPick]);
 
