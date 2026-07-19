@@ -20,7 +20,7 @@ type Props = {
   nameError?: string;
   nameValue: string;
   onNameChange: (value: string) => void;
-  onNamePick?: (ingredient: Ingredient) => void;
+  onNamePick?: (ingredient: Ingredient | null) => void;
   qty: string;
   onQtyChange: (value: string) => void;
   qtyError?: string;
