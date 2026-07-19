@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-import { isTheme, resolveTheme, type Theme, THEME_STORAGE_KEY } from "@/lib/theme";
+import { readStoredTheme, resolveTheme, storeTheme, type Theme, THEME_COLOR } from "@/lib/theme";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -14,7 +14,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function applyTheme(theme: Theme) {
   const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.classList.toggle("dark", resolveTheme(theme, systemPrefersDark) === "dark");
+  const resolved = resolveTheme(theme, systemPrefersDark);
+  document.documentElement.classList.toggle("dark", resolved === "dark");
+  // Цвет статус-бара/адресной строки PWA — под явный выбор пользователя, а не системную тему.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLOR[resolved]);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -23,8 +26,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Класс уже проставлен блокирующим themeInitScript в <head>; здесь только поднимаем сохранённое
   // значение в React-состояние, чтобы переключатель показывал текущий выбор.
   useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (isTheme(stored)) setThemeState(stored);
+    const stored = readStoredTheme();
+    if (stored) setThemeState(stored);
   }, []);
 
   // В режиме "system" переключаемся вслед за системной темой на лету.
@@ -38,7 +41,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);
-    localStorage.setItem(THEME_STORAGE_KEY, next);
+    storeTheme(next);
     applyTheme(next);
   }, []);
 
