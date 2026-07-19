@@ -3,6 +3,7 @@ import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { RecipeBrowser } from "@/components/recipes/RecipeBrowser";
 import { getCurrentUser, hasRole } from "@/lib/auth";
 import { getRecipeCards } from "@/lib/queries/recipes";
+import { toRecipeListSnapshot } from "@/lib/recipes";
 
 type Props = PageProps<"/recipes">;
 
@@ -20,7 +21,7 @@ export default async function RecipesPage({ searchParams }: Props) {
       <RecipeBrowser cards={cards} canEdit={canEdit} sortActive={onlyHave} />
       <OfflineSnapshot
         householdId={user.householdId}
-        snapshot={{ table: "recipeLists", id: "all", data: cards }}
+        snapshot={{ table: "recipeLists", id: "all", data: toRecipeListSnapshot(cards) }}
       />
     </div>
   );

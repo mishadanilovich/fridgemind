@@ -1,13 +1,13 @@
 "use client";
 
-import { BookOpen, Plus, SearchX } from "lucide-react";
+import { BookOpen, Plus } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { RecipeSortToggle } from "@/components/recipes/RecipeSortToggle";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SearchInput } from "@/components/ui/search-input";
+import { SearchInput, SearchNoResults } from "@/components/ui/search-input";
+import { useLocalSearch } from "@/lib/hooks/use-local-search";
 import { matchesQuery } from "@/lib/search";
 import type { RecipeCardView } from "@/lib/types";
 
@@ -17,17 +17,22 @@ type Props = {
   sortActive: boolean;
 };
 
-export function RecipeBrowser({ cards, canEdit, sortActive }: Props) {
-  const [query, setQuery] = useState("");
+function filterRecipes(cards: RecipeCardView[], query: string) {
+  return cards.filter((c) => matchesQuery([c.title, ...c.ingredientNames], query));
+}
 
-  const filtered = cards.filter((c) => matchesQuery([c.title, ...c.ingredientNames], query));
+export function RecipeBrowser({ cards, canEdit, sortActive }: Props) {
+  const { query, setQuery, results, noResults } = useLocalSearch(cards, filterRecipes);
 
   return (
     <>
       {cards.length > 0 && (
-        <div className="mb-3">
-          <SearchInput value={query} onChange={setQuery} placeholder="Поиск рецептов" />
-        </div>
+        <SearchInput
+          className="mb-3"
+          value={query}
+          onChange={setQuery}
+          placeholder="Поиск рецептов"
+        />
       )}
 
       <RecipeSortToggle active={sortActive} />
@@ -61,14 +66,10 @@ export function RecipeBrowser({ cards, canEdit, sortActive }: Props) {
               : "Рецепты добавляют Организатор и Редактор."
           }
         />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Ничего не найдено"
-          description="Проверьте запрос — поиск идёт по названию рецепта и его ингредиентам."
-        />
+      ) : noResults ? (
+        <SearchNoResults description="Проверьте запрос — поиск идёт по названию рецепта и его ингредиентам." />
       ) : (
-        filtered.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
+        results.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
       )}
     </>
   );

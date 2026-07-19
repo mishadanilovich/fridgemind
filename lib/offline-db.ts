@@ -1,7 +1,8 @@
 import Dexie, { type EntityTable } from "dexie";
 
 import type { PantryGroup } from "./pantry";
-import type { MenuDayView, RecipeCardView, RecipeWithDetails, ShoppingItemView } from "./types";
+import type { RecipeListSnapshot } from "./recipes";
+import type { MenuDayView, RecipeWithDetails, ShoppingItemView } from "./types";
 
 // Офлайн-кэш через IndexedDB (см. CLAUDE.md, раздел 4 "Локальное хранилище/офлайн").
 // Хранит последний отрисованный view-снапшот каждого экрана для чтения без сети:
@@ -21,8 +22,9 @@ type CachedMenuDay = Snapshot<MenuDayView>;
 type CachedShoppingList = Snapshot<{ weekStart: string; items: ShoppingItemView[] }>;
 /** id — recipeId. */
 type CachedRecipeDetail = Snapshot<RecipeWithDetails>;
-/** id — всегда "all": один снапшот последнего показанного списка карточек. */
-type CachedRecipeList = Snapshot<RecipeCardView[]>;
+/** id — всегда "all": один снапшот последнего показанного списка карточек.
+ *  ingredientNames нужны только для живого поиска в онлайне, в офлайне поиска нет — не храним. */
+type CachedRecipeList = Snapshot<RecipeListSnapshot>;
 /** id — всегда "all": один снапшот последнего показанного инвентаря. */
 type CachedPantry = Snapshot<PantryGroup[]>;
 
@@ -55,7 +57,7 @@ export type OfflineSnapshotInput =
   | { table: "menuDays"; id: string; data: MenuDayView }
   | { table: "shoppingLists"; id: string; data: { weekStart: string; items: ShoppingItemView[] } }
   | { table: "recipes"; id: string; data: RecipeWithDetails }
-  | { table: "recipeLists"; id: string; data: RecipeCardView[] }
+  | { table: "recipeLists"; id: string; data: RecipeListSnapshot }
   | { table: "pantry"; id: string; data: PantryGroup[] };
 
 const MAX_SNAPSHOT_AGE_MS = 30 * 24 * 60 * 60 * 1000;

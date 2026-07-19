@@ -1,5 +1,6 @@
-import { Search, X } from "lucide-react";
+import { Search, SearchX, X } from "lucide-react";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -36,4 +37,8 @@ export function SearchInput({ value, onChange, placeholder, className }: Props) 
       )}
     </div>
   );
+}
+
+export function SearchNoResults({ description }: { description: string }) {
+  return <EmptyState icon={SearchX} title="Ничего не найдено" description={description} />;
 }

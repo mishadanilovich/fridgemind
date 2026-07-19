@@ -1,11 +1,11 @@
 "use client";
 
-import { Pencil, SearchX } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 
 import { CategorySection } from "@/components/ui/category-section";
-import { EmptyState } from "@/components/ui/empty-state";
-import { SearchInput } from "@/components/ui/search-input";
+import { SearchInput, SearchNoResults } from "@/components/ui/search-input";
+import { useLocalSearch } from "@/lib/hooks/use-local-search";
 import type { PantryGroup } from "@/lib/pantry";
 import { matchesQuery } from "@/lib/search";
 import type { PantryItemView } from "@/lib/types";
@@ -18,31 +18,32 @@ type Props = {
   groups: PantryGroup[];
 };
 
-export function PantryGroups({ groups }: Props) {
-  const [editing, setEditing] = useState<PantryItemView | null>(null);
-  const [query, setQuery] = useState("");
-
-  const filteredGroups = groups
+function filterGroups(groups: PantryGroup[], query: string) {
+  return groups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => matchesQuery([item.ingredient.name], query)),
     }))
     .filter((group) => group.items.length > 0);
+}
+
+export function PantryGroups({ groups }: Props) {
+  const [editing, setEditing] = useState<PantryItemView | null>(null);
+  const { query, setQuery, results, noResults } = useLocalSearch(groups, filterGroups);
 
   return (
     <>
-      <div className="mb-3">
-        <SearchInput value={query} onChange={setQuery} placeholder="Поиск продуктов" />
-      </div>
+      <SearchInput
+        className="mb-3"
+        value={query}
+        onChange={setQuery}
+        placeholder="Поиск продуктов"
+      />
 
-      {filteredGroups.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Ничего не найдено"
-          description="Проверьте запрос — поиск идёт по названию продукта."
-        />
+      {noResults ? (
+        <SearchNoResults description="Проверьте запрос — поиск идёт по названию продукта." />
       ) : (
-        filteredGroups.map((group) => (
+        results.map((group) => (
           <CategorySection
             key={group.category}
             category={group.category}

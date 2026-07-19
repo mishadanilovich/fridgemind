@@ -1,4 +1,20 @@
-import type { UnitType } from "./types";
+import type { RecipeCardView, UnitType } from "./types";
+
+// Карточка рецепта без поискового индекса: ingredientNames нужны только живому поиску в онлайне,
+// в офлайн-снапшот (только чтение, без поиска) их не кладём.
+export type RecipeListSnapshot = Omit<RecipeCardView, "ingredientNames">[];
+
+export function toRecipeListSnapshot(cards: RecipeCardView[]): RecipeListSnapshot {
+  return cards.map((card) => ({
+    id: card.id,
+    title: card.title,
+    photoUrl: card.photoUrl,
+    cookTimeMinutes: card.cookTimeMinutes,
+    cookingMethods: card.cookingMethods,
+    matchHave: card.matchHave,
+    matchTotal: card.matchTotal,
+  }));
+}
 
 // Округление до целого только для COUNT — штуки нельзя дробить (см. CLAUDE.md, раздел 5).
 export function scaleIngredient(
