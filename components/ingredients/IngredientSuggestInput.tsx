@@ -11,7 +11,9 @@ type Props = {
   name?: string;
   value: string;
   onChange: (value: string) => void;
-  onPick?: (ingredient: Ingredient) => void;
+  // ingredient — точное совпадение с каталогом (подставить единицу/категорию); null — имя ушло
+  // с ранее подставленного продукта, родителю нужно откатить подстановку.
+  onPick?: (ingredient: Ingredient | null) => void;
   placeholder?: string;
   error?: string;
 };
@@ -40,8 +42,38 @@ export function IngredientSuggestInput({
   const suggestions = results.filter((r) => r.name.toLowerCase() !== trimmed.toLowerCase());
   const showList = open && suggestions.length > 0;
 
+  // Точное совпадение выпадает из suggestions (фильтр выше), поэтому его единицу/категорию
+  // нельзя подставить кликом — подхватываем автоматически, как будто по нему кликнули.
+  const exactMatch = results.find((r) => r.name.toLowerCase() === trimmed.toLowerCase()) ?? null;
+
+  // Каталожное совпадение, чьи единицу/категорию мы уже отдали родителю через onPick. Держим,
+  // чтобы откатить их (onPick(null)), когда имя перестаёт называть этот продукт: транзитное
+  // совпадение (печатали «Лимон» по пути к «Лимонная кислота») иначе оставило бы чужую единицу.
+  // Сверяем по имени, а не по наличию в results, чтобы задержка/очистка поиска не дала ни ложного
+  // отката (после клика по подсказке results пуст, но имя не менялось), ни повторной подстановки.
+  const appliedMatch = useRef<Ingredient | null>(null);
+  const userTyped = useRef(false);
+
+  useEffect(() => {
+    const q = trimmed.toLowerCase();
+    if (appliedMatch.current && appliedMatch.current.name.toLowerCase() === q) return;
+
+    if (appliedMatch.current) {
+      appliedMatch.current = null;
+      onPick?.(null);
+    }
+    // Предзаполненное при монтировании имя (userTyped=false, напр. редактирование позиции) не
+    // трогаем, чтобы не перезатереть сохранённую единицу.
+    if (exactMatch && userTyped.current) {
+      appliedMatch.current = exactMatch;
+      onPick?.(exactMatch);
+    }
+  }, [exactMatch, trimmed, onPick]);
+
   function pick(ingredient: Ingredient) {
     clear();
+    userTyped.current = true;
+    appliedMatch.current = ingredient;
     onChange(ingredient.name);
     onPick?.(ingredient);
     setOpen(false);
@@ -54,6 +86,7 @@ export function IngredientSuggestInput({
         name={name}
         value={value}
         onChange={(e) => {
+          userTyped.current = true;
           onChange(e.target.value);
           setOpen(true);
         }}

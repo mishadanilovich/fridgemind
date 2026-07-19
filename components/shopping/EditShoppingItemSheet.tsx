@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { deleteShoppingItem, updateShoppingItem } from "@/lib/actions/shopping-list";
 import { callAction, guardFormAction, initialFormState } from "@/lib/form-state";
-import type { ShoppingItemView, Unit } from "@/lib/types";
+import type { Ingredient, ShoppingItemView, Unit } from "@/lib/types";
 import { DISPLAY_UNIT_LABEL, UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
 import { ManualItemFields } from "./ManualItemFields";
@@ -31,6 +31,20 @@ export function EditShoppingItemSheet({ item, onClose }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, startDelete] = useTransition();
+
+  // Единица до автоподстановки из каталога — откат, когда имя ушло с подставленного продукта
+  // (onNamePick(null)); чистится, если пользователь сам сменил единицу.
+  const autoBaseline = useRef<Unit | null>(null);
+
+  function onNamePick(ingredient: Ingredient | null) {
+    if (ingredient) {
+      autoBaseline.current ??= unit;
+      setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType]);
+    } else if (autoBaseline.current) {
+      setUnit(autoBaseline.current);
+      autoBaseline.current = null;
+    }
+  }
 
   useEffect(() => {
     if (state.data) onClose();
@@ -90,13 +104,16 @@ export function EditShoppingItemSheet({ item, onClose }: Props) {
               <ManualItemFields
                 nameValue={name}
                 onNameChange={setName}
-                onNamePick={(ingredient) => setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType])}
+                onNamePick={onNamePick}
                 nameError={state.fieldErrors?.name}
                 qty={qty}
                 onQtyChange={setQty}
                 qtyError={state.fieldErrors?.quantity}
                 unit={unit}
-                onUnitChange={setUnit}
+                onUnitChange={(u) => {
+                  autoBaseline.current = null;
+                  setUnit(u);
+                }}
               />
             ) : (
               <QuantityInput

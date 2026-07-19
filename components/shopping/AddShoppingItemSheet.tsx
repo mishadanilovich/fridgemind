@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { addManualShoppingItem } from "@/lib/actions/shopping-list";
 import { guardFormAction, initialFormState } from "@/lib/form-state";
 import { useRemountKey } from "@/lib/hooks/use-remount-key";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
-import type { ProductCategory, Unit } from "@/lib/types";
+import type { Ingredient, ProductCategory, Unit } from "@/lib/types";
 import { UNIT_TYPE_TO_UNIT } from "@/lib/units";
 
 import { ManualItemFields } from "./ManualItemFields";
@@ -49,6 +49,23 @@ function AddItemForm({ onSaved }: { onSaved: () => void }) {
   const [unit, setUnit] = useState<Unit>("PCS");
   const [category, setCategory] = useState<ProductCategory>("OTHER");
 
+  // Значения единицы/категории до автоподстановки из каталога — чтобы откатить их, когда имя
+  // ушло с подставленного продукта (onNamePick(null)); чистится, если пользователь сам поменял
+  // единицу/категорию — его выбор автоподстановка не воскрешает.
+  const autoBaseline = useRef<{ unit: Unit; category: ProductCategory } | null>(null);
+
+  function onNamePick(ingredient: Ingredient | null) {
+    if (ingredient) {
+      autoBaseline.current ??= { unit, category };
+      setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType]);
+      setCategory(ingredient.category);
+    } else if (autoBaseline.current) {
+      setUnit(autoBaseline.current.unit);
+      setCategory(autoBaseline.current.category);
+      autoBaseline.current = null;
+    }
+  }
+
   useEffect(() => {
     if (state.data) onSaved();
   }, [state, onSaved]);
@@ -63,22 +80,28 @@ function AddItemForm({ onSaved }: { onSaved: () => void }) {
         <ManualItemFields
           nameValue={name}
           onNameChange={setName}
-          onNamePick={(ingredient) => {
-            setUnit(UNIT_TYPE_TO_UNIT[ingredient.defaultUnitType]);
-            setCategory(ingredient.category);
-          }}
+          onNamePick={onNamePick}
           namePlaceholder="Например, губки для посуды"
           nameError={state.fieldErrors?.name}
           qty={qty}
           onQtyChange={setQty}
           qtyError={state.fieldErrors?.quantity}
           unit={unit}
-          onUnitChange={setUnit}
+          onUnitChange={(u) => {
+            autoBaseline.current = null;
+            setUnit(u);
+          }}
         />
 
         <div className="space-y-1.5">
           <Label>Категория</Label>
-          <Select value={category} onValueChange={(v) => setCategory(v as ProductCategory)}>
+          <Select
+            value={category}
+            onValueChange={(v) => {
+              autoBaseline.current = null;
+              setCategory(v as ProductCategory);
+            }}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
