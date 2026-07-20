@@ -32,7 +32,31 @@ export default async function InvitePage({ params, searchParams }: Props) {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/signup?invite=${code}`);
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center space-y-5 px-4 py-8 text-center">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">Приглашение в семью «{household.name ?? "Наша кухня"}»</h1>
+          <p className="text-sm text-muted-foreground">
+            Войдите, если у вас уже есть аккаунт, или зарегистрируйтесь, чтобы присоединиться.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Link
+            href={`/login?next=/invite/${code}`}
+            className="block w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            Войти
+          </Link>
+          <Link
+            href={`/signup?invite=${code}`}
+            className="block w-full rounded-md border border-border px-4 py-2 text-sm font-semibold"
+          >
+            Зарегистрироваться
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   if (user.householdId === household.id) {
