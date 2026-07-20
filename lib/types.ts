@@ -64,6 +64,7 @@ export type RecipeCardView = {
   photoUrl: string | null;
   cookTimeMinutes: number | null;
   cookingMethods: CookingMethod[];
+  isFavorite: boolean;
   matchHave: number;
   matchTotal: number;
   ingredientNames: string[];

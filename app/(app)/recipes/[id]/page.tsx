@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { RecipeDetail } from "@/components/recipes/RecipeDetail";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, hasRole } from "@/lib/auth";
 import { getRecipeDetail } from "@/lib/queries/recipes";
 
 type Props = PageProps<"/recipes/[id]">;
@@ -18,9 +18,13 @@ export default async function RecipeDetailPage({ params }: Props) {
   const recipe = await getRecipeDetail(user.householdId, id, { includeDeleted: true });
   if (!recipe) notFound();
 
+  // Избранное — действие над рецептом, поэтому у soft-deleted оно недоступно даже Редактору:
+  // страница остаётся read-only, как и без кнопок правки.
+  const canEdit = hasRole(user, ["ORGANIZER", "EDITOR"]) && recipe.deletedAt === null;
+
   return (
     <>
-      <RecipeDetail recipe={recipe} />
+      <RecipeDetail recipe={recipe} canEdit={canEdit} />
       <OfflineSnapshot
         householdId={user.householdId}
         snapshot={{ table: "recipes", id: recipe.id, data: recipe }}
