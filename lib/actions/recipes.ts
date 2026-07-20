@@ -168,6 +168,24 @@ export async function getRecipeUsage(recipeId: string): Promise<number> {
   });
 }
 
+export async function toggleRecipeFavorite(
+  recipeId: string,
+  isFavorite: boolean,
+): Promise<ActionResult> {
+  const user = await requireRole(["ORGANIZER", "EDITOR"]);
+  if (!user) return { error: "Недостаточно прав" };
+
+  const updated = await prisma.recipe.updateMany({
+    where: { id: recipeId, householdId: user.householdId, deletedAt: null },
+    data: { isFavorite },
+  });
+  if (updated.count === 0) return { error: "Рецепт не найден" };
+
+  revalidatePath("/recipes");
+  revalidatePath(`/recipes/${recipeId}`);
+  return { error: null };
+}
+
 export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const user = await requireRole(["ORGANIZER", "EDITOR"]);
   if (!user) return { error: "Недостаточно прав" };

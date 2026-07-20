@@ -7,20 +7,24 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { scaleIngredient } from "@/lib/recipes";
 import type { RecipeWithDetails } from "@/lib/types";
 import { formatQuantity, UNIT_TO_TYPE } from "@/lib/units";
 
 import { CookingMethodBadges } from "./CookingMethodBadges";
+import { FavoriteButton } from "./FavoriteButton";
 import { ServingsStepper } from "./ServingsStepper";
 
 type Props = {
   recipe: RecipeWithDetails;
+  canEdit: boolean;
 };
 
-export function RecipeDetail({ recipe }: Props) {
+export function RecipeDetail({ recipe, canEdit }: Props) {
   const [servings, setServings] = useState(recipe.baseServings);
   const [stepIndex, setStepIndex] = useState(0);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
   const steps = recipe.steps;
   const hasSteps = steps.length > 0;
@@ -52,9 +56,21 @@ export function RecipeDetail({ recipe }: Props) {
         >
           <ChevronLeft className="size-5 text-foreground" strokeWidth={2.4} />
         </Link>
+        {canEdit && (
+          <span className="absolute right-4 top-4">
+            <FavoriteButton
+              recipeId={recipe.id}
+              isFavorite={recipe.isFavorite}
+              title={recipe.title}
+              variant="overlay"
+              onError={setFavoriteError}
+            />
+          </span>
+        )}
       </div>
 
       <div className="px-[22px]">
+        <FormErrorBanner message={favoriteError} className="mb-3" />
         <Badge variant="accent" className="font-bold uppercase tracking-[0.06em]">
           {meta}
         </Badge>

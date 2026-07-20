@@ -142,6 +142,7 @@ model Recipe {
   baseServings    Int             @map("base_servings")
   cookTimeMinutes Int?            @map("cook_time_minutes")
   cookingMethods  CookingMethod[] @map("cooking_methods")
+  isFavorite      Boolean         @default(false) @map("is_favorite") // общее на household, не персональное (см. CLAUDE.md §5)
   deletedAt       DateTime?       @map("deleted_at") // soft-delete: сохраняет историю "скушано" в прошлых неделях, как MealSlot (см. CLAUDE.md §5)
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")

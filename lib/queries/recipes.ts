@@ -53,6 +53,7 @@ export async function getRecipeCards(
       photoUrl: r.photoUrl,
       cookTimeMinutes: r.cookTimeMinutes,
       cookingMethods: r.cookingMethods,
+      isFavorite: r.isFavorite,
       matchHave: have,
       matchTotal: total,
       ingredientNames: r.ingredients.map((i) => i.ingredient.name),

@@ -1,15 +1,18 @@
 "use client";
 
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen, Heart, Plus } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { RecipeSortToggle } from "@/components/recipes/RecipeSortToggle";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import { SearchInput, SearchNoResults } from "@/components/ui/search-input";
 import { useLocalSearch } from "@/lib/hooks/use-local-search";
 import { matchesQuery } from "@/lib/search";
 import type { RecipeCardView } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type Props = {
   cards: RecipeCardView[];
@@ -23,17 +26,47 @@ function filterRecipes(cards: RecipeCardView[], query: string) {
 
 export function RecipeBrowser({ cards, canEdit, sortActive }: Props) {
   const { query, setQuery, results, noResults } = useLocalSearch(cards, filterRecipes);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
+
+  // Избранное целиком (сердечки и фильтр) — только Организатору/Редактору, см. CLAUDE.md §5.
+  const favoritesOn = canEdit && onlyFavorites;
+  const visible = favoritesOn ? results.filter((r) => r.isFavorite) : results;
+  const nothingToShow = cards.length > 0 && visible.length === 0;
 
   return (
     <>
       {cards.length > 0 && (
-        <SearchInput
-          className="mb-3"
-          value={query}
-          onChange={setQuery}
-          placeholder="Поиск рецептов"
-        />
+        <div className="mb-3 flex items-stretch gap-[9px]">
+          <SearchInput
+            className="min-w-0 flex-1"
+            value={query}
+            onChange={setQuery}
+            placeholder="Поиск рецептов"
+          />
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setOnlyFavorites((v) => !v)}
+              aria-pressed={onlyFavorites}
+              className={cn(
+                "pressable flex shrink-0 items-center gap-[7px] rounded-input border px-[15px] text-[13px] font-bold",
+                onlyFavorites
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : "border-border bg-card text-foreground",
+              )}
+            >
+              <Heart
+                className={cn("size-[17px]", onlyFavorites && "fill-current")}
+                strokeWidth={1.9}
+              />
+              Избранное
+            </button>
+          )}
+        </div>
       )}
+
+      {favoriteError && <FormErrorBanner message={favoriteError} className="mb-3" />}
 
       <RecipeSortToggle active={sortActive} />
 
@@ -66,10 +99,23 @@ export function RecipeBrowser({ cards, canEdit, sortActive }: Props) {
               : "Рецепты добавляют Организатор и Редактор."
           }
         />
-      ) : noResults ? (
-        <SearchNoResults description="Проверьте запрос — поиск идёт по названию рецепта и его ингредиентам." />
+      ) : nothingToShow ? (
+        <SearchNoResults
+          description={
+            noResults
+              ? "Проверьте запрос — поиск идёт по названию рецепта и его ингредиентам."
+              : "В избранном пока пусто — отметьте рецепт сердечком, чтобы он попал сюда."
+          }
+        />
       ) : (
-        results.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} canEdit={canEdit} />)
+        visible.map((recipe) => (
+          <RecipeCard
+            key={recipe.id}
+            recipe={recipe}
+            canEdit={canEdit}
+            onFavoriteError={setFavoriteError}
+          />
+        ))
       )}
     </>
   );

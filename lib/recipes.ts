@@ -1,8 +1,9 @@
 import type { RecipeCardView, UnitType } from "./types";
 
 // Карточка рецепта без поискового индекса: ingredientNames нужны только живому поиску в онлайне,
-// в офлайн-снапшот (только чтение, без поиска) их не кладём.
-export type RecipeListSnapshot = Omit<RecipeCardView, "ingredientNames">[];
+// в офлайн-снапшот (только чтение, без поиска) их не кладём. isFavorite — тоже: офлайн нельзя ни
+// переключить избранное, ни отфильтровать по нему, сердечко там не рисуется.
+export type RecipeListSnapshot = Omit<RecipeCardView, "ingredientNames" | "isFavorite">[];
 
 export function toRecipeListSnapshot(cards: RecipeCardView[]): RecipeListSnapshot {
   return cards.map((card) => ({
