@@ -1,3 +1,6 @@
+import { Upload } from "lucide-react";
+import Link from "next/link";
+
 import { ScreenHeader } from "@/components/nav/ScreenHeader";
 import { OfflineSnapshot } from "@/components/offline/OfflineSnapshot";
 import { RecipeBrowser } from "@/components/recipes/RecipeBrowser";
@@ -17,7 +20,21 @@ export default async function RecipesPage({ searchParams }: Props) {
 
   return (
     <div className="pb-8">
-      <ScreenHeader eyebrow="Библиотека" title="Рецепты" />
+      <ScreenHeader
+        eyebrow="Библиотека"
+        title="Рецепты"
+        aside={
+          canEdit ? (
+            <Link
+              href="/recipes/import"
+              aria-label="Импортировать рецепты"
+              className="pressable flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary"
+            >
+              <Upload className="size-[21px]" />
+            </Link>
+          ) : undefined
+        }
+      />
       <RecipeBrowser cards={cards} canEdit={canEdit} sortActive={onlyHave} />
       <OfflineSnapshot
         householdId={user.householdId}
