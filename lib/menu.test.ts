@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { DayMeal } from "./menu";
-import { buildDaySlots, countMeals } from "./menu";
+import type { DayMeal, TemplateMealDraft } from "./menu";
+import {
+  buildDaySlots,
+  countMeals,
+  resolveTemplateApplication,
+  weekMealsToTemplateDrafts,
+} from "./menu";
 import type { MenuMealView } from "./types";
 
 const SLOTS = [
@@ -74,5 +79,71 @@ describe("countMeals", () => {
     );
 
     expect(countMeals(slots)).toEqual({ planned: 2, eaten: 1 });
+  });
+});
+
+// Неделя начинается с понедельника (startOfWeekIso), поэтому Пн=0 … Вс=6.
+const MON = "2026-07-20";
+const TUE = "2026-07-21";
+const SUN = "2026-07-26";
+
+describe("weekMealsToTemplateDrafts", () => {
+  it("маппит дату приёма пищи в позицию дня недели (Пн=0)", () => {
+    const drafts = weekMealsToTemplateDrafts(
+      [
+        { dateIso: MON, mealSlotId: "breakfast", recipeId: "r1", servings: 2 },
+        { dateIso: SUN, mealSlotId: "dinner", recipeId: "r2", servings: 4 },
+      ],
+      MON,
+    );
+    expect(drafts).toEqual([
+      { dayOfWeek: 0, mealSlotId: "breakfast", recipeId: "r1", servings: 2 },
+      { dayOfWeek: 6, mealSlotId: "dinner", recipeId: "r2", servings: 4 },
+    ]);
+  });
+
+  it("отбрасывает приёмы пищи с датой вне сохраняемой недели", () => {
+    const drafts = weekMealsToTemplateDrafts(
+      [{ dateIso: "2026-07-27", mealSlotId: "breakfast", recipeId: "r1", servings: 2 }],
+      MON,
+    );
+    expect(drafts).toEqual([]);
+  });
+});
+
+describe("resolveTemplateApplication", () => {
+  const drafts: TemplateMealDraft[] = [
+    { dayOfWeek: 0, mealSlotId: "breakfast", recipeId: "r1", servings: 2 },
+    { dayOfWeek: 1, mealSlotId: "dinner", recipeId: "r2", servings: 4 },
+  ];
+
+  it("раскладывает dayOfWeek обратно в даты целевой недели", () => {
+    const apps = resolveTemplateApplication(
+      drafts,
+      new Set(["breakfast", "dinner"]),
+      new Set(["r1", "r2"]),
+      MON,
+    );
+    expect(apps).toEqual([
+      { dateIso: MON, mealSlotId: "breakfast", recipeId: "r1", servings: 2 },
+      { dateIso: TUE, mealSlotId: "dinner", recipeId: "r2", servings: 4 },
+    ]);
+  });
+
+  it("пропускает приёмы пищи с удалённым слотом или рецептом", () => {
+    const apps = resolveTemplateApplication(
+      drafts,
+      new Set(["breakfast"]), // dinner удалён
+      new Set(["r1"]), // r2 удалён
+      MON,
+    );
+    expect(apps).toEqual([
+      { dateIso: MON, mealSlotId: "breakfast", recipeId: "r1", servings: 2 },
+    ]);
+  });
+
+  it("пустой результат, когда все слоты/рецепты неактивны", () => {
+    const apps = resolveTemplateApplication(drafts, new Set(), new Set(), MON);
+    expect(apps).toEqual([]);
   });
 });

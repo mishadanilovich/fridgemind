@@ -86,6 +86,7 @@ model Household {
   recipes           Recipe[]
   pantryItems       PantryItem[]
   menuWeeks         MenuWeek[]
+  menuTemplates     MenuTemplate[]
   mealSlots         MealSlot[]
   shoppingListItems ShoppingListItem[]
   visionUsage       VisionUsage[]
@@ -106,8 +107,8 @@ model User {
 
   household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
-  eatenMeals        MenuDayMeal[]      @relation("EatenBy")
-  boughtItems       ShoppingListItem[] @relation("BoughtBy")
+  eatenMeals  MenuDayMeal[]      @relation("EatenBy")
+  boughtItems ShoppingListItem[] @relation("BoughtBy")
 
   @@index([householdId])
   @@map("users")
@@ -147,10 +148,11 @@ model Recipe {
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  household   Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  steps       RecipeStep[]
-  ingredients RecipeIngredient[]
-  menuDayMeals MenuDayMeal[]
+  household         Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  steps             RecipeStep[]
+  ingredients       RecipeIngredient[]
+  menuDayMeals      MenuDayMeal[]
+  menuTemplateMeals MenuTemplateMeal[]
 
   @@index([householdId])
   @@map("recipes")
@@ -223,15 +225,16 @@ model VisionUsage {
 // ---------- Meal slots (динамические, настраиваемые household'ом) ----------
 
 model MealSlot {
-  id          String   @id @default(cuid())
-  householdId String   @map("household_id")
+  id          String    @id @default(cuid())
+  householdId String    @map("household_id")
   name        String
   order       Int
   deletedAt   DateTime? @map("deleted_at") // soft-delete, см. раздел 5 "Слоты приёма пищи"
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
-  household    Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  menuDayMeals MenuDayMeal[]
+  household         Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  menuDayMeals      MenuDayMeal[]
+  menuTemplateMeals MenuTemplateMeal[]
 
   @@index([householdId])
   @@map("meal_slots")
@@ -270,22 +273,22 @@ model MenuDay {
 // По одной записи на каждый слот дня, в который назначен рецепт (см. раздел 5).
 // Удаление рецепта из слота ("убрать") = удаление этой записи.
 model MenuDayMeal {
-  id           String    @id @default(cuid())
-  menuDayId    String    @map("menu_day_id")
-  mealSlotId   String    @map("meal_slot_id")
-  recipeId     String    @map("recipe_id")
-  servings     Int // по умолчанию = Recipe.baseServings, можно поменять для конкретного раза
-  isEaten      Boolean   @default(false) @map("is_eaten")
-  eatenAt      DateTime? @map("eaten_at")
-  eatenByUserId String?  @map("eaten_by_user_id")
+  id            String    @id @default(cuid())
+  menuDayId     String    @map("menu_day_id")
+  mealSlotId    String    @map("meal_slot_id")
+  recipeId      String    @map("recipe_id")
+  servings      Int // по умолчанию = Recipe.baseServings, можно поменять для конкретного раза
+  isEaten       Boolean   @default(false) @map("is_eaten")
+  eatenAt       DateTime? @map("eaten_at")
+  eatenByUserId String?   @map("eaten_by_user_id")
 
-  menuDay   MenuDay  @relation(fields: [menuDayId], references: [id], onDelete: Cascade)
+  menuDay  MenuDay  @relation(fields: [menuDayId], references: [id], onDelete: Cascade)
   // Cascade, а не Restrict по умолчанию: слот и рецепт в приложении только soft-delete'ятся, и
   // физически строка исчезает лишь вместе с household. С Restrict удаление household падало на
   // FK, если в меню было запланировано хоть одно блюдо.
-  mealSlot  MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  eatenBy   User?    @relation("EatenBy", fields: [eatenByUserId], references: [id], onDelete: SetNull)
+  mealSlot MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  eatenBy  User?    @relation("EatenBy", fields: [eatenByUserId], references: [id], onDelete: SetNull)
 
   shoppingListItemMeals ShoppingListItemMeal[]
 
@@ -295,26 +298,66 @@ model MenuDayMeal {
   @@map("menu_day_meals")
 }
 
+// ---------- Menu templates (план после MVP, см. CLAUDE.md §5 "Шаблоны меню") ----------
+
+// Снимок спланированной недели, который можно накатить на другую неделю. Не более 4 на
+// household — лимит проверяется в server action (saveMenuTemplate), не ограничением БД.
+model MenuTemplate {
+  id          String   @id @default(cuid())
+  householdId String   @map("household_id")
+  name        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  household Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  meals     MenuTemplateMeal[]
+
+  @@index([householdId])
+  @@map("menu_templates")
+}
+
+// dayOfWeek — не Date, а позиция дня внутри недели (0 = понедельник … 6 = воскресенье, тот же
+// порядок, что weekDatesIso в lib/dates.ts): шаблон переносится на любую неделю по дню недели,
+// а не по календарной дате. Слот и рецепт — те же FK, что у MenuDayMeal; при применении
+// пропускаются меали с soft-deleted слотом/рецептом (см. applyMenuTemplate).
+model MenuTemplateMeal {
+  id             String @id @default(cuid())
+  menuTemplateId String @map("menu_template_id")
+  dayOfWeek      Int    @map("day_of_week")
+  mealSlotId     String @map("meal_slot_id")
+  recipeId       String @map("recipe_id")
+  servings       Int
+
+  menuTemplate MenuTemplate @relation(fields: [menuTemplateId], references: [id], onDelete: Cascade)
+  mealSlot     MealSlot     @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  recipe       Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([menuTemplateId, dayOfWeek, mealSlotId]) // один рецепт на слот в конкретный день шаблона
+  @@index([menuTemplateId])
+  @@index([mealSlotId])
+  @@index([recipeId])
+  @@map("menu_template_meals")
+}
+
 // ---------- Shopping list ----------
 
 model ShoppingListItem {
-  id              String           @id @default(cuid())
-  householdId     String           @map("household_id")
-  weekId          String           @map("week_id")
-  ingredientId    String?          @map("ingredient_id") // null для ручных позиций
-  name            String // денормализовано для ручных позиций; для обычных — из Ingredient.name
-  quantity        Float // суммарно на всю неделю (или под фильтр дней — пересчитывается на лету)
-  unit            Unit
-  isBought        Boolean          @default(false) @map("is_bought")
-  addedToPantry   Boolean          @default(false) @map("added_to_pantry")
-  isManual        Boolean          @default(false) @map("is_manual")
-  manualCategory  ProductCategory? @map("manual_category") // только для isManual = true
-  boughtByUserId  String?          @map("bought_by_user_id")
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  id             String           @id @default(cuid())
+  householdId    String           @map("household_id")
+  weekId         String           @map("week_id")
+  ingredientId   String?          @map("ingredient_id") // null для ручных позиций
+  name           String // денормализовано для ручных позиций; для обычных — из Ingredient.name
+  quantity       Float // суммарно на всю неделю (или под фильтр дней — пересчитывается на лету)
+  unit           Unit
+  isBought       Boolean          @default(false) @map("is_bought")
+  addedToPantry  Boolean          @default(false) @map("added_to_pantry")
+  isManual       Boolean          @default(false) @map("is_manual")
+  manualCategory ProductCategory? @map("manual_category") // только для isManual = true
+  boughtByUserId String?          @map("bought_by_user_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
 
-  household  Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  week       MenuWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  household  Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  week       MenuWeek    @relation(fields: [weekId], references: [id], onDelete: Cascade)
   ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
   boughtBy   User?       @relation("BoughtBy", fields: [boughtByUserId], references: [id], onDelete: SetNull)
 

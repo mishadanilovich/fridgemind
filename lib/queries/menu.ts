@@ -3,7 +3,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import type { DayMeal } from "@/lib/menu";
 import { buildDaySlots } from "@/lib/menu";
 import { prisma } from "@/lib/prisma";
-import type { MenuDayView, PickerRecipeView } from "@/lib/types";
+import type { MenuDayView, MenuTemplateCardView, PickerRecipeView } from "@/lib/types";
 
 const mealSelect = {
   id: true,
@@ -90,6 +90,21 @@ export async function getDayBoard(
     date: dateIso,
     slots: buildDaySlots(slots, (day?.meals ?? []).map(toDayMeal), canEdit),
   };
+}
+
+/** Шаблоны меню household для экрана "Шаблоны" (см. CLAUDE.md §5). Новые — сверху. */
+export async function getMenuTemplates(householdId: string): Promise<MenuTemplateCardView[]> {
+  const templates = await prisma.menuTemplate.findMany({
+    where: { householdId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, name: true, createdAt: true, _count: { select: { meals: true } } },
+  });
+  return templates.map((t) => ({
+    id: t.id,
+    name: t.name,
+    createdAtIso: dateToIso(t.createdAt),
+    mealCount: t._count.meals,
+  }));
 }
 
 /** Активные рецепты household для шторки выбора рецепта на слот. */

@@ -95,6 +95,15 @@ export type MenuDayView = {
   slots: MenuSlotView[];
 };
 
+/** Карточка шаблона меню на экране "Шаблоны" (см. CLAUDE.md §5). mealCount — сколько приёмов
+ *  пищи сохранено; createdAtIso — дата создания для подписи. */
+export type MenuTemplateCardView = {
+  id: string;
+  name: string;
+  createdAtIso: string;
+  mealCount: number;
+};
+
 /** Рецепт в шторке выбора рецепта на слот — baseServings задаёт начальное значение степпера. */
 export type PickerRecipeView = {
   id: string;
