@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import { PRODUCT_CATEGORY_LABELS } from "./product-categories";
-import type { CookingMethod, ProductCategory, Unit } from "./types";
+import type { CookingMethod, ProductCategory, Unit, UnitType } from "./types";
+import { DISPLAY_UNIT_LABEL, UNIT_TO_TYPE, UNIT_TYPE_TO_UNIT } from "./units";
 
 // Импорт рецептов из JSON (см. CLAUDE.md §5 "Импорт рецептов из JSON-файла"). Формат файла
 // генерирует сторонний ИИ-чат по промпту из buildImportPrompt; единицы и способы приготовления
@@ -113,6 +114,63 @@ export function buildImportPreview(
   });
 
   return { recipes: recipeViews, unmatched: [...unmatched.values()] };
+}
+
+const typeUnitLabel = (type: UnitType) => DISPLAY_UNIT_LABEL[UNIT_TYPE_TO_UNIT[type]];
+
+// Инвариант приложения: у продукта одна единица измерения (RecipeIngredient.unit всегда
+// соответствует Ingredient.defaultUnitType — ручная форма выводит единицу из продукта, а не даёт
+// выбрать свободно). Импорт обязан его удержать, иначе агрегация списка покупок и сравнение
+// "есть/нужно" (обе — по ingredientId, суммируют количества без учёта единицы) молча ломаются.
+// Конфликт, если одно имя в файле идёт с разными единицами, либо его единица не совпадает с типом
+// уже существующего в справочнике продукта. catalogTypeByName — тип каталожного продукта по имени
+// (нижний регистр). Возвращает человекочитаемые сообщения (пустой массив — конфликтов нет).
+export function findUnitConflicts(
+  recipes: ImportRecipe[],
+  catalogTypeByName: Map<string, UnitType>,
+): string[] {
+  const seen = new Map<string, { display: string; types: Set<UnitType> }>();
+  for (const recipe of recipes) {
+    for (const ing of recipe.ingredients) {
+      const key = norm(ing.name);
+      const entry = seen.get(key) ?? { display: ing.name.trim(), types: new Set<UnitType>() };
+      entry.types.add(UNIT_TO_TYPE[ing.unit]);
+      seen.set(key, entry);
+    }
+  }
+
+  const messages: string[] = [];
+  for (const [key, { display, types }] of seen) {
+    if (types.size > 1) {
+      const units = [...types].map(typeUnitLabel).join(" и ");
+      messages.push(`«${display}» указан в разных единицах (${units}) — в одном продукте должна быть одна.`);
+      continue;
+    }
+    const catalogType = catalogTypeByName.get(key);
+    const fileType = [...types][0]!;
+    if (catalogType && catalogType !== fileType) {
+      messages.push(
+        `«${display}»: в справочнике измеряется в ${typeUnitLabel(catalogType)}, а в файле указан в ${typeUnitLabel(fileType)}.`,
+      );
+    }
+  }
+  return messages;
+}
+
+// Слияние повторов одного продукта внутри рецепта: две строки с одним ingredientId — одна с
+// суммой количеств. После findUnitConflicts единицы у одного продукта заведомо совпадают, поэтому
+// суммировать безопасно. Без этого в БД молча писались бы две одинаковые строки (у ручной формы
+// повтор ingredientId запрещён, у импорта такого ограничения нет).
+export function mergeResolvedIngredients(
+  rows: { ingredientId: string; quantity: number; unit: Unit }[],
+): { ingredientId: string; quantity: number; unit: Unit }[] {
+  const byId = new Map<string, { ingredientId: string; quantity: number; unit: Unit }>();
+  for (const row of rows) {
+    const existing = byId.get(row.ingredientId);
+    if (existing) existing.quantity += row.quantity;
+    else byId.set(row.ingredientId, { ...row });
+  }
+  return [...byId.values()];
 }
 
 // Промпт для стороннего ИИ-чата: формат + пример + список названий из справочника (чтобы ИИ

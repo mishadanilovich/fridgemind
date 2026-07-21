@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { buildImportPreview, buildImportPrompt, parseImportJson } from "./recipe-import";
+import {
+  buildImportPreview,
+  buildImportPrompt,
+  findUnitConflicts,
+  mergeResolvedIngredients,
+  parseImportJson,
+} from "./recipe-import";
+import type { UnitType } from "./types";
 
 const VALID = JSON.stringify({
   recipes: [
@@ -104,6 +111,85 @@ describe("buildImportPreview", () => {
     if (!parsed.ok) throw new Error("fixture");
     const preview = buildImportPreview(parsed.recipes, new Set(["куриное филе", "морковь"]));
     expect(preview.unmatched).toEqual([]);
+  });
+});
+
+function recipesFrom(json: object) {
+  const parsed = parseImportJson(JSON.stringify(json));
+  if (!parsed.ok) throw new Error("fixture invalid");
+  return parsed.recipes;
+}
+
+describe("findUnitConflicts", () => {
+  it("ловит одно имя с разными единицами в файле", () => {
+    const recipes = recipesFrom({
+      recipes: [
+        {
+          title: "Р1",
+          baseServings: 2,
+          ingredients: [{ name: "Мёд", quantity: 50, unit: "g" }],
+          steps: ["ш"],
+        },
+        {
+          title: "Р2",
+          baseServings: 2,
+          ingredients: [{ name: "мёд", quantity: 30, unit: "ml" }],
+          steps: ["ш"],
+        },
+      ],
+    });
+    const conflicts = findUnitConflicts(recipes, new Map());
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]).toContain("Мёд");
+  });
+
+  it("ловит несовпадение единицы файла с типом продукта в справочнике", () => {
+    const recipes = recipesFrom({
+      recipes: [
+        {
+          title: "Р",
+          baseServings: 2,
+          ingredients: [{ name: "Молоко", quantity: 200, unit: "g" }],
+          steps: ["ш"],
+        },
+      ],
+    });
+    const catalog = new Map<string, UnitType>([["молоко", "VOLUME"]]);
+    const conflicts = findUnitConflicts(recipes, catalog);
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]).toContain("Молоко");
+  });
+
+  it("нет конфликтов, когда единицы согласованы", () => {
+    const recipes = recipesFrom({
+      recipes: [
+        {
+          title: "Р",
+          baseServings: 2,
+          ingredients: [
+            { name: "Молоко", quantity: 200, unit: "ml" },
+            { name: "Мука", quantity: 100, unit: "g" },
+          ],
+          steps: ["ш"],
+        },
+      ],
+    });
+    const catalog = new Map<string, UnitType>([["молоко", "VOLUME"]]);
+    expect(findUnitConflicts(recipes, catalog)).toEqual([]);
+  });
+});
+
+describe("mergeResolvedIngredients", () => {
+  it("складывает количество повторов одного продукта в рецепте", () => {
+    const merged = mergeResolvedIngredients([
+      { ingredientId: "a", quantity: 100, unit: "G" },
+      { ingredientId: "b", quantity: 2, unit: "PCS" },
+      { ingredientId: "a", quantity: 50, unit: "G" },
+    ]);
+    expect(merged).toEqual([
+      { ingredientId: "a", quantity: 150, unit: "G" },
+      { ingredientId: "b", quantity: 2, unit: "PCS" },
+    ]);
   });
 });
 

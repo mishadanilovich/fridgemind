@@ -8,24 +8,35 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   buildImportPreview,
+  findUnitConflicts,
   type ImportPreview,
   type ImportRecipe,
   type ImportResolution,
+  mergeResolvedIngredients,
   parseImportJson,
   recipeImportConfirmSchema,
 } from "@/lib/recipe-import";
-import type { ProductCategory, Unit } from "@/lib/types";
+import type { ProductCategory, Unit, UnitType } from "@/lib/types";
 import { UNIT_TO_TYPE } from "@/lib/units";
 
 // Импорт рецептов — только Организатору/Редактору (см. CLAUDE.md §5, RLS recipes).
 
 const norm = (name: string) => name.trim().toLowerCase();
 
+type CatalogEntry = { id: string; name: string; defaultUnitType: UnitType };
+
 // Каталог глобальный и для personal-use небольшой — читаем целиком и строим индекс по имени
-// (в нижнем регистре), чтобы сопоставлять точным совпадением без учёта регистра.
-async function loadIngredientIndex(): Promise<Map<string, { id: string; name: string }>> {
-  const all = await prisma.ingredient.findMany({ select: { id: true, name: true } });
+// (в нижнем регистре), чтобы сопоставлять точным совпадением без учёта регистра. defaultUnitType
+// нужен для проверки единиц (см. findUnitConflicts).
+async function loadIngredientIndex(): Promise<Map<string, CatalogEntry>> {
+  const all = await prisma.ingredient.findMany({
+    select: { id: true, name: true, defaultUnitType: true },
+  });
   return new Map(all.map((i) => [norm(i.name), i]));
+}
+
+function catalogTypeByName(index: Map<string, CatalogEntry>): Map<string, UnitType> {
+  return new Map([...index].map(([key, entry]) => [key, entry.defaultUnitType]));
 }
 
 export type PrepareImportResult =
@@ -42,6 +53,12 @@ export async function prepareRecipeImport(rawJson: string): Promise<PrepareImpor
   if (!parsed.ok) return { error: parsed.error };
 
   const index = await loadIngredientIndex();
+
+  // Единицы важнее сопоставления имён: файл с несогласованными единицами нельзя импортировать,
+  // поэтому блокируем ещё до превью — иначе пользователь дошёл бы до "Импортировать" впустую.
+  const conflicts = findUnitConflicts(parsed.recipes, catalogTypeByName(index));
+  if (conflicts.length > 0) return { error: conflicts[0]! };
+
   const preview = buildImportPreview(parsed.recipes, new Set(index.keys()));
   return { error: null, preview };
 }
@@ -97,7 +114,13 @@ export async function confirmRecipeImport(input: unknown): Promise<ConfirmImport
   const resolutions = parsedInput.data.resolutions as Record<string, ImportResolution>;
 
   const index = await loadIngredientIndex();
-  const validIds = new Set([...index.values()].map((i) => i.id));
+
+  // Та же проверка единиц, что и в prepare, но здесь она авторитетна: клиент мог прислать JSON
+  // мимо экрана превью.
+  const conflicts = findUnitConflicts(recipes, catalogTypeByName(index));
+  if (conflicts.length > 0) return { error: conflicts[0]! };
+
+  const typeById = new Map([...index.values()].map((i) => [i.id, i.defaultUnitType]));
 
   // Имя (нижний регистр) → Ingredient.id. Совпавшие берём из каталога, несовпавшие — из
   // резолвингов. unit несовпавшего берём из первого вхождения в файле (для unitType нового).
@@ -116,7 +139,13 @@ export async function confirmRecipeImport(input: unknown): Promise<ConfirmImport
     const resolution = resolutions[key];
     if (!resolution) return { error: "Не для всех новых продуктов выбрана категория или продукт" };
     if (resolution.mode === "existing") {
-      if (!validIds.has(resolution.ingredientId)) return { error: "Выбран несуществующий продукт" };
+      const chosenType = typeById.get(resolution.ingredientId);
+      if (!chosenType) return { error: "Выбран несуществующий продукт" };
+      // Сопоставлять можно только с продуктом тех же единиц — иначе тот же баг, что и с
+      // несогласованными единицами в файле.
+      if (chosenType !== UNIT_TO_TYPE[unit]) {
+        return { error: `«${displayName(recipes, key)}» нельзя сопоставить: у выбранного продукта другие единицы измерения.` };
+      }
       idByName.set(key, resolution.ingredientId);
     } else {
       const name = displayName(recipes, key);
@@ -140,13 +169,15 @@ export async function confirmRecipeImport(input: unknown): Promise<ConfirmImport
       await tx.recipeStep.createMany({
         data: recipe.steps.map((instruction, order) => ({ recipeId: created.id, order, instruction })),
       });
-      await tx.recipeIngredient.createMany({
-        data: recipe.ingredients.map((ing) => ({
-          recipeId: created.id,
+      const rows = mergeResolvedIngredients(
+        recipe.ingredients.map((ing) => ({
           ingredientId: idByName.get(norm(ing.name))!,
           quantity: ing.quantity,
           unit: ing.unit,
         })),
+      );
+      await tx.recipeIngredient.createMany({
+        data: rows.map((row) => ({ recipeId: created.id, ...row })),
       });
     }
   });

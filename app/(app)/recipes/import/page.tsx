@@ -13,7 +13,7 @@ export default async function RecipeImportPage() {
   // а сам список (id + name) — в селект «сопоставить с существующим» на экране подтверждения.
   const ingredients = await prisma.ingredient.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, defaultUnitType: true },
   });
 
   return <RecipeImport ingredients={ingredients} />;

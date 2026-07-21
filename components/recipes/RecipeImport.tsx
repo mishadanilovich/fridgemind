@@ -19,9 +19,10 @@ import { confirmRecipeImport, prepareRecipeImport } from "@/lib/actions/recipe-i
 import { callAction } from "@/lib/form-state";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
 import { buildImportPrompt, type ImportPreview, type ImportResolution } from "@/lib/recipe-import";
-import type { ProductCategory } from "@/lib/types";
+import type { ProductCategory, Unit, UnitType } from "@/lib/types";
+import { UNIT_TO_TYPE, UNIT_TYPE_LABELS } from "@/lib/units";
 
-type IngredientRef = { id: string; name: string };
+type IngredientRef = { id: string; name: string; defaultUnitType: UnitType };
 
 type Props = {
   ingredients: IngredientRef[];
@@ -415,6 +416,7 @@ function ConfirmStage({
               <UnmatchedRow
                 key={norm(item.name)}
                 name={item.name}
+                unit={item.unit}
                 ingredients={ingredients}
                 resolution={resolutions[norm(item.name)]}
                 onChange={(r) => onResolution(norm(item.name), r)}
@@ -446,13 +448,19 @@ function ConfirmStage({
 
 type UnmatchedRowProps = {
   name: string;
+  unit: Unit;
   ingredients: IngredientRef[];
   resolution: ImportResolution | undefined;
   onChange: (resolution: ImportResolution) => void;
 };
 
-function UnmatchedRow({ name, ingredients, resolution, onChange }: UnmatchedRowProps) {
+function UnmatchedRow({ name, unit, ingredients, resolution, onChange }: UnmatchedRowProps) {
   const mode = resolution?.mode ?? "new";
+  const neededType = UNIT_TO_TYPE[unit];
+  // Сопоставлять можно только с продуктом тех же единиц (иначе unit ≠ defaultUnitType, что
+  // ломает список покупок и сравнение "есть/нужно"). Показываем только совместимые.
+  const compatible = ingredients.filter((ing) => ing.defaultUnitType === neededType);
+
   return (
     <div className="rounded-card border border-border bg-card p-3">
       <div className="mb-2.5 text-sm font-bold text-foreground">{name}</div>
@@ -472,21 +480,28 @@ function UnmatchedRow({ name, ingredients, resolution, onChange }: UnmatchedRowP
       </div>
 
       {mode === "existing" ? (
-        <Select
-          value={resolution?.mode === "existing" ? resolution.ingredientId : ""}
-          onValueChange={(v) => onChange({ mode: "existing", ingredientId: v })}
-        >
-          <SelectTrigger aria-label={`Продукт для «${name}»`}>
-            <SelectValue placeholder="Выберите продукт из справочника…" />
-          </SelectTrigger>
-          <SelectContent>
-            {ingredients.map((ing) => (
-              <SelectItem key={ing.id} value={ing.id}>
-                {ing.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        compatible.length === 0 ? (
+          <p className="text-xs font-medium text-muted-foreground">
+            В справочнике нет продуктов в этих единицах ({UNIT_TYPE_LABELS[neededType]}) — создайте
+            новый.
+          </p>
+        ) : (
+          <Select
+            value={resolution?.mode === "existing" ? resolution.ingredientId : ""}
+            onValueChange={(v) => onChange({ mode: "existing", ingredientId: v })}
+          >
+            <SelectTrigger aria-label={`Продукт для «${name}»`}>
+              <SelectValue placeholder="Выберите продукт из справочника…" />
+            </SelectTrigger>
+            <SelectContent>
+              {compatible.map((ing) => (
+                <SelectItem key={ing.id} value={ing.id}>
+                  {ing.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
       ) : (
         <Select
           value={resolution?.mode === "new" ? resolution.category : "OTHER"}
