@@ -116,6 +116,12 @@ export function formatDayTitle(iso: string): string {
   return `${weekdayName(iso)}, ${date.getUTCDate()} ${monthName(date)}`;
 }
 
+/** "5 июля" — день и месяц без дня недели (подпись даты создания шаблона). */
+export function formatShortDate(iso: string): string {
+  const date = isoToDate(iso);
+  return `${date.getUTCDate()} ${monthName(date)}`;
+}
+
 /** "6 — 12 июля" — подзаголовок недели. */
 export function formatWeekRange(weekStartIso: string): string {
   const start = isoToDate(weekStartIso);
