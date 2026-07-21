@@ -62,7 +62,9 @@ test("recipe CRUD smoke: login, create, view with servings recalc, edit, delete"
   });
 
   await test.step("просмотр рецепта: пересчёт по порциям", async () => {
-    await page.getByText(title, { exact: true }).click();
+    // Карточка — оверлей-ссылка на всю площадь (сердечко избранного не даёт вложить <button>
+    // в <a>), поэтому открываем по ссылке карточки, а не по перекрытому ею тексту заголовка.
+    await page.getByRole("link", { name: title, exact: true }).click();
     await page.waitForURL(/\/recipes\/[^/]+$/);
     await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
     await expect(page.getByText(`${INGREDIENT_NAME} · 500 г`)).toBeVisible();
