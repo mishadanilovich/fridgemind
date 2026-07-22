@@ -12,7 +12,16 @@ import { THEME_COLOR, themeInitScript } from "@/lib/theme";
 // текущей версии next/font/google) — поэтому оба шрифта подключаются напрямую через
 // Google Fonts CSS2, который сам отдаёт нужный unicode-range subset.
 
+// VERCEL_PROJECT_PRODUCTION_URL — стабильный домен прод-алиаса (не меняется от деплоя к деплою,
+// в отличие от VERCEL_URL); без него og:image резолвился бы в http://localhost:3000 в проде.
+const SITE_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "FridgeMind",
   description: "Планирование меню, запасов и списка покупок для семьи",
   manifest: "/manifest.json",
