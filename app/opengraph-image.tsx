@@ -38,6 +38,9 @@ export default async function Image() {
         </div>
       </div>
     ),
-    { ...size, fonts: [{ name: "Hanken Grotesk", data: fontData, weight: 700, style: "normal" }] },
+    {
+      ...size,
+      fonts: fontData ? [{ name: "Hanken Grotesk", data: fontData, weight: 700, style: "normal" }] : undefined,
+    },
   );
 }
